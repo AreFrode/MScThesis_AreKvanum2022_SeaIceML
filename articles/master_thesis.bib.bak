@@ -182,4 +182,15 @@ Section 5 touch upon data preparation and model evaluation, especially data spli
   primaryclass  = {cs.LG},
 }
 
+@Book{Maraun_2017,
+  author    = {Douglas Maraun and Martin Widmann},
+  publisher = {Cambridge University Press},
+  title     = {Statistical Downscaling and Bias Correction for Climate Research},
+  year      = {2017},
+  address   = {Cambridge},
+  isbn      = {9781107588783},
+  month     = {dec},
+  doi       = {10.1017/9781107588783},
+}
+
 @Comment{jabref-meta: databaseType:bibtex;}

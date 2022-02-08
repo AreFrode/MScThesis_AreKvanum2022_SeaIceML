@@ -101,4 +101,4 @@ Section 5 touch upon data preparation and model evaluation, especially data spli
 @Article{Chantry2021,
   author    = {Matthew Chantry and Hannah Christensen and Peter Dueben and Tim Palmer},
   journal   = {Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences},
-  title     = {Opportunities and challenges for machine learning in weather and climate modelling: hard, mediu
+  title
