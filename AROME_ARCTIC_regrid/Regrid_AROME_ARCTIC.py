@@ -1,32 +1,80 @@
 # Script to Regrid Arome Arctic to IceChart projection
 # Author: Are Frode Kvanum
-# Date: 12.03.2022
+# Date: 14.03.2022
 
-import os
 import glob
+from json import load
+import netCDF4
+import os
 import numpy as np
-import itertools
-from itertools import chain
-from netCDF4 import Dataset
+from ast import Slice
 from calendar import monthrange
-from pyproj import CRS, Transformer, Proj
+from netCDF4 import Dataset
+from pyproj import CRS, Proj, Transformer
 from scipy.interpolate import griddata
-from datetime import datetime, timedelta
+from typing import Tuple
 
-def pad_2d(orig):
-	padded = np.zeros(orig.shape[0] + 2)
-	padded[1:-1] = np.copy(orig)
-	padded[0] = padded[1] - (padded[2] - padded[1])
-	padded[-1] = padded[-2] + (padded[2] - padded[1])
-	return padded
+
+def load_3dvariable(id: str, dataset: Dataset, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
+	"""loads a 4d variable, e.g. arome_arctic_full_* ([time, height, x, y])
+
+	Args:
+		id (str): Name of variable in arome arctic
+		dataset (Dataset): dataset where the variable is loaded from
+		output_dataset (Dataset): output netcdf file
+		name (str): name of variable in output
+		unit (str): unit of variable in output
+		standard_name (str): descriptive name in output
+		nx (int, optional): length of target grid in x direction. Defaults to 3220-526.
+		ny (int, optional): length of target grid in y direction. Defaults to 2979-194.
+
+	Returns:
+		Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]: output array for storing computed values, arome values and output netCDF4 variable
+	"""
+
+	id_ICgrid = np.zeros((3, ny, nx))
+	id_input = dataset.variables[id][:,:,:]
+	id_arome = np.pad(id_input, ((0,0), (1,1), (1, 1)), 'constant', constant_values=np.nan)
+	id_out = output_dataset.createVariable(name, 'd', ('time', 'y', 'x'))
+	id_out.units = unit
+	id_out.standard_name = standard_name
+
+	return (id_ICgrid, id_arome, id_out)
+
+def load_4dvariable(id: str, dataset: Dataset, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194, slicer: Slice = 0) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
+	"""loads a 4d variable, e.g. arome_arctic_full_* ([time, height, x, y])
+
+	Args:
+		id (str): Name of variable in arome arctic
+		dataset (Dataset): dataset where the variable is loaded from
+		output_dataset (Dataset): output netcdf file
+		name (str): name of variable in output
+		unit (str): unit of variable in output
+		standard_name (str): descriptive name in output
+		nx (int, optional): length of target grid in x direction. Defaults to 3220-526.
+		ny (int, optional): length of target grid in y direction. Defaults to 2979-194.
+		slicer (Slice, optional): height values to obtain. Defaults to 0.
+
+	Returns:
+		Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]: output array for storing computed values, arome values and output netCDF4 variable
+	"""
+
+	id_ICgrid = np.zeros((3, ny, nx))
+	id_input = dataset.variables[id][:,slicer,:,:]
+	id_arome = np.pad(id_input, ((0,0), (1,1), (1, 1)), 'constant', constant_values=np.nan)
+	id_out = output_dataset.createVariable(name, 'd', ('time', 'y', 'x'))
+	id_out.units = unit
+	id_out.standard_name = standard_name
+
+	return (id_ICgrid, id_arome, id_out)
+
 
 def runstuff():
 	################################################
 	# Constants
 	################################################
 	path_data = '/lustre/storeB/immutable/archive/projects/metproduction/DNMI_AROME_ARCTIC/'
-	path_output = '/lustre/storeB/users/arefk/AROME_ARCTIC_regrid/'
-	path_icechart = '/lustre/storeB/project/copernicus/sea_ice/SIW-METNO-ARC-SEAICE_HR-OBS/2019/01/ice_conc_svalbard_201901021500.nc'
+	path_output = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/'
 	proj4_icechart = "+proj=stere lon_0=0.0 lat_ts=90.0 lat_0=90.0 a=6371000.0 b=6371000.0"
 	proj4_arome = '+proj=lcc +lat_0=77.5 +lon_0=-25 +lat_1=77.5 +lat_2=77.5 +no_defs +R=6.371e+06'
 	#
@@ -88,30 +136,43 @@ def runstuff():
 		yyyymmdd = f"{year_task}{month_task}{dd:02d}"
 		print(yyyymmdd)
 
-		T2M_ICgrid = np.zeros((3, n_y, n_x))
-		SST_ICgrid = np.zeros((3, n_y, n_x))
-		# ZON10M_ICgrid = np.zeros((3, n_y, n_x))
+		# Start setup of NC file at start of loop
+		output_filename = 'AROME_ICgrid_' + yyyymmdd + 'T00Z.nc'
+		output_netcdf = Dataset(path_output_task + output_filename, 'w', format = 'NETCDF4')
+
+		output_netcdf.createDimension('y', len(y_ICgrid))
+		output_netcdf.createDimension('x', len(x_ICgrid))
+		output_netcdf.createDimension('latitude', len(y_ICgrid))
+		output_netcdf.createDimension('longitude', len(x_ICgrid))
+		output_netcdf.createDimension('time', 3)
 
 		dataset = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T00Z.nc")[0]
+		dataset_sfx = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_sfx_2_5km_{yyyymmdd}T00Z.nc")[0]
 	
 		nc = Dataset(dataset, 'r')
-		# time_arome = nc.variables['time'][:]
+		nc_sfx = Dataset(dataset_sfx, 'r')
+
 		x_input = nc.variables['x'][:]
 		y_input = nc.variables['y'][:]
-		T2M_input = nc.variables['air_temperature_2m'][:,0,:,:]
-		SST_input = nc.variables['air_temperature_0m'][:,0,:,:]
-		# ZON10M_input = nc.variables['ZON10M'][:,:,:]
+		x_diff = x_input[1] - x_input[0]
+		y_diff = y_input[1] - y_input[0]
 
-		x_arome = pad_2d(x_input)
-		y_arome = pad_2d(y_input)
+		x_arome = np.pad(x_input, (1,1), 'constant', constant_values=(x_input[0] - x_diff, x_input[-1] + x_diff))
+		y_arome = np.pad(y_input, (1,1), 'constant', constant_values=(y_input[0] - y_diff, y_input[-1] + y_diff))
 
 		xx_arome, yy_arome = np.meshgrid(x_arome, y_arome)
 
-		# T2M_arome = np.full((time_arome.shape[0], y_arome.shape[0], x_arome.shape[0]), np.nan)
-		# T2M_arome[:, 1:-1, 1:-1] = np.copy(T2M_input)
-		T2M_arome = np.pad(T2M_input, ((0,0), (1,1), (1, 1)), 'constant', constant_values=np.nan)
-		SST_arome = np.pad(SST_input, ((0,0), (1,1), (1, 1)), 'constant', constant_values=np.nan)
-		# ZON10M_arome = np.pad(ZON10M_input, ((0,0), (1,1), (1, 1)), 'constant', constant_values=np.nan)
+		T2M_ICgrid, T2M_arome, air_temperature = load_4dvariable('air_temperature_2m', nc, output_netcdf, 'T2M', 'K', 'air_temperature')
+		
+		ZON10M_ICgrid, ZON10M_arome, zonal_wind = load_4dvariable('x_wind_10m', nc, output_netcdf, 'ZON10M', 'm/s', 'Zonal 10 metre wind (U10M)')
+		
+		MER10M_ICgrid, MER10M_arome, meridional_wind = load_4dvariable('y_wind_10m', nc, output_netcdf, 'MER10M', 'm/s', 'Meridional 10 metre wind (V10M)')
+
+		SST_ICgrid, SST_arome, sea_surf_temp = load_3dvariable('SST', nc_sfx, output_netcdf, 'SST', 'K', 'Sea Surface Temperature')
+		
+		#
+		WS_ICgrid = np.zeros_like(T2M_ICgrid)
+		WD_ICgrid = np.zeros_like(T2M_ICgrid)
     
 		xx_ICgrid, yy_ICgrid = transform_function.transform(xx_arome, yy_arome)
 		xx_ICgrid_flat = xx_ICgrid.flatten()
@@ -121,55 +182,56 @@ def runstuff():
 			start = 24*t
 			stop = start + 24 if t < 2 else start + 18
 
+			# Flatten and daily mean
 			T2M_flat = T2M_arome[start:stop,:,:].mean(axis=0).flatten()
+			ZON10M_flat = ZON10M_arome[start:stop,:,:].mean(axis=0).flatten()
+			MER10M_flat = MER10M_arome[start:stop,:,:].mean(axis=0).flatten()
 			SST_flat = SST_arome[start:stop,:,:].mean(axis=0).flatten()
-			# ZON10M_flat = ZON10M_arome[start:stop,:,:].mean(axis=0).flatten()
 
 			T2M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), T2M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 			
 			SST_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), SST_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
-			# SST_ICgrid[t] = np.where(SST_ICgrid[t] < 0, np.nan, SST_ICgrid[t]) # Remove invalid temp
+			SST_ICgrid[t] = np.where(SST_ICgrid[t] < 0, np.nan, SST_ICgrid[t]) # Remove invalid temp
 
-			# ZON10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), ZON10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
+			ZON10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), ZON10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
+			MER10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), MER10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
+			WS_ICgrid[t] = np.sqrt(np.power(ZON10M_ICgrid[t], 2) + np.power(MER10M_ICgrid[t], 2))
+			WD_ICgrid[t] = (180 + (180/np.pi)*np.arctan2(MER10M_ICgrid[t], ZON10M_ICgrid[t])) % 360
+
 
 		nc.close()
+		nc_sfx.close()
 		################################################
 		# Output netcdf file
 		################################################
-		output_filename = 'AROME_T2M_ICgrid_' + yyyymmdd + 'T00Z.nc'
-		output_netcdf = Dataset(path_output_task + output_filename, 'w', format = 'NETCDF4')
-		#
-		y = output_netcdf.createDimension('y', len(y_ICgrid))
-		x = output_netcdf.createDimension('x', len(x_ICgrid))
-		latitude = output_netcdf.createDimension('latitude', len(y_ICgrid))
-		longitude = output_netcdf.createDimension('longitude', len(x_ICgrid))
-		time = output_netcdf.createDimension('time', 3)
 		#
 		yc = output_netcdf.createVariable('yc', 'd', ('y'))
-		xc = output_netcdf.createVariable('xc', 'd', ('x'))
-		lat = output_netcdf.createVariable('lat', 'd', ('y','x'))
-		lon = output_netcdf.createVariable('lon', 'd', ('y','x'))
-		timec = output_netcdf.createVariable('time', 'd', ('time'))
-		air_temperature = output_netcdf.createVariable('air_temperature', 'd', ('time', 'y', 'x'))
-		sea_surface_temp = output_netcdf.createVariable('sea_surface_temperature','d',('time','y','x'))
-		# zonal_wind = output_netcdf.createVariable('zonal_wind', 'd', ('time', 'y', 'x'))
-		#
 		yc.units = 'm'
 		yc.standard_name = 'y'
+
+		xc = output_netcdf.createVariable('xc', 'd', ('x'))
 		xc.units = 'm'
 		xc.standard_name = 'x'
+
+		lat = output_netcdf.createVariable('lat', 'd', ('y','x'))
+		lat.units='degree'
+		lon = output_netcdf.createVariable('lon', 'd', ('y','x'))
+		lon.units='degree'
+
+		timec = output_netcdf.createVariable('time', 'd', ('time'))
 		timec.units = 'days since the start date'
 		timec.standard_name = 'time'
-		lat.units='degree'
-		lon.units='degree'
-		air_temperature.units = 'K'
-		air_temperature.standard_name = 'air_temperature'
-		sea_surface_temp.units = 'K'
-		sea_surface_temp.standard_name = 'sea_surface_temperature'
-		# zonal_wind.units = 'm/s'
-		# zonal_wind.standard_name = '10m_Zonal_wind'
-		#
 
+		# Additional 3d variables
+		wind_speed = output_netcdf.createVariable("10WindSpeed", 'd', ('time', 'y', 'x'))
+		wind_speed.units = "m/s"
+		wind_speed.standard_name = "10 metre wind speed"
+
+		wind_direction = output_netcdf.createVariable("10WindDirection", 'd', ('time', 'y', 'x'))
+		wind_direction.units = "degrees"
+		wind_direction.standard_name = "10 metre wind direction"
+
+		# Fill NC variables with values
 		yc[:] = np.linspace(y_min, y_max, n_y)
 		xc[:] = np.linspace(x_min, x_max, n_x)
 		timec[:] = np.linspace(0, 2, 3)
@@ -177,8 +239,11 @@ def runstuff():
 		lat[:, :] = lats
 		lon[:, :] = lons
 		air_temperature[:,:,:] = T2M_ICgrid
-		sea_surface_temp[:,:,:] = SST_ICgrid
-		# zonal_wind[:,:,:] = ZON10M_ICgrid
+		sea_surf_temp[:,:,:] = SST_ICgrid
+		zonal_wind[:,:,:] = ZON10M_ICgrid
+		meridional_wind[:,:,:] = MER10M_ICgrid
+		wind_speed[:,:,:] = WS_ICgrid
+		wind_direction[:,:,:] = WD_ICgrid
 
 		##
 		output_netcdf.description = f"{proj4_icechart}"
