@@ -1,7 +1,19 @@
-# Script to Regrid Arome Arctic to IceChart projection
-# Author: Are Frode Kvanum
-# Date: 08.04.2022
+#$ -S /bin/bash
+#$ -l h_rt=10:00:00
+#$ -q research-el7.q
+#$ -l h_vmem=8G
+#$ -t 1-36
+#$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
+#$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
+#$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/OUT/
 
+echo "Got $NSLOTS slots for job $SGE_TASK_ID."
+
+module load Python/3.7.2
+
+cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/PROG/AROME_Arctic_IC_regrid_""$SGE_TASK_ID"".py" << EOF
+
+############################################
 import glob
 from json import load
 import netCDF4
@@ -19,6 +31,7 @@ from rotate_wind_from_UV_to_xy import rotate_wind_from_UV_to_xy
 def load_3dvariable(id: str, dataset: Dataset, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
 	"""loads a 3d variable, e.g. arome_arctic_full_* ([time, height, x, y])
 		Currently very specific for SST
+
 
 	Args:
 		id (str): Name of variable in arome arctic
@@ -141,16 +154,16 @@ def runstuff():
 	# Dataset
 	################################################
 	paths = []
-	# for year in range(2019, 2022):
-	for year in range(2019, 2020): # Only want one year
-		# for month in range(1, 13):
-		for month in range(1, 2): # Only want one month
+	for year in range(2019, 2022):
+	# for year in range(2019, 2020): # Only want one year
+		for month in range(1, 13):
+		# for month in range(1, 2): # Only want one month
 			p = f"{path_data}{year}/{month:02d}/"
 			paths.append(p)
 
 	#
-	# path_data_task = paths[$SGE_TASK_ID - 1]
-	path_data_task = paths[0] # This should be the only path
+	path_data_task = paths[$SGE_TASK_ID - 1]
+	# path_data_task = paths[0] # This should be the only path
 	print(f"path_data_task = {path_data_task}")
 	path_output_task = path_data_task.replace(path_data, path_output)
 	print(f"path_output_task = {path_output_task}")
@@ -237,7 +250,6 @@ def runstuff():
 				T2M_flat = T2M_arome[start:stop,...].mean(axis=0).flatten()
 				ZON10M_flat = ZON10M_arome[start:stop,...].mean(axis=0).flatten()
 				MER10M_flat = MER10M_arome[start:stop,...].mean(axis=0).flatten()
-				# SST_flat = np.ma.mean(SST_arome[start:stop,...],axis=0).flatten()
 				HCC_flat = HCC_arome[start:stop,...].mean(axis=0).flatten()
 				MCC_flat = MCC_arome[start:stop,...].mean(axis=0).flatten()
 				LCC_flat = LCC_arome[start:stop,...].mean(axis=0).flatten()
@@ -245,7 +257,6 @@ def runstuff():
 				T2M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), T2M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 			
 				SST_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), SST_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
-				# SST_ICgrid[t] = np.where(SST_ICgrid[t] < 0, np.nan, SST_ICgrid[t]) # Remove invalid temp
 
 				ZON10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), ZON10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 				MER10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), MER10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
@@ -325,7 +336,11 @@ def runstuff():
 			output_netcdf.description = f"{proj4_icechart}"
 	
 			output_netcdf.close()	
-			break
 
 if __name__ == "__main__":
 	runstuff()
+
+#################################################
+EOF
+
+PYTHONPATH=/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/ python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/PROG/AROME_Arctic_IC_regrid_""$SGE_TASK_ID"".py"
