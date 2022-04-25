@@ -124,76 +124,94 @@ def runstuff():
     path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/Data/"
 
     paths = []
-    # for year in range(2019, 2022):
-    for year in range(2019, 2020): # Only want one year
-        # for month in range(1, 13):
-        for month in range(1, 2): # Only want one month
+    for year in range(2019, 2022):
+    # for year in range(2019, 2020): # Only want one year
+        for month in range(1, 13):
+        # for month in range(1, 2): # Only want one month
             p = f"{path_data}{year}/{month:02d}/"
             paths.append(p)
 
     #
-    path_data_task = paths[0]
-    print(f"path_data_task = {path_data_task}")
-    year_task = path_data_task[len(path_data) : len(path_data) + 4]
-    print(f"year_task = {year_task}")
-    month_task = path_data_task[len(path_data) + 5 : len(path_data) + 7]
-    print(f"month_task = {month_task}")
-    nb_days_task = monthrange(int(year_task), int(month_task))[1]
-    print(f"nb_days_task = {nb_days_task}")
-    #
-    if os.path.isdir(path_output) == False:
-        os.system('mkdir -p ' + path_output)
+    prepend = 'Data'
+    if not os.path.isdir(prepend):
+        os.mkdir(prepend)
 
-    outfile = h5py.File(f"{path_output}PatchedAromeArctic_{year_task}{month_task}.hdf5", "w")
+    hdf5_path = f"{prepend}/FullPatchedAromeArctic.hdf5"
+    if os.path.exists(hdf5_path):
+        os.remove(hdf5_path)
 
-    for dd in range(1, nb_days_task + 1):
-        yyyymmdd = f"{year_task}{month_task}{dd:02d}"
-        print(f"{yyyymmdd}")
+    outfile = h5py.File(hdf5_path, "a")
 
-        try:
-            arome_path = glob.glob(f"{path_data_task}AROME_ICgrid_{yyyymmdd}T00Z.nc")[0]
-            ic_path = glob.glob(f"{path_IceChart}{year_task}/{month_task}/ice_conc_svalbard_{yyyymmdd}1500.nc")[0]
+    for path_data_task in paths[19:20]:
+        print(f"path_data_task = {path_data_task}")
+        year_task = path_data_task[len(path_data) : len(path_data) + 4]
+        print(f"year_task = {year_task}")
+        month_task = path_data_task[len(path_data) + 5 : len(path_data) + 7]
+        print(f"month_task = {month_task}")
+        nb_days_task = monthrange(int(year_task), int(month_task))[1]
+        print(f"nb_days_task = {nb_days_task}")
+        #
+        if os.path.isdir(path_output) == False:
+            os.system('mkdir -p ' + path_output)
 
-        except IndexError:
-            continue
 
-        nc = Dataset(arome_path, 'r')
-        x = nc.variables['xc']
-        y = nc.variables['yc']
-        temp = nc.variables['T2M']
-        sst = nc.variables['SST']
-        xwind = nc.variables['X_wind_10m']
-        ywind = nc.variables['Y_wind_10m']
+        for dd in range(1, nb_days_task + 1):
+            yyyymmdd = f"{year_task}{month_task}{dd:02d}"
+            print(f"{yyyymmdd}")
 
-        nc_IC = Dataset(ic_path, 'r')
+            try:
+                arome_path = glob.glob(f"{path_data_task}AROME_ICgrid_{yyyymmdd}T00Z.nc")[0]
+                ic_path = glob.glob(f"{path_IceChart}{year_task}/{month_task}/ice_conc_svalbard_{yyyymmdd}1500.nc")[0]
 
-        xc = nc_IC['xc'][:]
-        yc = nc_IC['yc'][:]
+            except IndexError:
+                continue
 
-        xmin = find_nearest(xc, x[:].min())
-        xmax = find_nearest(xc, x[:].max())
-        ymin = find_nearest(yc, y[:].min())
-        ymax = find_nearest(yc, y[:].max())
+            nc = Dataset(arome_path, 'r')
+            x = nc.variables['xc']
+            y = nc.variables['yc']
+            temp = nc.variables['T2M']
+            sst = nc.variables['SST']
+            xwind = nc.variables['X_wind_10m']
+            ywind = nc.variables['Y_wind_10m']
 
-        SIC_thresholds = determine_meanSIC(nc_IC['ice_concentration'][..., ymin:ymax, xmin:xmax])
+            nc_IC = Dataset(ic_path, 'r')
 
-        nc_IC.close()
+            xc = nc_IC['xc'][:]
+            yc = nc_IC['yc'][:]
 
-        for key in SIC_thresholds.keys():
-            x_idx = np.array(SIC_thresholds[key]['x'])
-            y_idx = np.array(SIC_thresholds[key]['y'])
-            x_idx, y_idx = get_valid_patches(temp, x_idx, y_idx)
-            xc, yc = get_x_y_patch(x, y, x_idx, y_idx)
-            outfile[f"{key}/{yyyymmdd}/xc"] = xc
-            outfile[f"{key}/{yyyymmdd}/yc"] = yc
-            outfile[f"{key}/{yyyymmdd}/temp"] = sliding_window_from_idx(temp, x_idx, y_idx)
-            outfile[f"{key}/{yyyymmdd}/sst"] = sliding_window_from_idx(sst, x_idx, y_idx)
-            outfile[f"{key}/{yyyymmdd}/xwind"] = sliding_window_from_idx(xwind, x_idx, y_idx)
-            outfile[f"{key}/{yyyymmdd}/ywind"] = sliding_window_from_idx(ywind, x_idx, y_idx)
+            xmin = find_nearest(xc, x[:].min())
+            xmax = find_nearest(xc, x[:].max())
+            ymin = find_nearest(yc, y[:].min())
+            ymax = find_nearest(yc, y[:].max())
 
-        nc.close()
+            SIC_thresholds = determine_meanSIC(nc_IC['ice_concentration'][..., ymin:ymax, xmin:xmax])
 
-        break
+            nc_IC.close()
+
+            for key in SIC_thresholds.keys():
+                x_idx = np.array(SIC_thresholds[key]['x'])
+                y_idx = np.array(SIC_thresholds[key]['y'])
+                x_idx, y_idx = get_valid_patches(temp, x_idx, y_idx)
+
+                try:
+                    xc, yc = get_x_y_patch(x, y, x_idx, y_idx)
+                except ValueError:
+                    for key in SIC_thresholds.keys():
+                        offending = f"{key}/{yyyymmdd}"
+                        if offending in outfile:
+                            del outfile[offending]
+
+                    break
+
+                outfile[f"{key}/{yyyymmdd}/xc"] = xc
+                outfile[f"{key}/{yyyymmdd}/yc"] = yc
+                outfile[f"{key}/{yyyymmdd}/temp"] = sliding_window_from_idx(temp, x_idx, y_idx)
+                outfile[f"{key}/{yyyymmdd}/sst"] = sliding_window_from_idx(sst, x_idx, y_idx)
+                outfile[f"{key}/{yyyymmdd}/xwind"] = sliding_window_from_idx(xwind, x_idx, y_idx)
+                outfile[f"{key}/{yyyymmdd}/ywind"] = sliding_window_from_idx(ywind, x_idx, y_idx)
+
+            nc.close()
+
 
     outfile.close()
 

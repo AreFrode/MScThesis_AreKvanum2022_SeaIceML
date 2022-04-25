@@ -1,21 +1,20 @@
-# THIS IS DEPRECATED AS OF 25.04.2022, SEE Full_patch_to_hdf5.sh for correct file
-
 #$ -S /bin/bash
-#$ -l h_rt=10:00:00
+#$ -l h_rt=24:00:00
 #$ -q research-el7.q
 #$ -l h_vmem=8G
-#$ -t 1-36
+#$ -M arefk@met.no
 #$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/data_processing_files/OUT/
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
 
-module load Python/3.7.2
+module load Python-devel/3.8.7
 
-cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/data_processing_files/PROG/Patch_to_hdf5_""$SGE_TASK_ID"".py" << EOF
+cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/data_processing_files/PROG/FULL_Patch_to_hdf5.py" << EOF
 
 ###########################################################
+
 import glob
 import h5py
 import os
@@ -93,7 +92,8 @@ def sliding_window_from_idx(var, x_idx, y_idx, stride=250):      # 250km x 250km
 
     return np.array(list(outputs.values()), dtype=np.float32)
 
-def determine_meanSIC(sic, x_stride = 100, y_stride = 100):
+
+def determine_meanSIC(sic, x_stride = 250, y_stride = 250):
     """Function to determine meanSIC in all cells
         Uses a bottom up approach when sliding the window
 
@@ -149,66 +149,85 @@ def runstuff():
             paths.append(p)
 
     #
-    path_data_task = paths[$SGE_TASK_ID - 1]
-    print(f"path_data_task = {path_data_task}")
-    year_task = path_data_task[len(path_data) : len(path_data) + 4]
-    print(f"year_task = {year_task}")
-    month_task = path_data_task[len(path_data) + 5 : len(path_data) + 7]
-    print(f"month_task = {month_task}")
-    nb_days_task = monthrange(int(year_task), int(month_task))[1]
-    print(f"nb_days_task = {nb_days_task}")
-    #
-    if os.path.isdir(path_output) == False:
-        os.system('mkdir -p ' + path_output)
+    if not os.path.isdir(path_output):
+        os.mkdir(path_output)
 
-    outfile = h5py.File(f"{path_output}PatchedAromeArctic_{year_task}{month_task}.hdf5", "w")
+    hdf5_path = f"{path_output}/FullPatchedAromeArctic.hdf5"
+    if os.path.exists(hdf5_path):
+        os.remove(hdf5_path)
 
-    for dd in range(1, nb_days_task + 1):
-        yyyymmdd = f"{year_task}{month_task}{dd:02d}"
-        print(f"{yyyymmdd}")
+    outfile = h5py.File(hdf5_path, "a")
 
-        try:
-            arome_path = glob.glob(f"{path_data_task}AROME_ICgrid_{yyyymmdd}T00Z.nc")[0]
-            ic_path = glob.glob(f"{path_IceChart}{year_task}/{month_task}/ice_conc_svalbard_{yyyymmdd}1500.nc")[0]
+    for path_data_task in paths:
+        print(f"path_data_task = {path_data_task}")
+        year_task = path_data_task[len(path_data) : len(path_data) + 4]
+        print(f"year_task = {year_task}")
+        month_task = path_data_task[len(path_data) + 5 : len(path_data) + 7]
+        print(f"month_task = {month_task}")
+        nb_days_task = monthrange(int(year_task), int(month_task))[1]
+        print(f"nb_days_task = {nb_days_task}")
+        #
+        if os.path.isdir(path_output) == False:
+            os.system('mkdir -p ' + path_output)
 
-        except IndexError:
-            continue
 
-        nc = Dataset(arome_path, 'r')
-        x = nc.variables['xc']
-        y = nc.variables['yc']
-        temp = nc.variables['T2M']
-        sst = nc.variables['SST']
-        xwind = nc.variables['X_wind_10m']
-        ywind = nc.variables['Y_wind_10m']
+        for dd in range(1, nb_days_task + 1):
+            yyyymmdd = f"{year_task}{month_task}{dd:02d}"
+            print(f"{yyyymmdd}")
 
-        nc_IC = Dataset(ic_path, 'r')
+            try:
+                arome_path = glob.glob(f"{path_data_task}AROME_ICgrid_{yyyymmdd}T00Z.nc")[0]
+                ic_path = glob.glob(f"{path_IceChart}{year_task}/{month_task}/ice_conc_svalbard_{yyyymmdd}1500.nc")[0]
 
-        xc = nc_IC['xc'][:]
-        yc = nc_IC['yc'][:]
+            except IndexError:
+                continue
 
-        xmin = find_nearest(xc, x[:].min())
-        xmax = find_nearest(xc, x[:].max())
-        ymin = find_nearest(yc, y[:].min())
-        ymax = find_nearest(yc, y[:].max())
+            nc = Dataset(arome_path, 'r')
+            x = nc.variables['xc']
+            y = nc.variables['yc']
+            temp = nc.variables['T2M']
+            sst = nc.variables['SST']
+            xwind = nc.variables['X_wind_10m']
+            ywind = nc.variables['Y_wind_10m']
 
-        SIC_thresholds = determine_meanSIC(nc_IC['ice_concentration'][..., ymin:ymax, xmin:xmax])
+            nc_IC = Dataset(ic_path, 'r')
 
-        nc_IC.close()
+            xc = nc_IC['xc'][:]
+            yc = nc_IC['yc'][:]
 
-        for key in SIC_thresholds.keys():
-            x_idx = np.array(SIC_thresholds[key]['x'])
-            y_idx = np.array(SIC_thresholds[key]['y'])
-            x_idx, y_idx = get_valid_patches(temp, x_idx, y_idx)
-            xc, yc = get_x_y_patch(x, y, x_idx, y_idx)
-            outfile[f"{key}/{yyyymmdd}/xc"] = xc
-            outfile[f"{key}/{yyyymmdd}/yc"] = yc
-            outfile[f"{key}/{yyyymmdd}/temp"] = sliding_window_from_idx(temp, x_idx, y_idx)
-            outfile[f"{key}/{yyyymmdd}/sst"] = sliding_window_from_idx(sst, x_idx, y_idx)
-            outfile[f"{key}/{yyyymmdd}/xwind"] = sliding_window_from_idx(xwind, x_idx, y_idx)
-            outfile[f"{key}/{yyyymmdd}/ywind"] = sliding_window_from_idx(ywind, x_idx, y_idx)
+            xmin = find_nearest(xc, x[:].min())
+            xmax = find_nearest(xc, x[:].max())
+            ymin = find_nearest(yc, y[:].min())
+            ymax = find_nearest(yc, y[:].max())
 
-        nc.close()
+            SIC_thresholds = determine_meanSIC(nc_IC['ice_concentration'][..., ymin:ymax, xmin:xmax])
+
+            nc_IC.close()
+
+            for key in SIC_thresholds.keys():
+                x_idx = np.array(SIC_thresholds[key]['x'])
+                y_idx = np.array(SIC_thresholds[key]['y'])
+                x_idx, y_idx = get_valid_patches(temp, x_idx, y_idx)
+
+                try:
+                    xc, yc = get_x_y_patch(x, y, x_idx, y_idx)
+                except ValueError:
+                    for key in SIC_thresholds.keys():
+                        offending = f"{key}/{yyyymmdd}"
+                        if offending in outfile:
+                            del outfile[offending]
+
+                    break
+
+                outfile[f"{key}/{yyyymmdd}/xc"] = xc
+                outfile[f"{key}/{yyyymmdd}/yc"] = yc
+                outfile[f"{key}/{yyyymmdd}/temp"] = sliding_window_from_idx(temp, x_idx, y_idx)
+                outfile[f"{key}/{yyyymmdd}/sst"] = sliding_window_from_idx(sst, x_idx, y_idx)
+                outfile[f"{key}/{yyyymmdd}/xwind"] = sliding_window_from_idx(xwind, x_idx, y_idx)
+                outfile[f"{key}/{yyyymmdd}/ywind"] = sliding_window_from_idx(ywind, x_idx, y_idx)
+
+            nc.close()
+
 
     outfile.close()
 
@@ -218,4 +237,4 @@ if __name__ == "__main__":
 #################################################
 EOF
 
-python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/data_processing_files/PROG/Patch_to_hdf5_""$SGE_TASK_ID"".py"
+python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/data_processing_files/PROG/FULL_Patch_to_hdf5.py"
