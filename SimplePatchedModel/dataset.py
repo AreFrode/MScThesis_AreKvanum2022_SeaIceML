@@ -1,4 +1,5 @@
 import glob
+from re import M
 import h5py
 import os
 from random import sample
@@ -74,6 +75,22 @@ class HDF5Dataset:
 
         return self.train_data, self.test_data
 
+    @property
+    def split_by_year(self):
+        year_range = int(len(self.dates)/3)
+        self.train = np.empty((year_range,), object)
+        self.val = np.empty_like(self.train, object)
+        self.test = np.empty_like(self.train, object)
+
+        print(f"{np.where(self.dates=='202001')=}")
+        print(f"{self.dates[236]=}")
+        print(f"{self.dates[2*236]=}")
+        print(f"{self.dates[3*236]=}")
+        print(f"{self.train.shape=}")
+        print(f"{self.val.shape=}")
+        print(f"{self.test.shape=}")
+
+
 def count_elements(data):
     elements = 0
     for date in data:
@@ -115,6 +132,7 @@ class HDF5Generator(Sequence):
         # Helper function 
 
         X = np.empty((self.batch_size, *self.dim, self.n_fields))
+        # y = np.empty((self.batch_size, *self.dim))
         y = np.empty((self.batch_size, np.prod(self.dim)))
 
         with h5py.File(self.fname, 'r') as hf:
@@ -133,13 +151,17 @@ class HDF5Generator(Sequence):
                 out_x = np.stack((xc, yc, sst, t2m, xwind, ywind), axis=-1)
 
                 X[idx, ...] = out_x
-                y[idx, ...] = sic.flatten()
+                y[idx] = np.where(sic.flatten() >= 0.5, 1, 0)
+                
     
         return X, y
 
 
 
 def runstuff():
+    print(f"{tf.config.list_physical_devices()=}")
+
+
     path_data = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/Data/"
     
     if os.path.exists(path_data):
@@ -148,11 +170,13 @@ def runstuff():
     
     generator = HDF5Dataset(fname, 'between')
 
-    train_data, test_data = generator.homemade_train_test_split()
-    
-    hdf5generator = HDF5Generator(train_data, fname)
+    generator.split_by_year
 
-    hdf5generator[0]
+    # train_data, test_data = generator.split_by_year
+    
+    # hdf5generator = HDF5Generator(train_data, fname)
+
+    # hdf5generator[0]
 
     
 
