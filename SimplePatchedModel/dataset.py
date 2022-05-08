@@ -77,19 +77,36 @@ class HDF5Dataset:
 
     @property
     def split_by_year(self):
-        year_range = int(len(self.dates)/3)
-        self.train = np.empty((year_range,), object)
-        self.val = np.empty_like(self.train, object)
-        self.test = np.empty_like(self.train, object)
+        """Splits the data in train/val/test subsets,
+            train covers 2019, 248 correct end 2019
+            val covers 2020, 467 correct end 2020
+            test covers 2021, -1 correct End 2021
+        """
 
-        print(f"{np.where(self.dates=='202001')=}")
-        print(f"{self.dates[236]=}")
-        print(f"{self.dates[2*236]=}")
-        print(f"{self.dates[3*236]=}")
-        print(f"{self.train.shape=}")
-        print(f"{self.val.shape=}")
-        print(f"{self.test.shape=}")
+        self.train = self.extract_and_isolate_data(stop=249)
+        self.val = self.extract_and_isolate_data(start=249,stop=468)
+        self.test = self.extract_and_isolate_data(start=468)
+    
+    def extract_and_isolate_data(self, start = 0, stop = -1):
+        """Extract the correct date and patches, as well as isolates each datapoint as seperate array entry
 
+        Args:
+            start (int, optional): index to start slicing the data array. Defaults to 0.
+            stop (int, optional): index to stop slicing the data array. Defaults to -1.
+
+        Returns:
+            np.array(object): data subset with each patch as separate entry
+        """
+
+        data = np.empty((count_elements(self.data[start:stop]),), object)
+        displacement = 0
+
+        for i, date in enumerate(self.dates[start:stop]):
+            for value in list(self.data[i + start].values())[0]:
+                data[displacement] = {date: value}
+                displacement += 1
+
+        return data
 
 def count_elements(data):
     elements = 0
@@ -159,7 +176,7 @@ class HDF5Generator(Sequence):
 
 
 def runstuff():
-    print(f"{tf.config.list_physical_devices()=}")
+    # print(f"{tf.config.list_physical_devices()=}")
 
 
     path_data = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/Data/"
