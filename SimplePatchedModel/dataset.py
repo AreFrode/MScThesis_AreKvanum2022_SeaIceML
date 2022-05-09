@@ -1,5 +1,4 @@
 import glob
-from re import M
 import h5py
 import os
 from random import sample
@@ -16,8 +15,6 @@ import numpy as np
 
 class HDF5Dataset:
     def __init__(self, fname, key, seed=0):
-        self.seed = seed
-        np.random.seed(self.seed)
         tmpf = h5py.File(fname, 'r')
         self.fname = fname
         self.key = key
@@ -86,6 +83,8 @@ class HDF5Dataset:
         self.train = self.extract_and_isolate_data(stop=249)
         self.val = self.extract_and_isolate_data(start=249,stop=468)
         self.test = self.extract_and_isolate_data(start=468)
+
+        return self.train, self.val, self.test
     
     def extract_and_isolate_data(self, start = 0, stop = -1):
         """Extract the correct date and patches, as well as isolates each datapoint as seperate array entry
@@ -119,37 +118,40 @@ def count_elements(data):
 class HDF5Generator(Sequence):
     # For later, what about shuffling the rekkefølge of the data for every epoch?
 
-    def __init__(self, data, fname, key='between', batch_size=1, dim=(250,250), n_fields=6):
+    def __init__(self, data, fname, key='between', batch_size=1, dim=(250,250), n_fields=4, n_axes=2, SEED_VALUE=0):
+        self.seed = SEED_VALUE
+        np.random.seed(self.seed)
+
         self.data = data
+        np.random.shuffle(self.data)
+
         self.key = key
         self.dim = dim
         self.n_fields = n_fields
+        self.n_axes =n_axes
         self.batch_size = batch_size
         self.fname = fname
         self.fields = ['xc', 'yc', 'sst', 't2m', 'xwind', 'ywind', 'sic']
 
     def __len__(self):
         # Get the number of minibatches
-        return int(np.floor(count_elements(self.data)) / self.batch_size)
+        return int(np.floor(self.data.size / self.batch_size))
+
+    def on_epoch_end(self):
+        np.random.shuffle(self.data)
 
     def __getitem__(self, index):
         # Get the minibatch associated with index
-        samples = []
-        indexes = np.random.choice(self.data, size=(self.batch_size))
-        
-        for sample in indexes:
-            date = list(sample.keys())[0]
-            patch = np.random.choice(list(sample.values())[0])
-            samples.append({date:patch})
-
+        samples = self.data[index*self.batch_size:(index+1)*self.batch_size]
         X, y = self.__generate_data(samples)
         return X, y
 
     def __generate_data(self, samples):
         # Helper function 
 
-        X = np.empty((self.batch_size, *self.dim, self.n_fields))
-        # y = np.empty((self.batch_size, *self.dim))
+        X1 = np.empty((self.batch_size, *self.dim, self.n_fields))
+        X2 = np.empty((self.batch_size, self.dim[0], self.n_axes))
+
         y = np.empty((self.batch_size, np.prod(self.dim)))
 
         with h5py.File(self.fname, 'r') as hf:
@@ -157,21 +159,26 @@ class HDF5Generator(Sequence):
                 date = list(sample.keys())[0]
                 patch = list(sample.values())[0]
 
-                xc = hf[f"{self.key}/{date}/{self.fields[0]}"][patch, ...]
-                yc = hf[f"{self.key}/{date}/{self.fields[1]}"][patch, ...]
+                xc = hf[f"{self.key}/{date}/{self.fields[0]}"][patch, 0, :]
+                yc = hf[f"{self.key}/{date}/{self.fields[1]}"][patch, :, 0]
+
                 sst = hf[f"{self.key}/{date}/{self.fields[2]}"][0, patch, ...]
                 t2m = hf[f"{self.key}/{date}/{self.fields[3]}"][0, patch, ...]
                 xwind = hf[f"{self.key}/{date}/{self.fields[4]}"][0, patch, ...]
                 ywind = hf[f"{self.key}/{date}/{self.fields[5]}"][0, patch, ...]
                 sic = hf[f"{self.key}/{date}/{self.fields[6]}"][patch, ...]
                 
-                out_x = np.stack((xc, yc, sst, t2m, xwind, ywind), axis=-1)
+                out_x1 = np.stack((sst, t2m, xwind, ywind), axis=-1)
+                out_x2 = np.stack((xc, yc), axis=-1)
 
-                X[idx, ...] = out_x
+                X1[idx, ...] = out_x1
+                X2[idx, ...] = out_x2
+
+                X = [X1, X2]
                 y[idx] = np.where(sic.flatten() >= 0.5, 1, 0)
                 
     
-        return X, y
+        return X1, y
 
 
 
