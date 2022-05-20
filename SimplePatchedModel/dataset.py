@@ -118,7 +118,7 @@ def count_elements(data):
 class HDF5Generator(Sequence):
     # For later, what about shuffling the rekkefølge of the data for every epoch?
 
-    def __init__(self, data, fname, key='between', batch_size=1, dim=(250,250), n_fields=4, n_axes=2, SEED_VALUE=0):
+    def __init__(self, data, fname, key='between', batch_size=1, dim=(250,250), n_fields=4, n_outputs=1, SEED_VALUE=0):
         self.seed = SEED_VALUE
         np.random.seed(self.seed)
 
@@ -128,9 +128,9 @@ class HDF5Generator(Sequence):
         self.key = key
         self.dim = dim
         self.n_fields = n_fields
-        self.n_axes =n_axes
         self.batch_size = batch_size
         self.fname = fname
+        self.n_outputs = n_outputs
         self.fields = ['xc', 'yc', 'sst', 't2m', 'xwind', 'ywind', 'sic']
 
     def __len__(self):
@@ -142,6 +142,7 @@ class HDF5Generator(Sequence):
 
     def __getitem__(self, index):
         # Get the minibatch associated with index
+        # print(f"{self.data[index]=}")
         samples = self.data[index*self.batch_size:(index+1)*self.batch_size]
         X, y = self.__generate_data(samples)
         return X, y
@@ -150,7 +151,7 @@ class HDF5Generator(Sequence):
         # Helper function 
 
         X1 = np.empty((self.batch_size, *self.dim, self.n_fields))
-        X2 = np.empty((self.batch_size, self.dim[0], self.n_axes))
+        X2 = np.empty((self.batch_size, 2*self.dim[0]))
 
         y = np.empty((self.batch_size, np.prod(self.dim)))
 
@@ -169,7 +170,7 @@ class HDF5Generator(Sequence):
                 sic = hf[f"{self.key}/{date}/{self.fields[6]}"][patch, ...]
                 
                 out_x1 = np.stack((sst, t2m, xwind, ywind), axis=-1)
-                out_x2 = np.stack((xc, yc), axis=-1)
+                out_x2 = np.stack((xc, yc), axis=-1).flatten()
 
                 X1[idx, ...] = out_x1
                 X2[idx, ...] = out_x2
@@ -177,8 +178,8 @@ class HDF5Generator(Sequence):
                 X = [X1, X2]
                 y[idx] = np.where(sic.flatten() >= 0.5, 1, 0)
                 
-    
-        return X1, y
+
+        return X[:self.n_outputs], y
 
 
 
@@ -194,13 +195,13 @@ def runstuff():
     
     generator = HDF5Dataset(fname, 'between')
 
-    generator.split_by_year
+    # generator.split_by_year
 
-    # train_data, test_data = generator.split_by_year
+    train_data, val_data, test_data = generator.split_by_year
     
-    # hdf5generator = HDF5Generator(train_data, fname)
+    hdf5generator = HDF5Generator(train_data, fname)
 
-    # hdf5generator[0]
+    hdf5generator[0]
 
     
 

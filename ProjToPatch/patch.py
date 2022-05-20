@@ -75,6 +75,12 @@ def sliding_window_from_idx(var, x_idx, y_idx, stride=250):      # 250km x 250km
 
     return np.array(list(outputs.values()), dtype=np.float32)
 
+def icechart_patch_from_idx(ic, x_idx, y_idx, stride=250):
+    outputs = []
+    for y,x in zip(y_idx, x_idx):
+        outputs.append(ic[..., y:y+stride,x:x+stride])
+        
+    return np.array(outputs, dtype=np.float32)
 
 def determine_meanSIC(sic, x_stride = 250, y_stride = 250):
     """Function to determine meanSIC in all cells
@@ -184,9 +190,9 @@ def runstuff():
             ymin = find_nearest(yc, y[:].min())
             ymax = find_nearest(yc, y[:].max())
 
-            SIC_thresholds = determine_meanSIC(nc_IC['ice_concentration'][..., ymin:ymax, xmin:xmax])
+            sic = nc_IC['ice_concentration'][..., ymin:ymax, xmin:xmax]
 
-            nc_IC.close()
+            SIC_thresholds = determine_meanSIC(sic)
 
             for key in SIC_thresholds.keys():
                 x_idx = np.array(SIC_thresholds[key]['x'])
@@ -205,11 +211,13 @@ def runstuff():
 
                 outfile[f"{key}/{yyyymmdd}/xc"] = xc
                 outfile[f"{key}/{yyyymmdd}/yc"] = yc
-                outfile[f"{key}/{yyyymmdd}/temp"] = sliding_window_from_idx(temp, x_idx, y_idx)
+                outfile[f"{key}/{yyyymmdd}/t2m"] = sliding_window_from_idx(temp, x_idx, y_idx)
                 outfile[f"{key}/{yyyymmdd}/sst"] = sliding_window_from_idx(sst, x_idx, y_idx)
                 outfile[f"{key}/{yyyymmdd}/xwind"] = sliding_window_from_idx(xwind, x_idx, y_idx)
                 outfile[f"{key}/{yyyymmdd}/ywind"] = sliding_window_from_idx(ywind, x_idx, y_idx)
+                outfile[f"{key}/{yyyymmdd}/sic"] = icechart_patch_from_idx(sic[0,...], x_idx, y_idx)
 
+            nc_IC.close()
             nc.close()
 
 
