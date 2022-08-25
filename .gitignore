@@ -223,4 +223,4 @@ tags
 # Datafiles
 *.nc
 *.hdf
-/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/
+AROME_ARCTIC_regrid/data_processing_files/
