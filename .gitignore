@@ -224,6 +224,6 @@ tags
 *.nc
 *.hdf
 AROME_ARCTIC_regrid/data_processing_files/
-AROME_ARCTIC_regrid/bak/data_processing_files/
+AROME_ARCTIC_regrid/bak/
 
 
