@@ -1,9 +1,8 @@
 # Script to Regrid Arome Arctic to IceChart projection
 # Author: Are Frode Kvanum
-# Date: 08.04.2022
+# Date: 25.08.2022
 
 import glob
-from json import load
 import netCDF4
 import os
 import numpy as np
@@ -14,6 +13,37 @@ from pyproj import CRS, Proj, Transformer
 from scipy.interpolate import griddata
 from typing import Tuple
 from rotate_wind_from_UV_to_xy import rotate_wind_from_UV_to_xy
+
+
+def create_landseamask(id: str, dataset: Dataset, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
+	"""Creates a landseamask based on the masked values in SST
+
+	Args:
+		id (str): Name of variable in arome arctic
+		dataset (Dataset): dataset where the variable is loaded from
+		output_dataset (Dataset): output netcdf file
+		name (str): name of variable in output
+		unit (str): unit of variable in output
+		standard_name (str): descriptive name in output
+		nx (int, optional): length of target grid in x direction. Defaults to 3220-526.
+		ny (int, optional): length of target grid in y direction. Defaults to 2979-194.
+
+	Returns:
+		Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]: output array for storing computed values, arome values and output netCDF4 variable
+	"""
+
+	id_ICgrid = np.zeros((3, ny, nx))
+	id_input = dataset.variables[id][:,:,:]
+	
+	id_input[~id_input.mask] = 0.
+	id_input = np.ma.filled(id_input, 1.)
+
+	id_arome = np.pad(id_input, ((0,0), (1,1), (1, 1)), 'constant', constant_values=np.nan)
+	id_out = output_dataset.createVariable(name, 'd', ('time', 'y', 'x'))
+	id_out.units = unit
+	id_out.standard_name = standard_name
+
+	return (id_ICgrid, id_arome, id_out)
 
 
 def load_3dvariable(id: str, dataset: Dataset, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
@@ -71,45 +101,13 @@ def load_4dvariable(id: str, dataset: Dataset, output_dataset: Dataset, name: st
 
 	return (id_ICgrid, id_arome, id_out)
 
-def load_TCC(id: str, dataset: Dataset, x, y, time, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
-	"""loads a 4d variable, e.g. arome_arctic_full_* ([time, height, x, y])
-
-	Args:
-		id (str): Name of variable in arome arctic
-		dataset (Dataset): dataset where the variable is loaded from
-		output_dataset (Dataset): output netcdf file
-		name (str): name of variable in output
-		unit (str): unit of variable in output
-		standard_name (str): descriptive name in output
-		nx (int, optional): length of target grid in x direction. Defaults to 3220-526.
-		ny (int, optional): length of target grid in y direction. Defaults to 2979-194.
-		slicer (Slice, optional): height values to obtain. Defaults to 0.
-
-	Returns:
-		Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]: output array for storing computed values, arome values and output netCDF4 variable
-	"""
-
-	id_ICgrid = np.zeros((3, ny, nx))
-	id_input = np.zeros((len(time), len(y), len(x)))
-
-	# There has to be a better way than this, slow loop many FLOPs
-	for i in range(len(time)):
-		id_input[i,:,:] = dataset.variables[id][i,...].sum(axis=0)
-
-	id_arome = np.pad(id_input, ((0,0), (1,1), (1, 1)), 'constant', constant_values=np.nan)
-	id_out = output_dataset.createVariable(name, 'd', ('time', 'y', 'x'))
-	id_out.units = unit
-	id_out.standard_name = standard_name
-
-	return (id_ICgrid, id_arome, id_out)
-
 
 def runstuff():
 	################################################
 	# Constants
 	################################################
 	path_data = '/lustre/storeB/immutable/archive/projects/metproduction/DNMI_AROME_ARCTIC/'
-	path_output = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/'
+	path_output = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/testingdata/'
 	proj4_icechart = "+proj=stere lon_0=0.0 lat_ts=90.0 lat_0=90.0 a=6371000.0 b=6371000.0"
 	proj4_arome = '+proj=lcc +lat_0=77.5 +lon_0=-25 +lat_1=77.5 +lat_2=77.5 +no_defs +R=6.371e+06'
 	#
@@ -209,25 +207,23 @@ def runstuff():
 			MER10M_ICgrid, MER10M_arome, meridional_wind = load_4dvariable('y_wind_10m', nc, output_netcdf, 'MER10M', 'm/s', 'Meridional 10 metre wind (V10M)')
 
 			SST_ICgrid, SST_arome, sea_surf_temp = load_3dvariable('SST', nc_sfx, output_netcdf, 'SST', 'K', 'Sea Surface Temperature')
-		
-			# TCC_ICgrid, TCC_arome, totalcloudcover = load_TCC('cloud_area_fraction_ml', nc, x_input, y_input, time_input,  output_netcdf, 'TCC', '1', 'Total Cloud Cover / Cloud area fraction')
-			HCC_ICgrid, HCC_arome, highcloudcover = load_4dvariable('high_type_cloud_area_fraction', nc, output_netcdf, 'HCC', '1', 'Cloud cover of high clouds')
 
-			MCC_ICgrid, MCC_arome, mediumcloudcover = load_4dvariable('medium_type_cloud_area_fraction', nc, output_netcdf, 'MCC', '1', 'Cloud cover of medium clouds')
-
-			LCC_ICgrid, LCC_arome, lowcloudcover = load_4dvariable('low_type_cloud_area_fraction', nc, output_netcdf, 'LCC', '1', 'Cloud cover of low clouds')
+			LSMASK_ICgrid, LSMASK_arome, land_sea_mask = create_landseamask('SST', nc_sfx, output_netcdf, 'LSMASK', '1', 'Land Sea Mask')
 
 			#
 			Xwind_ICgrid = np.zeros_like(T2M_ICgrid)
 			Ywind_ICgrid = np.zeros_like(T2M_ICgrid)
 			WS_ICgrid = np.zeros_like(T2M_ICgrid)
 			WD_ICgrid = np.zeros_like(T2M_ICgrid)
+			OOBMASK_ICgrid = np.zeros_like(T2M_ICgrid)
     
 			xx_ICgrid, yy_ICgrid = transform_function.transform(xx_arome, yy_arome)
 			xx_ICgrid_flat = xx_ICgrid.flatten()
 			yy_ICgrid_flat = yy_ICgrid.flatten()
 
+			# Constant for three days, no mean in loop
 			SST_flat = SST_arome[0, ...].flatten()
+			LSMASK_flat = LSMASK_arome[0, ...].flatten()
 
 			for t in range(0, 3): # 3, as there are almost three full days to mean
 				start = 24*t
@@ -238,28 +234,21 @@ def runstuff():
 				ZON10M_flat = ZON10M_arome[start:stop,...].mean(axis=0).flatten()
 				MER10M_flat = MER10M_arome[start:stop,...].mean(axis=0).flatten()
 				# SST_flat = np.ma.mean(SST_arome[start:stop,...],axis=0).flatten()
-				HCC_flat = HCC_arome[start:stop,...].mean(axis=0).flatten()
-				MCC_flat = MCC_arome[start:stop,...].mean(axis=0).flatten()
-				LCC_flat = LCC_arome[start:stop,...].mean(axis=0).flatten()
 
 				T2M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), T2M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 			
 				SST_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), SST_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
-				# SST_ICgrid[t] = np.where(SST_ICgrid[t] < 0, np.nan, SST_ICgrid[t]) # Remove invalid temp
+
+				LSMASK_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), LSMASK_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 
 				ZON10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), ZON10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 				MER10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), MER10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
-
-				HCC_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), HCC_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
-
-				MCC_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), MCC_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
-
-				LCC_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), LCC_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 
 				Xwind_ICgrid[t], Ywind_ICgrid[t] = rotate_wind_from_UV_to_xy(x_ICgrid[None, :].flatten(), y_ICgrid[:,None].flatten(), proj4_icechart, ZON10M_ICgrid[t], MER10M_ICgrid[t])
 
 			WS_ICgrid = np.sqrt(np.power(Xwind_ICgrid, 2) + np.power(Ywind_ICgrid, 2))
 			WD_ICgrid = (180 + (180/np.pi)*np.arctan2(Ywind_ICgrid, Xwind_ICgrid)) % 360
+			OOBMASK_ICgrid = np.where(np.isnan(T2M_ICgrid), 1, 0)
 
 			nc.close()
 			nc_sfx.close()
@@ -267,11 +256,11 @@ def runstuff():
 			# Output netcdf file
 			################################################
 			#
-			yc = output_netcdf.createVariable('yc', 'd', ('y'))
+			yc = output_netcdf.createVariable('y', 'd', ('y'))
 			yc.units = 'm'
 			yc.standard_name = 'y'
 
-			xc = output_netcdf.createVariable('xc', 'd', ('x'))
+			xc = output_netcdf.createVariable('x', 'd', ('x'))
 			xc.units = 'm'
 			xc.standard_name = 'x'
 
@@ -300,8 +289,11 @@ def runstuff():
 			wind_direction = output_netcdf.createVariable("10WindDirection", 'd', ('time', 'y', 'x'))
 			wind_direction.units = "degrees"
 			wind_direction.standard_name = "10 metre wind direction"
-		
 
+			oob_mask = output_netcdf.createVariable("OutOfBoundsMask", 'd', ('time', 'y', 'x'))
+			oob_mask.units = "1"
+			oob_mask.standard_name = "Out Of Bounds Mask"
+		
 			# Fill NC variables with values
 			yc[:] = y_ICgrid[:, None]
 			xc[:] = x_ICgrid[None, :]
@@ -311,21 +303,20 @@ def runstuff():
 			lon[:, :] = lons
 			air_temperature[...] = T2M_ICgrid
 			sea_surf_temp[...] = SST_ICgrid
+			land_sea_mask[...] = LSMASK_ICgrid
 			zonal_wind[...] = ZON10M_ICgrid
 			meridional_wind[...] = MER10M_ICgrid
 			xwind[...] = Xwind_ICgrid
 			ywind[...] = Ywind_ICgrid
 			wind_speed[...] = WS_ICgrid
 			wind_direction[...] = WD_ICgrid
-			highcloudcover[...] = HCC_ICgrid
-			mediumcloudcover[...] = MCC_ICgrid
-			lowcloudcover[...] = LCC_ICgrid
+			oob_mask[...] = OOBMASK_ICgrid
 
 			##
 			output_netcdf.description = f"{proj4_icechart}"
 	
 			output_netcdf.close()	
-			break
+			
 
 if __name__ == "__main__":
 	runstuff()

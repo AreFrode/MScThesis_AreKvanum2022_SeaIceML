@@ -103,18 +103,17 @@ def determine_meanSIC(sic, x_stride = 250, y_stride = 250):
         for x in x_vals:
             current_output = sic[0, y:y+y_stride, x:x+x_stride]
 
-            if not np.ma.is_masked(current_output):
-                mean = current_output.mean()
-                if mean <= 10.:
-                    pos = 'below'
-                elif mean >= 90.:
-                    pos = 'above'
-                else:
-                    pos = 'between'
+            mean = current_output.mean()
+            if mean <= 10.:
+                pos = 'below'
+            elif mean >= 90.:
+                pos = 'above'
+            else:
+                pos = 'between'
                     
-                outputs[pos]['x'].append(x)
-                outputs[pos]['y'].append(y)
-                outputs[pos]['mean_sic'].append(mean)
+            outputs[pos]['x'].append(x)
+            outputs[pos]['y'].append(y)
+            outputs[pos]['mean_sic'].append(mean)
 
     return outputs
     
@@ -125,7 +124,7 @@ def find_nearest(array, value):
 
 def runstuff():
     # Setup data
-    path_IceChart = "/lustre/storeB/project/copernicus/sea_ice/SIW-METNO-ARC-SEAICE_HR-OBS/"
+    path_IceChart = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/LandmaskSIC/Data/"
     path_data = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/"
     path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/Data/"
 
@@ -158,7 +157,7 @@ def runstuff():
     
         try:
             arome_path = glob.glob(f"{path_data_task}AROME_ICgrid_{yyyymmdd}T00Z.nc")[0]
-            ic_path = glob.glob(f"{path_IceChart}{year_task}/{month_task}/ice_conc_svalbard_{yyyymmdd}1500.nc")[0]
+            ic_path = glob.glob(f"{path_IceChart}{year_task}/{month_task}/ice_conc_svalbard_landmask_{yyyymmdd}1500.nc")[0]
 
         except IndexError:
             continue

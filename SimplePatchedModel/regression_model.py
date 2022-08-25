@@ -12,34 +12,6 @@ The encoder model seems to be very sensitive to exploding gradients
 This is a problem, as the model can break either during training or inference
 """
 
-def encoder():
-    inputs = Input(shape=(250, 250, 4))
-
-    conv1 = layers.Conv2D(16, 6, strides=(4, 4), activation='relu', input_shape=(250, 250, 4), data_format='channels_last')
-    conv2 = layers.Conv2D(32, 6, strides=(4, 4), activation='relu', input_shape=(31, 31, 16), data_format='channels_last')
-    relu = layers.Activation(tf.nn.leaky_relu) # Add Alpha 
-    flatten = layers.Flatten()
-    dropout = layers.Dropout(.1)
-    x = dropout(inputs)
-    x = conv1(x)  
-    x = layers.MaxPooling2D(pool_size=(2, 2))(x)
-    x = layers.BatchNormalization()(x)
-    x = relu(x)
-    x = dropout(x)
-    x = conv2(x)
-    x = layers.MaxPooling2D(pool_size=(2, 2))(x)
-    x = layers.BatchNormalization()(x)
-    x = relu(x)
-    x = flatten(x)
-
-    dense = layers.Dense(62500)    
-    outputs = dense(x)
-
-    model = models.Model(inputs=inputs, outputs=outputs)
-
-    return model
-
-
 def concat_model():
     # Functional API definition
     initializer = keras.initializers.HeNormal()
@@ -51,7 +23,8 @@ def concat_model():
     relu = layers.Activation(tf.nn.relu)
     flatten = layers.Flatten()
 
-    x1 = conv1(inputs1)  
+    x1 = layers.Normalization()(inputs1)
+    x1 = conv1(x1)  
     x1 = layers.MaxPooling2D(pool_size=(2, 2))(x1)
     x1 = layers.BatchNormalization()(x1)
     x1 = relu(x1)
@@ -61,7 +34,45 @@ def concat_model():
     x1 = relu(x1)
     x1 = flatten(x1)
 
-    x2 = layers.Dense(1000, activation=tf.nn.relu, kernel_initializer=initializer)(inputs2)
+    x2 = layers.Normalization()(inputs2)
+    x2 = layers.Dense(1000, activation=tf.nn.relu, kernel_initializer=initializer)(x2)
+    x2 = layers.Dense(100, activation=tf.nn.relu, kernel_initializer=initializer)(x2)
+
+    x = layers.concatenate([x1, x2])
+
+    dense = layers.Dense(62500, kernel_initializer=initializer)    
+    outputs = dense(x)
+
+    model = models.Model(inputs=[inputs1, inputs2], outputs=outputs)
+
+    return model
+
+def concat_regression_model():
+    # Functional API definition
+    initializer = keras.initializers.HeNormal()
+    inputs1 = Input(shape=(250, 250, 4))
+    inputs2 = Input(shape=(500,))
+
+    # conv1 = layers.Conv2D(16, 6, strides=(4, 4), activation=tf.nn.relu, input_shape=(250, 250, 4), data_format='channels_last', kernel_initializer=initializer)
+    # conv2 = layers.Conv2D(32, 6, strides=(4, 4), activation=tf.nn.relu, input_shape=(31, 31, 16), data_format='channels_last', kernel_initializer=initializer)
+    dense1 = layers.Dense(5, activation=tf.nn.relu, kernel_initializer=initializer)
+    dense2 = layers.Dense(5, activation=tf.nn.relu, kernel_initializer=initializer)
+    relu = layers.Activation(tf.nn.relu)
+    flatten = layers.Flatten()
+
+    x1 = layers.Normalization()(inputs1)
+    x1 = dense1(x1)  
+    # x1 = layers.MaxPooling2D(pool_size=(2, 2))(x1)
+    # x1 = layers.BatchNormalization()(x1)
+    # x1 = relu(x1)
+    x1 = dense2(x1)
+    # x1 = layers.MaxPooling2D(pool_size=(2, 2))(x1)
+    # x1 = layers.BatchNormalization()(x1)
+    # x1 = relu(x1)
+    x1 = flatten(x1)
+
+    x2 = layers.Normalization()(inputs2)
+    x2 = layers.Dense(1000, activation=tf.nn.relu, kernel_initializer=initializer)(x2)
     x2 = layers.Dense(100, activation=tf.nn.relu, kernel_initializer=initializer)(x2)
 
     x = layers.concatenate([x1, x2])
@@ -106,7 +117,7 @@ def runstuff():
     scores = model1.evaluate(hdf5generator_single_test)
     """
 
-    model2 = concat_model()
+    model2 = concat_regression_model()
     model2.compile(optimizer='adam', loss=losses.MeanSquaredError())
     history = model2.fit(hdf5generator_full, epochs=15, batch_size=BATCH_SIZE)
     scores = model2.predict(hdf5generator_full_test, batch_size=BATCH_SIZE)

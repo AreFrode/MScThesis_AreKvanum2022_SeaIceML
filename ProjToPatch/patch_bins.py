@@ -4,6 +4,7 @@ import os
 import numpy as np
 from calendar import monthrange
 from netCDF4 import Dataset
+from scipy.ndimage import distance_transform_edt
 
 # The point of this script is to discretize the SIC into some premade bins, as this might simplify training as the model doesnt have to predict numerical values but classes instead. Also might create several small hdf5 files instead of one large hdf5 files, as in line with MET conventions
 
@@ -32,6 +33,13 @@ def get_valid_patches(var, x_idx, y_idx, stride=250):
 
     return new_x_idx, new_y_idx
 
+def sliding_window_no_time(var, x_idx, y_idx, stride=250):
+    outputs = []
+    for y,x in zip(y_idx, x_idx):
+        current_output = var[y:y+stride,x:x+stride]
+        outputs.append(current_output)
+
+    return np.array(outputs, dtype=np.float32)
 
 def sliding_window_from_idx(var, x_idx, y_idx, stride=250):      # 250km x 250km grid
     outputs = {'t0': [], 't1': [], 't2': []}
@@ -50,6 +58,10 @@ def icechart_patch_from_idx_onehot_encoded(ic, x_idx, y_idx, stride=250):
     for y,x in zip(y_idx, x_idx):
         outputs.append([])
         icepatch = ic[y:y+stride,x:x+stride]
+        # icepatch = icepatch.filled(np.nan)
+
+        # indices = distance_transform_edt(np.isnan(icepatch), return_distances=False, return_indices=True)
+        # icepatch = icepatch[tuple(indices)]
 
         n,m = icepatch.shape
 
@@ -75,17 +87,18 @@ def determine_meanSIC(sic, x_stride = 250, y_stride = 250):
     y_vals = np.arange(0, len_y, y_stride)
     x_vals = np.arange(0, len_x, x_stride)
 
-    outputs = {'below': {'x': [], 'y': [], 'mean_sic': []}, 
-               'between': {'x': [], 'y': [], 'mean_sic': []},
-               'above': {'x': [], 'y': [], 'mean_sic': []}}
+    outputs = {'below': {'x': [], 'y': []}, 
+               'between': {'x': [], 'y': []},
+               'above': {'x': [], 'y': []}}
 
 
     for y in y_vals:
         for x in x_vals:
             current_output = sic[0, y:y+y_stride, x:x+x_stride]
 
-            if not np.ma.is_masked(current_output):
-                mean = current_output.mean()
+            mean = np.ma.mean(current_output)
+
+            if mean.dtype == np.dtype(np.float64):
                 if mean <= 10.:
                     pos = 'below'
                 elif mean >= 90.:
@@ -95,7 +108,6 @@ def determine_meanSIC(sic, x_stride = 250, y_stride = 250):
                     
                 outputs[pos]['x'].append(x)
                 outputs[pos]['y'].append(y)
-                outputs[pos]['mean_sic'].append(mean)
 
     return outputs
     
@@ -111,14 +123,13 @@ def runstuff():
     path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ProjToPatch/Data/"
 
     paths = []
-    # for year in range(2019, 2022):
-    for year in range(2020, 2021): # Only want one year
-        # for month in range(1, 13):
-        for month in range(8, 9): # Only want one month
+    for year in range(2019, 2022):
+        for month in range(1, 13):
             p = f"{path_data}{year}/{month:02d}/"
             paths.append(p)
 
 
+    # path_data_task = paths[$SGE_TASK_ID - 1]
     path_data_task = paths[0]
     print(f"path_data_task = {path_data_task}")
     year_task = path_data_task[len(path_data) : len(path_data) + 4]
@@ -133,7 +144,7 @@ def runstuff():
         os.makedirs(f"{path_output}{year_task}/{month_task}")
 
 
-    for dd in range(19, 20):
+    for dd in range(1, nb_days_task + 1):
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(f"{yyyymmdd}")
     
@@ -148,7 +159,7 @@ def runstuff():
         if os.path.exists(hdf5_path):
             os.remove(hdf5_path)
 
-        
+        outfile = h5py.File(hdf5_path, "a")
 
         nc = Dataset(arome_path, 'r')
         x = nc.variables['xc']
@@ -162,6 +173,9 @@ def runstuff():
 
         xc = nc_IC['xc'][:]
         yc = nc_IC['yc'][:]
+
+        lat = nc_IC['lat'][:]
+        lon = nc_IC['lon'][:]
 
         xmin = find_nearest(xc, x[:].min())
         xmax = find_nearest(xc, x[:].max())
@@ -180,15 +194,15 @@ def runstuff():
             try:
                 xc, yc = get_x_y_patch(x, y, x_idx, y_idx)
             except ValueError:
-                # Kind of extreme, but delete file where error occurs
+                # Kind of extreme, but delete file when error occurs
                 
                 os.remove(hdf5_path)
                 break
-            
-            outfile = h5py.File(hdf5_path, "a")
 
             outfile[f"{key}/xc"] = xc
             outfile[f"{key}/yc"] = yc
+            outfile[f"{key}/lat"] = sliding_window_no_time(lat, x_idx, y_idx)
+            outfile[f"{key}/lon"] = sliding_window_no_time(lon, x_idx, y_idx)
             outfile[f"{key}/t2m"] = sliding_window_from_idx(temp, x_idx, y_idx)
             outfile[f"{key}/sst"] = sliding_window_from_idx(sst, x_idx, y_idx)
             outfile[f"{key}/xwind"] = sliding_window_from_idx(xwind, x_idx, y_idx)
@@ -199,6 +213,8 @@ def runstuff():
         nc.close()
 
         outfile.close()
+
+        break
 
 if __name__ == "__main__":
     runstuff()

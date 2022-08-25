@@ -16,7 +16,8 @@ def concat_model():
     relu = layers.Activation(tf.nn.relu)
     flatten = layers.Flatten()
 
-    x1 = conv1(inputs1)  
+    x1 = layers.Normalization()(inputs1)
+    x1 = conv1(x1)  
     x1 = layers.MaxPooling2D(pool_size=(2, 2))(x1)
     x1 = layers.BatchNormalization()(x1)
     x1 = relu(x1)
@@ -26,8 +27,9 @@ def concat_model():
     x1 = relu(x1)
     x1 = flatten(x1)
 
-    x2 = layers.Dense(1000, activation=tf.nn.relu, kernel_initializer=initializer)(inputs2)
+    x2 = layers.Normalization()(inputs2)
     x2 = layers.Dense(100, activation=tf.nn.relu, kernel_initializer=initializer)(x2)
+    x2 = layers.Dense(10, activation=tf.nn.relu, kernel_initializer=initializer)(x2)
 
     x = layers.concatenate([x1, x2])
 
