@@ -1,7 +1,19 @@
-# Script to Regrid IceChart to Arome Arctic projection
-# Author: Are Frode Kvanum
-# Date: 02.09.2022
+#$ -S /bin/bash
+#$ -l h_rt=10:00:00
+#$ -q research-el7.q
+#$ -l h_vmem=8G
+#$ -t 1-36
+#$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ICE_CHART_regrid/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
+#$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ICE_CHART_regrid/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
+#$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ICE_CHART_regrid/data_processing_files/OUT/
 
+echo "Got $NSLOTS slots for job $SGE_TASK_ID."
+
+module load Python-devel/3.8.7
+
+cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ICE_CHART_regrid/data_processing_files/PROG/regrid_icechart_arome_""$SGE_TASK_ID"".py" << EOF
+
+#######################################################################################################
 import glob
 import os
 import numpy as np
@@ -44,16 +56,16 @@ def runstuff():
 	# Dataset
 	################################################
 	paths = []
-	# for year in range(2019, 2022):
-	for year in range(2019, 2020): # Only want one year
-		# for month in range(1, 13):
-		for month in range(1, 2): # Only want one month
+	for year in range(2019, 2022):
+	# for year in range(2019, 2020): # Only want one year
+		for month in range(1, 13):
+		# for month in range(1, 2): # Only want one month
 			p = f"{path_data}{year}/{month:02d}/"
 			paths.append(p)
 
 	#
-	# path_data_task = paths[$SGE_TASK_ID - 1]
-	path_data_task = paths[0] # This should be the only path
+	path_data_task = paths[$SGE_TASK_ID - 1]
+	# path_data_task = paths[0] # This should be the only path
 	print(f"path_data_task = {path_data_task}")
 	path_output_task = path_data_task.replace(path_data, path_output)
 	print(f"path_output_task = {path_output_task}")
@@ -117,8 +129,8 @@ def runstuff():
 		################################################
 		# Output netcdf file
 		################################################
-		output_filename = 'ICECHART_AROMEgrid_' + yyyymmdd + 'T1500Z.nc'
-		output_netcdf = Dataset(path_output_task + output_filename, 'w', format = 'NETCDF4')
+		output_filename = f"ICECHART_AROMEgrid_{yyyymmdd}T1500Z.nc"
+		output_netcdf = Dataset(f"{path_output_task}{output_filename}, 'w', format = 'NETCDF4')
 
 		output_netcdf.createDimension('y', len(y_AROMEgrid))
 		output_netcdf.createDimension('x', len(x_AROMEgrid))
@@ -156,8 +168,10 @@ def runstuff():
 	
 		output_netcdf.close()
 
-		exit()
-
 
 if __name__ == "__main__":
 	runstuff()
+#######################################################################################################
+EOF
+
+python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ICE_CHART_regrid/data_processing_files/PROG/regrid_icechart_arome_""$SGE_TASK_ID"".py"
