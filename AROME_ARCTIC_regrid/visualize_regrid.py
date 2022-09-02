@@ -55,10 +55,10 @@ def main():
 
 
         nc = Dataset(arome_path, 'r')
-        x_min = nc.variables['xc'][:].min()
-        x_max = nc.variables['xc'][:].max()
-        y_min = nc.variables['yc'][:].min()
-        y_max = nc.variables['yc'][:].max()
+        x_min = nc.variables['x'][:].min()
+        x_max = nc.variables['x'][:].max()
+        y_min = nc.variables['y'][:].min()
+        y_max = nc.variables['y'][:].max()
         lat = nc.variables['lat']
         lon = nc.variables['lon']
     
@@ -90,7 +90,7 @@ def main():
             ax.add_feature(cfeature.LAND, zorder=3, edgecolor='black', facecolor='none')
             ax.pcolormesh(lon[:], lat[:], nc.variables[field][0,:], transform=data_proj, zorder=4, alpha=.7)
             
-            ax.pcolormesh(lonc, latc, sic, transform=data_proj, zorder=3, cmap=plt.colormaps['PiYG'])
+            ax.pcolormesh(lon, lat, sic, transform=data_proj, zorder=3, cmap=plt.colormaps['PiYG'])
             ax.pcolormesh(lon[:], lat[:], oob_mask, transform=data_proj, zorder=4, alpha = .7, cmap=plt.colormaps['cividis'])
 
             plt.savefig(f"{path_figures}visualize_{yyyymmdd}_{field}.png")

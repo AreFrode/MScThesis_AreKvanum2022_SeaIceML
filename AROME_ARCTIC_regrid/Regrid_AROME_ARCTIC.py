@@ -14,7 +14,6 @@ from scipy.interpolate import griddata
 from typing import Tuple
 from rotate_wind_from_UV_to_xy import rotate_wind_from_UV_to_xy
 
-
 def create_landseamask(id: str, dataset: Dataset, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
 	"""Creates a landseamask based on the masked values in SST
 

@@ -27,36 +27,6 @@ from scipy.interpolate import griddata
 from typing import Tuple
 from rotate_wind_from_UV_to_xy import rotate_wind_from_UV_to_xy
 
-def create_landseamask(id: str, dataset: Dataset, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
-	"""Creates a landseamask based on the masked values in SST
-
-	Args:
-		id (str): Name of variable in arome arctic
-		dataset (Dataset): dataset where the variable is loaded from
-		output_dataset (Dataset): output netcdf file
-		name (str): name of variable in output
-		unit (str): unit of variable in output
-		standard_name (str): descriptive name in output
-		nx (int, optional): length of target grid in x direction. Defaults to 3220-526.
-		ny (int, optional): length of target grid in y direction. Defaults to 2979-194.
-
-	Returns:
-		Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]: output array for storing computed values, arome values and output netCDF4 variable
-	"""
-
-	id_ICgrid = np.zeros((3, ny, nx))
-	id_input = dataset.variables[id][:,:,:]
-	
-	id_input[~id_input.mask] = 0.
-	id_input = np.ma.filled(id_input, 1.)
-
-	id_arome = np.pad(id_input, ((0,0), (1,1), (1, 1)), 'constant', constant_values=np.nan)
-	id_out = output_dataset.createVariable(name, 'd', ('time', 'y', 'x'))
-	id_out.units = unit
-	id_out.standard_name = standard_name
-
-	return (id_ICgrid, id_arome, id_out)
-
 def load_3dvariable(id: str, dataset: Dataset, output_dataset: Dataset, name: str, unit: str, standard_name: str, nx: int = 3220 - 526, ny: int = 2979 - 194) -> Tuple[np.ndarray, np.ndarray, netCDF4._netCDF4.Variable]:
 	"""loads a 3d variable, e.g. arome_arctic_full_* ([time, height, x, y])
 		Currently very specific for SST
@@ -219,15 +189,12 @@ def runstuff():
 			MER10M_ICgrid, MER10M_arome, meridional_wind = load_4dvariable('y_wind_10m', nc, output_netcdf, 'MER10M', 'm/s', 'Meridional 10 metre wind (V10M)')
 
 			SST_ICgrid, SST_arome, sea_surf_temp = load_3dvariable('SST', nc_sfx, output_netcdf, 'SST', 'K', 'Sea Surface Temperature')
-		
-			LSMASK_ICgrid, LSMASK_arome, land_sea_mask = create_landseamask('SST', nc_sfx, output_netcdf, 'LSMASK', '1', 'Land Sea Mask')
 
 			#
 			Xwind_ICgrid = np.zeros_like(T2M_ICgrid)
 			Ywind_ICgrid = np.zeros_like(T2M_ICgrid)
 			WS_ICgrid = np.zeros_like(T2M_ICgrid)
 			WD_ICgrid = np.zeros_like(T2M_ICgrid)
-			OOBMASK_ICgrid = np.zeros_like(T2M_ICgrid)
     
 			xx_ICgrid, yy_ICgrid = transform_function.transform(xx_arome, yy_arome)
 			xx_ICgrid_flat = xx_ICgrid.flatten()
@@ -235,7 +202,6 @@ def runstuff():
 			
 			# Constant for three days, no mean in loop
 			SST_flat = SST_arome[0, ...].flatten()
-			LSMASK_flat = LSMASK_arome[0, ...].flatten()
 
 			for t in range(0, 3): # 3, as there are almost three full days to mean
 				start = 24*t
@@ -250,8 +216,6 @@ def runstuff():
 			
 				SST_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), SST_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 
-				LSMASK_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), LSMASK_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
-
 				ZON10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), ZON10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 				MER10M_ICgrid[t] = griddata((xx_ICgrid_flat, yy_ICgrid_flat), MER10M_flat, (x_ICgrid[None, :], y_ICgrid[:, None]), method = 'nearest')
 
@@ -259,7 +223,6 @@ def runstuff():
 
 			WS_ICgrid = np.sqrt(np.power(Xwind_ICgrid, 2) + np.power(Ywind_ICgrid, 2))
 			WD_ICgrid = (180 + (180/np.pi)*np.arctan2(Ywind_ICgrid, Xwind_ICgrid)) % 360
-			OOBMASK_ICgrid = np.where(np.isnan(T2M_ICgrid), 1, 0)
 
 			nc.close()
 			nc_sfx.close()
@@ -267,11 +230,11 @@ def runstuff():
 			# Output netcdf file
 			################################################
 			#
-			yc = output_netcdf.createVariable('yc', 'd', ('y'))
+			yc = output_netcdf.createVariable('y', 'd', ('y'))
 			yc.units = 'm'
 			yc.standard_name = 'y'
 
-			xc = output_netcdf.createVariable('xc', 'd', ('x'))
+			xc = output_netcdf.createVariable('x', 'd', ('x'))
 			xc.units = 'm'
 			xc.standard_name = 'x'
 
@@ -293,17 +256,13 @@ def runstuff():
 			ywind.units = 'm/s'
 			ywind.standard_name = "Y 10 metre wind (Y10M)"
 		
-			wind_speed = output_netcdf.createVariable("10WindSpeed", 'd', ('time', 'y', 'x'))
+			wind_speed = output_netcdf.createVariable("WindSpeed10M", 'd', ('time', 'y', 'x'))
 			wind_speed.units = "m/s"
 			wind_speed.standard_name = "10 metre wind speed"
 
-			wind_direction = output_netcdf.createVariable("10WindDirection", 'd', ('time', 'y', 'x'))
+			wind_direction = output_netcdf.createVariable("WindDirection10M", 'd', ('time', 'y', 'x'))
 			wind_direction.units = "degrees"
 			wind_direction.standard_name = "10 metre wind direction"
-
-			oob_mask = output_netcdf.createVariable("OutOfBoundsMask", 'd', ('time', 'y', 'x'))
-			oob_mask.units = "1"
-			oob_mask.standard_name = "Out Of Bounds Mask"
 		
 
 			# Fill NC variables with values
@@ -315,14 +274,12 @@ def runstuff():
 			lon[:, :] = lons
 			air_temperature[...] = T2M_ICgrid
 			sea_surf_temp[...] = SST_ICgrid
-			land_sea_mask[...] = LSMASK_ICgrid
 			zonal_wind[...] = ZON10M_ICgrid
 			meridional_wind[...] = MER10M_ICgrid
 			xwind[...] = Xwind_ICgrid
 			ywind[...] = Ywind_ICgrid
 			wind_speed[...] = WS_ICgrid
 			wind_direction[...] = WD_ICgrid
-			oob_mask[...] = OOBMASK_ICgrid
 
 			##
 			output_netcdf.description = f"{proj4_icechart}"
