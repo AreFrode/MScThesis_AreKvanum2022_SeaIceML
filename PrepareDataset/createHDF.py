@@ -8,36 +8,37 @@ from calendar import monthrange
 from netCDF4 import Dataset
 from scipy.interpolate import NearestNDInterpolator
 
+def interpolate_invalid(field):
+    """NN interpolation of NaN areas
 
-def find_nearest(array, value):
-    idx = (np.abs(array - value)).argmin()
-    return idx
+    Args:
+        field (array): 2d field to apply interpolation
 
-
-def extrapolate_border(field):
+    Returns:
+        array: interpolated array
+    """
     mask = np.where(~np.isnan(field))
     interp = NearestNDInterpolator(np.transpose(mask), field[mask])
-    return interp(*np.indices(field.shape))
+    interp_field = interp(*np.indices(field.shape))
+    return np.ma.masked_where(interp_field > 100., interp_field)
 
-
-def runstuff():
-    # Setup data-paths
-    path_IceChart = "/lustre/storeB/project/copernicus/sea_ice/SIW-METNO-ARC-SEAICE_HR-OBS/"
-    path_RegridArome = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/testingdata/" # TODO subject to change
+def main():
+    # setup data-paths
+    path_Arome = "/lustre/storeB/immutable/archive/projects/metproduction/DNMI_AROME_ARCTIC/"
+    path_RegridIceChart = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ICE_CHART_regrid/Data/"
     path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/"
 
     paths = []
     for year in range(2019, 2022):
-        for month in range(1,13):
-            p = f"{path_RegridArome}{year}/{month:02d}/"
+        for month in range(1, 13):
+            p = f"{path_RegridIceChart}{year}/{month:02d}/"
             paths.append(p)
 
-    # path_data_task = paths[$SGE_TASK_ID - 1]
     path_data_task = paths[0]
     print(f"path_data_task = {path_data_task}")
-    year_task = path_data_task[len(path_RegridArome) : len(path_RegridArome) + 4]
+    year_task = path_data_task[len(path_RegridIceChart) : len(path_RegridIceChart) + 4]
     print(f"year_task = {year_task}")
-    month_task = path_data_task[len(path_RegridArome) + 5 : len(path_RegridArome) + 7]
+    month_task = path_data_task[len(path_RegridIceChart) + 5 : len(path_RegridIceChart) + 7]
     print(f"month_task = {month_task}")
     nb_days_task = monthrange(int(year_task), int(month_task))[1]
     print(f"nb_days_task = {nb_days_task}")
@@ -50,67 +51,51 @@ def runstuff():
         print(f"{yyyymmdd}")
 
         try:
-            arome_path = glob.glob(f"{path_data_task}/AROME_ICgrid_{yyyymmdd}T00Z.nc")[0]
-            ic_path = glob.glob(f"{path_IceChart}{year_task}/{month_task}/ice_conc_svalbard_{yyyymmdd}1500.nc")[0]
+            ic_path = glob.glob(f"{path_data_task}ICECHART_AROMEgrid_{yyyymmdd}T1500Z.nc")[0]
+            arome_path = glob.glob(f"{path_Arome}{year_task}/{month_task}/{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T00Z.nc")[0]
 
         except IndexError:
             continue
 
-        hdf5_path = f"{path_output}{year_task}/{month_task}/PreparedExtrapolated_{yyyymmdd}.hdf5"
-        
+        hdf5_path = f"{path_output}{year_task}/{month_task}/PreparedNNFilled_{yyyymmdd}.hdf5"
+
         if os.path.exists(hdf5_path):
             os.remove(hdf5_path)
 
-        outfile = h5py.File(hdf5_path, "a")
+        outfile = h5py.File(hdf5_path, 'w-')
+        
+        # Open Ice Chart
+        nc = Dataset(ic_path, 'r')
+        sic = nc.variables['sic'][:]
 
-        nc = Dataset(arome_path, 'r')
-        lat = nc.variables['lat']
-        lon = nc.variables['lon']
 
-        t2m = nc.variables['T2M']
-        sst = nc.variables['SST']
-        xwind = nc.variables['X_wind_10m']
-        ywind = nc.variables['Y_wind_10m']
-        windspeed = nc.variables['10WindSpeed']
-        winddir = nc.variables['10WindDirection']
-        lsmask = nc.variables['LSMASK']
-        oobmask = nc.variables['OutOfBoundsMask']
+        # Open AROME
+        nc_a = Dataset(arome_path, 'r')
+        lat = nc_a.variables['latitude'][:]
+        lon = nc_a.variables['longitude'][:]
+        t2m = nc_a.variables['air_temperature_2m'][:]
 
-        x = nc.variables['x']
-        y = nc.variables['y']
 
-        x_min = x[:].min()
-        x_max = x[:].max()
-        y_min = y[:].min()
-        y_max = y[:].max()
-
-        nc_IC = Dataset(ic_path, 'r')
-        xc = nc_IC.variables['xc'][:]
-        yc = nc_IC.variables['yc'][:]
-
-        xc_min = find_nearest(xc, x_min)
-        xc_max = find_nearest(xc, x_max)
-        yc_min = find_nearest(yc, y_min)
-        yc_max = find_nearest(yc, y_max)
-
-        sic = nc_IC['ice_concentration'][..., yc_min:yc_max, xc_min:xc_max]
-
+        # Write to HDF5
         outfile[f"lat"] = lat[:]
         outfile[f"lon"] = lon[:]
-        outfile[f"sic"] = sic[0]
-        outfile[f"sst"] = extrapolate_border(sst[0])
-        outfile[f"lsmask"] = extrapolate_border(lsmask[0])
-        outfile[f"oobmask"] = oobmask[0]
+        outfile[f"sic"] = np.ma.filled(interpolate_invalid(sic[:]), np.nan)
 
-        for day in range(3):   # Arome Regrid contain 3 days
+        # Three daily AA means
+        for day in range(3):
             key = f"day{day}"
+            start = day*24
+            stop = start + 24 if day != 2 else None
 
-            outfile[f"{key}/t2m"] = extrapolate_border(t2m[day])        
+            outfile[f"{key}/t2m"] = np.mean(t2m[start:stop, 0, :, :], axis=0)
 
 
-        nc_IC.close()
-        nc.close()
         outfile.close()
+        nc.close()
+        nc_a.close()
+
+        exit()
+
 
 if __name__ == "__main__":
-    runstuff()
+    main()
