@@ -1,3 +1,19 @@
+#$ -S /bin/bash
+#$ -l h_rt=10:00:00
+#$ -q research-el7.q
+#$ -l h_vmem=8G
+#$ -t 1-36
+#$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
+#$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
+#$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/
+
+echo "Got $NSLOTS slots for job $SGE_TASK_ID."
+
+module load Python-devel/3.8.7
+
+cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/PROG/prepare_date_to_hdf_""$SGE_TASK_ID"".py" << EOF
+
+########################################################################################################################################################################
 import glob
 import h5py
 import os
@@ -37,7 +53,8 @@ def main():
             p = f"{path_RegridIceChart}{year}/{month:02d}/"
             paths.append(p)
 
-    path_data_task = paths[0]
+    path_data_task = paths[$SGE_TASK_ID - 1]
+    print(path_data_task)
     print(f"path_data_task = {path_data_task}")
     year_task = path_data_task[len(path_RegridIceChart) : len(path_RegridIceChart) + 4]
     print(f"year_task = {year_task}")
@@ -119,3 +136,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+########################################################################################################################################################################
+EOF
+
+PYTHONPATH=/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/ python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/PROG/prepare_date_to_hdf_""$SGE_TASK_ID"".py"
