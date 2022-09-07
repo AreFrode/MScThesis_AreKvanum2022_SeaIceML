@@ -34,7 +34,7 @@ def main():
             p = f"{path_RegridIceChart}{year}/{month:02d}/"
             paths.append(p)
 
-    path_data_task = paths[0]
+    path_data_task = paths[20]
     print(f"path_data_task = {path_data_task}")
     year_task = path_data_task[len(path_RegridIceChart) : len(path_RegridIceChart) + 4]
     print(f"year_task = {year_task}")

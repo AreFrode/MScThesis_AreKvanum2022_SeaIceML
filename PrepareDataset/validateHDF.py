@@ -9,7 +9,7 @@ from cartopy import crs as ccrs
 from cartopy import feature as cfeature
 
 def main():
-    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/2019/01/"
+    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/2020/09/"
     path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/"
 
     map_proj = ccrs.NorthPolarStereo()
@@ -34,7 +34,7 @@ def main():
     # ax.pcolormesh(lon, lat, t2m, transform = data_proj, zorder=3, alpha=.4)
     ax.pcolormesh(lon, lat, sic, transform=data_proj, zorder=2, cmap=plt.colormaps['PiYG'])
 
-    plt.savefig(f"{path_figures}visual_validate.png")
+    plt.savefig(f"{path_figures}visual_validate_20200901.png")
 
 
 
