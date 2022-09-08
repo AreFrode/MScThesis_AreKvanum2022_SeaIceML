@@ -231,3 +231,5 @@ ExternalIceConc_concentration_study/OSISAF/data_processing_files/
 ICE_CHART_regrid/data_processing_files/
 ExternalIceConc_concentration_study/OSISAF/.vscode/settings.json
 PrepareDataset/data_processing_files/
+AROME_ARCTIC_regrid/OLD_IceChartGrid/bak/DATA/data_processing_files/
+AROME_ARCTIC_regrid/OLD_IceChartGrid/data_processing_files/
