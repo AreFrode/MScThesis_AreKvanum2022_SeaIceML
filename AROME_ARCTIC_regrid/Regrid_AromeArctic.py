@@ -112,7 +112,7 @@ def main():
         
         for t in range(3):
             start = t*24
-            stop = start + 24 if t != 2 else None
+            stop = start + 24 if t < 2 else None
             t2m_flat = t2m_arome[start:stop, ...].mean(axis=0).flatten()
             uwind_flat = uwind_arome[start:stop, ...].mean(axis=0).flatten()
             vwind_flat = vwind_arome[start:stop, ...].mean(axis=0).flatten()
@@ -169,7 +169,7 @@ def main():
         ywind_out.units = 'm/s'
         ywind_out.standard_name = 'y 10 metre wind (Y10M)'
 
-        sst_out = output_netcdf.createVariable('sst', 'd', ('t', 'y', 'x'))
+        sst_out = output_netcdf.createVariable('sst', 'd', ('y', 'x'))
         sst_out.units = 'K'
         sst_out.standard_name = 'Sea Surface Temperature'
 

@@ -5,22 +5,22 @@ import glob
 import numpy as np
 
 from tensorflow import keras
+from unet import UNET
 
 
 class HDF5Generator(keras.utils.Sequence):
-    def __init__(self, data, batch_size, key= 'day0', constant_fields = ['sst', 'lsmask'], dated_fields = ['t2m', 'xwind', 'ywind'], target = 'sic_target', num_target_classes = 6, seed=0):
+    def __init__(self, data, batch_size = 1, constant_fields = ['sic', 'sst', 'lsmask'], dated_fields = ['t2m', 'xwind', 'ywind'], target = 'sic_target', num_target_classes = 6, seed=0):
         self.seed = seed
 
         self.data = data
         self.rng = np.random.default_rng(self.seed)
         self.batch_size = batch_size
-        self.key = key
         self.constant_fields = constant_fields
         self.dated_fields = dated_fields
         self.target = target
         self.num_target_classes = num_target_classes
-        self.n_fields = len(self.constant_fields) + len(self.dated_fields)
-        self.dim = (948,738)  # AROME ARCTIC domain (even numbers)
+        self.n_fields = len(self.constant_fields) + 3 * len(self.dated_fields)
+        self.dim = (2370,1844)  # AROME ARCTIC domain (even numbers)
 
         self.rng.shuffle(self.data)
 
@@ -31,9 +31,12 @@ class HDF5Generator(keras.utils.Sequence):
     def on_epoch_end(self):
         self.rng.shuffle(self.data)
 
+    def get_dates(self, index):
+        return self.data[index*self.batch_size:(index+1)*self.batch_size]
+
     def __getitem__(self, index):
         # Get the minibatch associated with index
-        samples = self.data[index*self.batch_size:(index+1)*self.batch_size]
+        samples = self.get_dates(index)
         X, y = self.__generate_data(samples)
         return X, y
         
@@ -47,12 +50,14 @@ class HDF5Generator(keras.utils.Sequence):
                 for i, field in enumerate(self.constant_fields):
                     X[idx, ..., i] = hf[f"{field}"][:]
 
-                for j, field in enumerate(self.dated_fields, start = i+1):
-                    X[idx, ..., j] = hf[f"{self.key}"][f"{field}"][:]
+                for j, field in zip(range(i+1, 3 * len(self.dated_fields) + i + 1, 3), self.dated_fields):
+                    X[idx, ..., j]   = hf[f"day0"][f"{field}"][:]
+                    X[idx, ..., j+1] = hf[f"day1"][f"{field}"][:]
+                    X[idx, ..., j+2] = hf[f"day2"][f"{field}"][:]
 
-                y[idx] = keras.utils.to_categorical(hf[f"{self.target}"][:])
+                y[idx] = keras.utils.to_categorical(hf[f"{self.target}"][:], num_classes = self.num_target_classes)
 
-        return X, y
+        return X[:, 451::2, :1792:2, :], y[:, 451::2, :1792:2, :]
 
 
 
@@ -65,4 +70,15 @@ if __name__ == "__main__":
     data_2021 = np.array(sorted(glob.glob(f"{path_data}2021/**/*.hdf5", recursive=True)))
     
     train_generator = HDF5Generator(data_2019, 1)
+    val_generator = HDF5Generator(data_2020, 1)
+    print(len(train_generator))
     X, y = train_generator[0]
+    print(f"{X.shape=}")
+    print(f"{y.shape=}")
+
+
+    unet = UNET(channels = [64, 128, 256, 512, 1024, 2048])
+    y_pred = unet(X)
+
+    print(f"{y_pred.shape=}")
+

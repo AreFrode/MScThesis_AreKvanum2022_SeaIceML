@@ -181,7 +181,7 @@ def main():
         ywind_out.units = 'm/s'
         ywind_out.standard_name = 'y 10 metre wind (Y10M)'
 
-        sst_out = output_netcdf.createVariable('sst', 'd', ('t', 'y', 'x'))
+        sst_out = output_netcdf.createVariable('sst', 'd', ('y', 'x'))
         sst_out.units = 'K'
         sst_out.standard_name = 'Sea Surface Temperature'
 
