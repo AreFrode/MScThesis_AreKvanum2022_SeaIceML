@@ -1,3 +1,20 @@
+#$ -S /bin/bash
+#$ -l h_rt=10:00:00
+#$ -q research-el7.q
+#$ -l h_vmem=8G
+#$ -t 1-3
+#$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
+#$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
+#$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/
+
+echo "Got $NSLOTS slots for job $SGE_TASK_ID."
+
+source /modules/rhel8/conda/install/etc/profile.d/conda.sh
+conda activate production-03-2022
+
+cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/PROG/validateHDF_""$SGE_TASK_ID"".py" << EOF
+
+########################################################################################################################################################################
 import h5py
 import glob
 import os
@@ -49,7 +66,7 @@ def main():
     bottom_lon_t, bottom_lat_t = map_proj.transform_point(bottom_lon, bottom_lat, data_proj)
     top_lon_t, top_lat_t = map_proj.transform_point(top_lon, top_lat, data_proj)
 
-    for date in data[0]:
+    for date in data[$SGE_TASK_ID - 1]:
         yyyymmdd = date[-13:-5]
         print(f"{yyyymmdd}", end='\r')
         year = yyyymmdd[:4]
@@ -61,8 +78,6 @@ def main():
 
         f_current = h5py.File(date, 'r')
         sic_onehot = f_current['sic_target']
-
-        print(np.unique(sic_onehot))
 
         fig = plt.figure(figsize=(20,20))
         ax = plt.axes(projection=map_proj)
@@ -83,10 +98,12 @@ def main():
         f_current.close()
         plt.close(fig)
 
-        exit()
-
 
     h5file_constants.close()
 
 if __name__ == "__main__":
     main()
+########################################################################################################################################################################
+EOF
+
+python "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/PROG/validateHDF_""$SGE_TASK_ID"".py"

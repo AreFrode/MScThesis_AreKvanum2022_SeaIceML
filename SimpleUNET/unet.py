@@ -64,7 +64,7 @@ class Decoder(keras.Model):
 
 
 class UNET(keras.Model):
-    def __init__(self, channels, num_classes = 6, kernel_initializer = 'HeNormal', name='unet'):
+    def __init__(self, channels, num_classes = 7, kernel_initializer = 'HeNormal', name='unet'):
         super(UNET, self).__init__(name='name')
 
         self.normalizer = keras.layers.Normalization(axis=-1)
@@ -86,7 +86,7 @@ class UNET(keras.Model):
         return x
 
 
-def create_UNET(input_shape: List[int] = (2370, 1844, 5), channels: List[int] = [64, 128, 256], num_classes: int = 6, kernel_initializer: str = 'HeNormal'):
+def create_UNET(input_shape: List[int] = (2370, 1844, 5), channels: List[int] = [64, 128, 256], num_classes: int = 7, kernel_initializer: str = 'HeNormal'):
     input = keras.Input(shape=input_shape)
     output = UNET(channels = channels, num_classes = num_classes, kernel_initializer = kernel_initializer)(input)
 

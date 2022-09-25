@@ -27,13 +27,15 @@ from datetime import datetime, timedelta
 
 
 def onehot_encode_sic(sic):
-    fast_ice = np.where(np.equal(sic, 100.), 5, 0)
-    vcd_ice = np.where(np.logical_and(np.greater_equal(sic, 90.), np.less(sic,100.)), 4, 0)
-    cd_ice = np.where(np.logical_and(np.greater_equal(sic, 70.), np.less(sic, 90.)), 3, 0)
-    od_ice = np.where(np.logical_and(np.greater_equal(sic, 40.), np.less(sic, 70.)), 2, 0)
-    vod_ice = np.where(np.logical_and(np.greater_equal(sic, 10.), np.less(sic, 40.)), 1, 0)
+    fast_ice = np.where(np.equal(sic, 100.), 6, 0)
+    vcd_ice = np.where(np.logical_and(np.greater_equal(sic, 90.), np.less(sic,100.)), 5, 0)
+    cd_ice = np.where(np.logical_and(np.greater_equal(sic, 70.), np.less(sic, 90.)), 4, 0)
+    od_ice = np.where(np.logical_and(np.greater_equal(sic, 40.), np.less(sic, 70.)), 3, 0)
+    vod_ice = np.where(np.logical_and(np.greater_equal(sic, 10.), np.less(sic, 40.)), 2, 0)
+    open_water = np.where(np.logical_and(np.greater(sic, 0.), np.less(sic, 10.)), 1, 0)
 
-    return fast_ice + vcd_ice + cd_ice + od_ice + vod_ice
+    return fast_ice + vcd_ice + cd_ice + od_ice + vod_ice + open_water
+
 
 
 def main():
@@ -68,7 +70,7 @@ def main():
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(f"{yyyymmdd}")
         yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
-        yyyymmdd_datetime = (yyyymmdd_datetime + timedelta(days = 7)).strftime('%Y%m%d')
+        yyyymmdd_datetime = (yyyymmdd_datetime + timedelta(days = 1)).strftime('%Y%m%d')
 
         try:
             arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}T00Z.nc")[0]
@@ -92,6 +94,8 @@ def main():
         sic = nc_ic.variables['sic'][:,:-1]
         lat = nc_ic.variables['lat'][:,:-1]
         lon = nc_ic.variables['lon'][:,:-1]
+        x = nc_ic.variables['x'][:-1]
+        y = nc_ic.variables['y'][:]
 
         # Open target IceChart
         nc_ic_target = Dataset(target_icechart_path, 'r')
@@ -110,12 +114,14 @@ def main():
         outfile['sic_target'] = onehot_encode_sic(sic_target)
         outfile['lon'] = lon
         outfile['lat'] = lat
+        outfile['x'] = x
+        outfile['y'] = y
         outfile['lsmask'] = lsmask
         outfile['sst'] = sst
 
-        # Three daily AA means
-        for day in range(3):
-            key = f"day{day}"
+        # Two daily AA means
+        for day in range(2):
+            key = f"ts{day}"
             outfile[f"{key}/t2m"] = t2m[day,...]
             outfile[f"{key}/xwind"] = xwind[day,...]
             outfile[f"{key}/ywind"] = ywind[day,...]

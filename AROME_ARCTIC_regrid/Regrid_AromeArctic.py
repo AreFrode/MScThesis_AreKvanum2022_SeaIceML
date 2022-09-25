@@ -68,8 +68,8 @@ def main():
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(yyyymmdd)
 
-        path_day = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T00Z.nc")
-        path_day_sfx = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_sfx_2_5km_{yyyymmdd}T00Z.nc")
+        path_day = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T18Z.nc")
+        path_day_sfx = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_sfx_2_5km_{yyyymmdd}T18Z.nc")
 
         try:
             dataset = path_day[0]
@@ -100,9 +100,9 @@ def main():
         lat_target = np.zeros((ny, nx))
         lon_target = np.zeros((ny, nx))
         sst_target = np.zeros((ny, nx))
-        t2m_target = np.zeros((3, ny, nx))
-        xwind_target = np.zeros((3, ny, nx))
-        ywind_target = np.zeros((3, ny, nx))
+        t2m_target = np.zeros((2, ny, nx))
+        xwind_target = np.zeros((2, ny, nx))
+        ywind_target = np.zeros((2, ny, nx))
 
 
         # Regrid and assign
@@ -110,9 +110,10 @@ def main():
         lon_target[...] = griddata((xx_input_flat, yy_input_flat), lon_arome.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
         sst_target[...] = griddata((xx_input_flat, yy_input_flat), sst_arome[0, ...].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
         
-        for t in range(3):
-            start = t*24
-            stop = start + 24 if t < 2 else None
+        for t in range(2):
+            start = 6 + t*24
+            # stop = start + 24 if t < 2 else None
+            stop = start + 24
             t2m_flat = t2m_arome[start:stop, ...].mean(axis=0).flatten()
             uwind_flat = uwind_arome[start:stop, ...].mean(axis=0).flatten()
             vwind_flat = vwind_arome[start:stop, ...].mean(axis=0).flatten()
@@ -135,7 +136,7 @@ def main():
 
         output_netcdf.createDimension('y', len(y_target))
         output_netcdf.createDimension('x', len(x_target))
-        output_netcdf.createDimension('t', 3)
+        output_netcdf.createDimension('t', 2)
 
         yc = output_netcdf.createVariable('y', 'd', ('y'))
         yc.units = 'm'
@@ -175,7 +176,7 @@ def main():
 
         yc[:] = y_target
         xc[:] = x_target
-        tc[:] = np.linspace(0,2,3)
+        tc[:] = np.linspace(0,1,2)
         latc[:] = lat_target
         lonc[:] = lon_target
         sst_out[:] = sst_target
