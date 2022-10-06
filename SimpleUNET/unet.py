@@ -7,7 +7,6 @@ from typing import List
 
 # This initial version is attempting to recreate the architecture of (RONNEBERGER,2015), obviously with the spatial dimensionality of the icechart data.
 
-
 class convolutional_block(keras.Model):
     def __init__(self, out_channel, kernel_initializer, name='unet_conv_block'):
         super(convolutional_block, self).__init__(name=name)
@@ -56,8 +55,8 @@ class Decoder(keras.Model):
     def call(self, x, encoder_features, training = False):
         for i in range(len(self.channels)):
             x = self.Tconvs[i](x)
-            cropped_encoder_features = keras.layers.experimental.preprocessing.CenterCrop(x.shape[1], x.shape[2])(encoder_features[i])
-            x = tf.concat([cropped_encoder_features, x], axis=-1)
+            # cropped_encoder_features = keras.layers.CenterCrop(x.shape[1], x.shape[2])(encoder_features[i])
+            x = tf.concat([encoder_features[i], x], axis=-1)
             x = self.decoder_blocks[i](x)
 
         return x
@@ -70,7 +69,7 @@ class UNET(keras.Model):
         self.normalizer = keras.layers.Normalization(axis=-1)
         self.encoder = Encoder(channels = channels, kernel_initializer=kernel_initializer)
         self.decoder = Decoder(channels = channels[:-1][::-1], kernel_initializer=kernel_initializer)
-        self.output_layer = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer)
+        self.output_layer = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32)
 
     @tf.autograph.experimental.do_not_convert
     def call(self, x, training = False):
@@ -80,13 +79,12 @@ class UNET(keras.Model):
         x = self.decoder(x, encoder_feature_maps[1:])
         x = self.output_layer(x)
 
-        if not training:
-            x = keras.activations.softmax(x)
+        x = keras.activations.softmax(x)
 
         return x
 
 
-def create_UNET(input_shape: List[int] = (2370, 1844, 5), channels: List[int] = [64, 128, 256], num_classes: int = 7, kernel_initializer: str = 'HeNormal'):
+def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 7, kernel_initializer: str = 'HeNormal'):
     input = keras.Input(shape=input_shape)
     output = UNET(channels = channels, num_classes = num_classes, kernel_initializer = kernel_initializer)(input)
 

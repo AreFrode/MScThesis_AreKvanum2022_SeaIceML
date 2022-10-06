@@ -1,19 +1,3 @@
-#$ -S /bin/bash
-#$ -l h_rt=10:00:00
-#$ -q research-el7.q
-#$ -l h_vmem=8G
-#$ -t 1-36
-#$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
-#$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
-#$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/
-
-echo "Got $NSLOTS slots for job $SGE_TASK_ID."
-
-module load Python-devel/3.8.7
-
-cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/PROG/prepare_date_to_hdf_""$SGE_TASK_ID"".py" << EOF
-
-########################################################################################################################################################################
 import glob
 import os
 import h5py
@@ -37,12 +21,11 @@ def onehot_encode_sic(sic):
     return fast_ice + vcd_ice + cd_ice + od_ice + vod_ice + open_water
 
 
-
 def main():
     # setup data-paths
-    path_arome = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/Data/"
+    path_arome = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/Data/one_day_forecast/"
     path_icechart = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/"
-    path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/"
+    path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/one_day_forecast/"
 
     paths = []
     for year in range(2019, 2022):
@@ -50,7 +33,7 @@ def main():
             p = f"{path_arome}{year}/{month:02d}/"
             paths.append(p)
 
-    path_data_task = paths[$SGE_TASK_ID - 1]
+    path_data_task = paths[0]
     print(f"path_data_task = {path_data_task}")
     year_task = path_data_task[len(path_arome) : len(path_arome) + 4]
     print(f"year_task = {year_task}")
@@ -73,12 +56,18 @@ def main():
         yyyymmdd_datetime = (yyyymmdd_datetime + timedelta(days = 1)).strftime('%Y%m%d')
 
         try:
+            # Assert that arome forecast exist for current day
+            # Assert that predictor icechart exist for current day
+            # Assert that target icechart exist for following day
             arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}T00Z.nc")[0]
             icechart_path = glob.glob(f"{path_icechart}{year_task}/{month_task}/ICECHART_1kmAromeGrid_{yyyymmdd}T1500Z.nc")[0]
             target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_datetime[:4]}/{yyyymmdd_datetime[4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_datetime}T1500Z.nc")[0]
 
         except IndexError:
             continue
+
+        print(arome_path)
+        print(icechart_path)
 
         # Prepare output hdf5 file
 
@@ -101,14 +90,13 @@ def main():
         nc_ic_target = Dataset(target_icechart_path, 'r')
         sic_target = nc_ic_target.variables['sic'][:, :-1]
 
-
         # Open Arome Arctic
         nc_a = Dataset(arome_path, 'r')
         t2m = nc_a.variables['t2m'][:,:,:-1]
         xwind = nc_a.variables['xwind'][:,:,:-1]
         ywind = nc_a.variables['ywind'][:,:,:-1]
         sst = nc_a.variables['sst'][:,:-1]
-        
+
         # Write to hdf5
         outfile['sic'] = sic
         outfile['sic_target'] = onehot_encode_sic(sic_target)
@@ -126,16 +114,13 @@ def main():
             outfile[f"{key}/xwind"] = xwind[day,...]
             outfile[f"{key}/ywind"] = ywind[day,...]
 
-
         nc_ic.close()
         nc_ic_target.close()
         nc_a.close()
         outfile.close()
 
+        exit()
+
 
 if __name__ == "__main__":
     main()
-########################################################################################################################################################################
-EOF
-
-PYTHONPATH=/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/ python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/PROG/prepare_date_to_hdf_""$SGE_TASK_ID"".py"

@@ -22,6 +22,7 @@ def main():
     with h5py.File(target_path, 'r') as infile_target:
         sic_target = infile_target['sic_target'][451::2, :1792:2]
         lsmask = infile_target['lsmask'][451::2, :1792:2]
+        lsmask[:200, 800:] = 1   # Baltic mask
 
 
     with h5py.File(prediction_path, 'r') as infile_pred:

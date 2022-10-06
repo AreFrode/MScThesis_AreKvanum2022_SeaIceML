@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
+
 import h5py
 import os
 import glob
@@ -19,7 +22,7 @@ class HDF5Generator(keras.utils.Sequence):
         self.dated_fields = dated_fields
         self.target = target
         self.num_target_classes = num_target_classes
-        self.n_fields = len(self.constant_fields) + len(self.dated_fields)
+        self.n_fields = len(self.constant_fields) + 2 * len(self.dated_fields)
         self.dim = (2370,1844)  # AROME ARCTIC domain (even numbers)
 
         if shuffle:
@@ -48,21 +51,27 @@ class HDF5Generator(keras.utils.Sequence):
 
         for idx, sample in enumerate(samples):
             with h5py.File(sample, 'r') as hf:
-                for i, field in enumerate(self.constant_fields):
-                    X[idx, ..., i] = hf[f"{field}"][:]
-
-                for j, field in enumerate(self.dated_fields, start = i+1):
-                    X[idx, ..., j]   = hf[f"ts0"][f"{field}"][:]
+                X[idx, ..., 0] = hf[f"sic"][:]
+                X[idx, ..., 1] = hf[f"sst"][:]
+                X[idx, ..., 2] = hf[f"lsmask"][:]
+                
+                X[idx, ..., 3]   = hf[f"ts0"][f"t2m"][:]
+                X[idx, ..., 4]   = hf[f"ts1"][f"t2m"][:]
+                X[idx, ..., 5]   = hf[f"ts0"][f"xwind"][:]
+                X[idx, ..., 6]   = hf[f"ts1"][f"xwind"][:]
+                X[idx, ..., 7]   = hf[f"ts0"][f"ywind"][:]
+                X[idx, ..., 8]   = hf[f"ts1"][f"ywind"][:]
 
                 y[idx] = keras.utils.to_categorical(hf[f"{self.target}"][:], num_classes = self.num_target_classes)
 
-        return X[:, 451::2, :1792:2, :], y[:, 451::2, :1792:2, :]
+        # return X[:, 451::2, :1792:2, :], y[:, 451::2, :1792:2, :]
+        return X[:, 450:, :1840, :], y[:, 450:, :1840, :]
 
 
 
 
 if __name__ == "__main__":
-    path_data = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/"
+    path_data = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 
     data_2019 = np.array(sorted(glob.glob(f"{path_data}2019/**/*.hdf5", recursive=True)))
     data_2020 = np.array(sorted(glob.glob(f"{path_data}2020/**/*.hdf5", recursive=True)))

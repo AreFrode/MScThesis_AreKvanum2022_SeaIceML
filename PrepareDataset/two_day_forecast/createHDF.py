@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset')
+
 import glob
 import os
 import h5py
@@ -23,9 +26,9 @@ def onehot_encode_sic(sic):
 
 def main():
     # setup data-paths
-    path_arome = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/Data/"
+    path_arome = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/Data/two_day_forecast/"
     path_icechart = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/"
-    path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/"
+    path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 
     paths = []
     for year in range(2019, 2022):
@@ -53,15 +56,21 @@ def main():
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(f"{yyyymmdd}")
         yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
-        yyyymmdd_datetime = (yyyymmdd_datetime + timedelta(days = 1)).strftime('%Y%m%d')
+        yyyymmdd_datetime = (yyyymmdd_datetime + timedelta(days = 2)).strftime('%Y%m%d')
 
         try:
+            # Assert that arome forecast exist for current day
+            # Assert that predictor icechart exist for current day
+            # Assert that target icechart exist two timesteps forward in time
             arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}T00Z.nc")[0]
             icechart_path = glob.glob(f"{path_icechart}{year_task}/{month_task}/ICECHART_1kmAromeGrid_{yyyymmdd}T1500Z.nc")[0]
             target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_datetime[:4]}/{yyyymmdd_datetime[4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_datetime}T1500Z.nc")[0]
 
         except IndexError:
             continue
+
+        print(arome_path)
+        print(icechart_path)
 
         # Prepare output hdf5 file
 
@@ -107,7 +116,6 @@ def main():
             outfile[f"{key}/t2m"] = t2m[day,...]
             outfile[f"{key}/xwind"] = xwind[day,...]
             outfile[f"{key}/ywind"] = ywind[day,...]
-
 
         nc_ic.close()
         nc_ic_target.close()

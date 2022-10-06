@@ -13,8 +13,8 @@ import warnings
 warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning) 
 
 def main():
-    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/"
-    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/"
+    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
+    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/two_day_forecast"
 
     data_2019 = np.array(sorted(glob.glob(f"{path}2019/**/*.hdf5", recursive = True)))
     data_2020 = np.array(sorted(glob.glob(f"{path}2020/**/*.hdf5", recursive = True)))
@@ -33,15 +33,15 @@ def main():
     lon = f['lon'][:]
     lsmask = f['lsmask'][:]
 
-    left_lat = lat[451, 0]
-    left_lon = lon[451, 0]
-    right_lat = lat[451, -1]
-    right_lon = lon[451, -1]
+    left_lat = lat[450, 0]
+    left_lon = lon[450, 0]
+    right_lat = lat[450, -1]
+    right_lon = lon[450, -1]
 
-    bottom_lat = lat[0, 1792]
-    bottom_lon = lon[0, 1792]
-    top_lat = lat[-1, 1792]
-    top_lon = lon[-1, 1792]
+    bottom_lat = lat[0, 1840]
+    bottom_lon = lon[0, 1840]
+    top_lat = lat[-1, 1840]
+    top_lon = lon[-1, 1840]
 
     left_lon_t, left_lat_t = map_proj.transform_point(left_lon, left_lat, data_proj)
     right_lon_t, right_lat_t = map_proj.transform_point(right_lon, right_lat, data_proj)

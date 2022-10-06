@@ -1,10 +1,12 @@
 import os
 import glob
+from re import A
 import h5py
 
 import numpy as np
+import pandas as pd
 
-def find_ice_edge(sic, threshold = 2):
+def find_ice_edge(sic, mask, threshold = 2):
     """Calculates and defines a ice_edge mask for a given array
 
     Args:
@@ -14,29 +16,34 @@ def find_ice_edge(sic, threshold = 2):
     Returns:
         array: binary sea ice edge array
     """
+    mask_padded = np.pad(mask, 1, 'constant', constant_values = 1)
+    sic_padded = np.pad(sic, 1, 'constant', constant_values = 7)
+    sic_padded[mask_padded] = 7
 
-    ice_edge = np.zeros_like(sic[1:-1, 1:-1])
-    H, W = sic.shape
+    ice_edge = np.zeros_like(sic_padded[1:-1, 1:-1])
+    H, W = sic_padded.shape
 
     for i in range(1, H-1):
         for j in range(1, W-1):
-            current = sic[i,j]
-            left = sic[i, j-1]
-            right = sic[i, j+1]
-            top = sic[i-1, j]
-            bottom = sic[i+1, j]
+            current = sic_padded[i,j]
+            if current == 7:
+                continue
+
+            left = sic_padded[i, j-1]
+            right = sic_padded[i, j+1]
+            top = sic_padded[i-1, j]
+            bottom = sic_padded[i+1, j]
 
             neighbor = np.array([top, bottom, left, right])
 
-            smallest_neighbor = np.nanmin(neighbor)
-            if np.isnan(smallest_neighbor):
-                continue
-            
+            smallest_neighbor = np.min(neighbor)
+
             print(f"pixel [{i-1}, {j-1}], smallest neighbor = {smallest_neighbor}", end='\r')
 
             ice_edge[i-1,j-1] = ((current >= threshold) and (smallest_neighbor < threshold)).astype(int)
 
     print('\n')
+    ice_edge[:200, 1500:] = 0
     return ice_edge
 
 def calculate_distance(current_ice_edge, other_ice_edge, x, y):
@@ -60,17 +67,21 @@ def calculate_distance(current_ice_edge, other_ice_edge, x, y):
     return d
 
 
-def IIEE(sic_prediction, sic_target, threshold = 2):
+def IIEE(sic_prediction, sic_target, mask, threshold = 2):
     # I think this metric has a direction (not tested), the first is compared against the second
-    a_plus = np.logical_and(np.greater_equal(sic_prediction, threshold), np.less(sic_target, threshold)).astype(int)
-    a_minus = np.logical_and(np.greater_equal(sic_target, threshold), np.less(sic_prediction, threshold)).astype(int)
-    ocean = np.logical_and(np.less(sic_prediction, threshold), np.less(sic_target, threshold)).astype(int)
-    ice = np.logical_and(np.greater_equal(sic_prediction, threshold), np.greater_equal(sic_target, threshold)).astype(int)
+    mask[:200, 1500:] = 1     # Baltic mask
+    sic_target_masked = np.ma.masked_array(sic_target, mask=mask)
+    sic_prediction_masked = np.ma.masked_array(sic_prediction, mask=mask)
+
+    a_plus = np.logical_and(np.greater_equal(sic_prediction_masked, threshold), np.less(sic_target_masked, threshold)).astype(int)
+    a_minus = np.logical_and(np.greater_equal(sic_target_masked, threshold), np.less(sic_prediction_masked, threshold)).astype(int)
+    ocean = np.logical_and(np.less(sic_prediction_masked, threshold), np.less(sic_target_masked, threshold)).astype(int)
+    ice = np.logical_and(np.greater_equal(sic_prediction_masked, threshold), np.greater_equal(sic_target_masked, threshold)).astype(int)
 
     return np.ma.stack((a_plus, a_minus, ocean, ice))
 
 def ice_edge_length(ice_edge, s = 1):
-    # Here I assume that I use every other pixel, and their difference is 2 km
+    # Here I am unsure about the length when using every other pixel from the original field
     ice_edge = np.pad(ice_edge, 1, 'constant')
     I, J = np.where(ice_edge == 1)
     length = 0.
@@ -100,8 +111,8 @@ def ice_edge_length(ice_edge, s = 1):
 def main():
     
     # Define global paths
-    PATH_TARGETS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/"
-    PATH_PREDICTIONS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/outputs/Data/"
+    PATH_TARGETS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/one_day_forecast/"
+    PATH_PREDICTIONS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/outputs/Data/weights_20091742/"
     PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/Data/"
 
     year = "2021"
@@ -120,16 +131,9 @@ def main():
     with h5py.File(prediction_path, 'r') as infile_pred:
         sic_pred = infile_pred['y_pred'][0]
 
-    lsmask_padded = np.pad(lsmask, 1, 'constant', constant_values = 1)
-    sic_target_padded = np.pad(sic_target, 1, 'constant', constant_values = 7)
-    sic_target_padded = np.ma.masked_array(sic_target_padded, mask = lsmask_padded)
-
-    sic_pred_padded = np.pad(sic_pred, 1, 'constant', constant_values = 7)
-    sic_pred_padded = np.ma.masked_array(sic_pred_padded, mask = lsmask_padded)
-
     if not os.path.exists("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/Data/2021/01/ice_edge_20210105.hdf5"):
-        ice_edge_target = find_ice_edge(sic_target_padded)
-        ice_edge_pred = find_ice_edge(sic_pred_padded)
+        ice_edge_target = find_ice_edge(sic_target, lsmask)
+        ice_edge_pred = find_ice_edge(sic_pred, lsmask)
 
 
         if not os.path.exists(f"{PATH_OUTPUTS}{year}/{month}/"):
@@ -150,23 +154,18 @@ def main():
     
     
     print("\n")
-    """
     print("D_RMS^IE")
     print(0.5*(np.sqrt(np.sum(np.power(d_pred['distance'],2))/len(d_pred['distance'])) + np.sqrt(np.sum(np.power(d_target['distance'],2))/len(d_target['distance']))))
     print("D_AVG^IE")
     print(0.5*(np.mean(d_pred['distance']) + np.mean(d_target['distance'])))
-    """
     
     length_pred = ice_edge_length(ice_edge_pred)
     length_target = ice_edge_length(ice_edge_target)
 
-    # print(f"{length_pred=}")
-    # print(f"{length_target=}")
+    print(f"{length_pred=}")
+    print(f"{length_target=}")
 
-    sic_target_masked = np.ma.masked_array(sic_target, mask=lsmask)
-    sic_pred_masked = np.ma.masked_array(sic_pred, mask=lsmask)
-
-    iiee = IIEE(sic_pred_masked, sic_target_masked)
+    iiee = IIEE(sic_pred, sic_target, lsmask)
 
     A_plus = iiee[0].sum()
     A_minus = iiee[1].sum()

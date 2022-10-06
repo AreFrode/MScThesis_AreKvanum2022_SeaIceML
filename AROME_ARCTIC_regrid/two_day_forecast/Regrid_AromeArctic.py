@@ -1,19 +1,10 @@
-#$ -S /bin/bash
-#$ -l h_rt=10:00:00
-#$ -q research-el7.q
-#$ -l h_vmem=8G
-#$ -t 1-36
-#$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
-#$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
-#$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/OUT/
+# Script to Regrid AromeArctic onto IceCharts with AA projection (1km x 1km)
+# Author: Are Frode Kvanum
+# Date: 29.09.2022
+import sys
+sys.path.append('/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid')
 
-echo "Got $NSLOTS slots for job $SGE_TASK_ID."
 
-module load Python-devel/3.8.7
-
-cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/PROG/regrid_arome_1km_""$SGE_TASK_ID"".py" << EOF
-
-#######################################################################################################
 import glob
 import os
 
@@ -30,7 +21,7 @@ def main():
 	# Constants
 	################################################
     path_data = '/lustre/storeB/immutable/archive/projects/metproduction/DNMI_AROME_ARCTIC/'
-    path_output = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/Data/'
+    path_output = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/testingdata/two_day_forecast/'
 
     proj4_arome = "+proj=lcc +lat_0=77.5 +lon_0=-25 +lat_1=77.5 +lat_2=77.5 +no_defs +R=6.371e+06"
 
@@ -58,8 +49,8 @@ def main():
             paths.append(p)
 
     #
-    path_data_task = paths[$SGE_TASK_ID - 1]
-    # path_data_task = paths[0] # This should be the only path
+    # path_data_task = paths[$SGE_TASK_ID - 1]
+    path_data_task = paths[0] # This should be the only path
     print(f"path_data_task = {path_data_task}")
     path_output_task = path_data_task.replace(path_data, path_output)
     print(f"path_output_task = {path_output_task}")
@@ -121,10 +112,12 @@ def main():
         lat_target[...] = griddata((xx_input_flat, yy_input_flat), lat_arome.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
         lon_target[...] = griddata((xx_input_flat, yy_input_flat), lon_arome.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
         sst_target[...] = griddata((xx_input_flat, yy_input_flat), sst_arome[0, ...].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
-        
-        for t in range(2):
-            start = 6 + t*24
-            stop = start + 24
+
+        starts = [0, 18]
+        stops = [18, 42]
+
+        for t, start, stop in zip(range(2), starts, stops):
+            print(t2m_arome[start:stop].shape)
             t2m_flat = t2m_arome[start:stop, ...].mean(axis=0).flatten()
             uwind_flat = uwind_arome[start:stop, ...].mean(axis=0).flatten()
             vwind_flat = vwind_arome[start:stop, ...].mean(axis=0).flatten()
@@ -142,7 +135,7 @@ def main():
         ################################################
         # Output netcdf file
         ################################################
-        output_filename = f"AROME_1kmgrid_{yyyymmdd}T00Z.nc"
+        output_filename = f"AROME_1kmgrid_{yyyymmdd}T18Z.nc"
         output_netcdf = Dataset(f"{path_output_task}{output_filename}", 'w', format = 'NETCDF4')
 
         output_netcdf.createDimension('y', len(y_target))
@@ -203,7 +196,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-########################################################################################################################################################################
-EOF
-
-PYTHONPATH=/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/ python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/PROG/regrid_arome_1km_""$SGE_TASK_ID"".py" << EOF

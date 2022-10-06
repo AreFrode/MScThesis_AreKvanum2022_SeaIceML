@@ -14,8 +14,8 @@ warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
 
 def main():
     path_data = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/Data/2021/01/ice_edge_20210105.hdf5"
-    path_predictions = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/outputs/Data/2021/01/SIC_SimpleUNET_20210105T15Z.hdf5"
-    path_extras = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/2021/01/PreparedSample_20210105.hdf5"
+    path_predictions = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/outputs/Data/weights_20091742/2021/01/SIC_SimpleUNET_20210105T15Z.hdf5"
+    path_extras = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/one_day_forecast/2021/01/PreparedSample_20210105.hdf5"
     path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/figures/"
 
     map_proj = ccrs.NorthPolarStereo()
@@ -43,21 +43,22 @@ def main():
         os.makedirs(save_location)
 
     fig = plt.figure(figsize=(20,20))
-    ax = plt.axes(projection=map_proj)
+    ax = plt.axes()
+    # ax = plt.axes(projection=map_proj)
     ax.set_title(yyyymmdd, fontsize=30)
-    ax.set_extent([-20, 45, 60, 90], crs=data_proj)
-    ax.add_feature(cfeature.OCEAN)
-    ax.add_feature(cfeature.LAND, zorder=1, edgecolor='black')
+    # ax.set_extent([-20, 45, 60, 90], crs=data_proj)
+    # ax.add_feature(cfeature.OCEAN)
+    # ax.add_feature(cfeature.LAND, zorder=1, edgecolor='black')
 
-    cbar = ax.pcolormesh(lon, lat, sic, transform=data_proj, zorder=2, cmap=plt.colormaps['cividis'])
-    ax.pcolormesh(lon, lat, np.ma.masked_array(ice_edge, ice_edge < 1), transform=data_proj, zorder=3, cmap=plt.colormaps['spring'])
+    cbar = ax.pcolormesh(sic, zorder=2, cmap=plt.colormaps['cividis'])
+    ax.pcolormesh(np.ma.masked_array(ice_edge, ice_edge < 1), zorder=3, cmap=plt.colormaps['spring'])
     # plt.pcolormesh(sic, zorder=2, cmap=plt.colormaps['cividis'])
     # plt.pcolormesh(np.ma.masked_array(ice_edge, ice_edge < 1), zorder=3, cmap=plt.colormaps['spring'])
-    ax.pcolormesh(lon, lat, np.ma.masked_array(lsmask, lsmask < 1), transform=data_proj, zorder=4, cmap='autumn')
+    ax.pcolormesh(np.ma.masked_array(lsmask, lsmask < 1), zorder=4, cmap='autumn')
 
     plt.colorbar(cbar)
 
-    plt.savefig(f"{save_location}{yyyymmdd}.png")
+    plt.savefig(f"{save_location}{yyyymmdd}_target.png")
 
     plt.close(fig)
 

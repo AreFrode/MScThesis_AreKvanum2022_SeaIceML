@@ -131,7 +131,7 @@ def main():
         ################################################
         # Output netcdf file
         ################################################
-        output_filename = f"AROME_1kmgrid_{yyyymmdd}T00Z.nc"
+        output_filename = f"AROME_1kmgrid_{yyyymmdd}T18Z.nc"
         output_netcdf = Dataset(f"{path_output_task}{output_filename}", 'w', format = 'NETCDF4')
 
         output_netcdf.createDimension('y', len(y_target))

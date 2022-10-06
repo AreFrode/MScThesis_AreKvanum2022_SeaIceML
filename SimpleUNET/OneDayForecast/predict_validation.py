@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
+
 import glob
 import h5py
 import os
@@ -10,18 +13,20 @@ from datetime import datetime, timedelta
 
 def main():
     SEED_VALUE = 0
-    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/outputs/"
-    PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/"
+    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/OneDayForecast/outputs/"
+    PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/one_day_forecast/"
 
     BATCH_SIZE = 1
+
+    weights = "weights_05101310"
     
     data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5", recursive=True)))
 
     validation_generator = HDF5Generator(data_2021, batch_size=BATCH_SIZE, shuffle=False)
 
-    model = create_UNET(input_shape = (960, 896, 6), channels = [64, 128, 256, 512, 1024])
+    model = create_UNET(input_shape = (1920, 1840, 6), channels = [64, 128, 256, 512])
 
-    load_status = model.load_weights(f"{PATH_OUTPUTS}models/weights_20091742").expect_partial()
+    load_status = model.load_weights(f"{PATH_OUTPUTS}models/{weights}").expect_partial()
 
     samples = len(validation_generator)
 
@@ -34,11 +39,11 @@ def main():
         yyyymmdd = datetime.strptime(yyyymmdd, '%Y%m%d')
         yyyymmdd = (yyyymmdd + timedelta(days = 1)).strftime('%Y%m%d')
 
-        hdf_path = f"{PATH_OUTPUTS}Data/{yyyymmdd[:4]}/{yyyymmdd[4:6]}/"
+        hdf_path = f"{PATH_OUTPUTS}Data/{weights}/{yyyymmdd[:4]}/{yyyymmdd[4:6]}/"
         if not os.path.exists(hdf_path):
             os.makedirs(hdf_path)
 
-        output_file = h5py.File(f"{hdf_path}SIC_SimpleUNET_{yyyymmdd}T15Z.hdf5", "w-")
+        output_file = h5py.File(f"{hdf_path}SIC_SimpleUNET_one_day_forecast_{yyyymmdd}T15Z.hdf5", "w-")
 
         output_file["y"] = y
         output_file["y_pred"] = y_pred
