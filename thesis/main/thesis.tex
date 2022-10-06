@@ -1,0 +1,22 @@
+\documentclass{article}
+
+\usepackage{subfiles}
+
+\usepackage{../main/crossref}
+\usepackage{../main/preamble}
+
+
+\begin{document}
+\def\biblio{} % Reset command defined to apply bibliography in subfiles
+
+% Theory and methods
+\subfile{../theory_and_methods/datasets.tex}
+\subfile{../theory_and_methods/workflow.tex}
+
+
+% Bibliography
+\bibliographystyle{unsrt}
+\bibliography{\bib/master_thesis}
+
+
+\end{document}
