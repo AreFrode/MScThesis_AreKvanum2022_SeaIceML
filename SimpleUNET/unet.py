@@ -7,7 +7,7 @@ from typing import List
 
 # This initial version is attempting to recreate the architecture of (RONNEBERGER,2015), obviously with the spatial dimensionality of the icechart data.
 
-class convolutional_block(keras.Model):
+class convolutional_block(keras.layers.Layer):
     def __init__(self, out_channel, kernel_initializer, name='unet_conv_block'):
         super(convolutional_block, self).__init__(name=name)
 
@@ -28,7 +28,7 @@ class convolutional_block(keras.Model):
 
         return x
 
-class Encoder(keras.Model):
+class Encoder(keras.layers.Layer):
     def __init__(self, channels, kernel_initializer, name='encoder'):
         super(Encoder, self).__init__(name=name)
 
@@ -44,7 +44,7 @@ class Encoder(keras.Model):
         
         return feature_maps[::-1]
 
-class Decoder(keras.Model):
+class Decoder(keras.layers.Layer):
     def __init__(self, channels, kernel_initializer, name='decoder'):
         super(Decoder, self).__init__(name=name)
 
@@ -95,7 +95,7 @@ def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = 
 def main():
     model = create_UNET((1920, 1840, 9), [64, 128, 256, 512, 1024])
 
-    keras.utils.plot_model(model)
+    # keras.utils.plot_model(model)
 
 
 if __name__ == '__main__':
