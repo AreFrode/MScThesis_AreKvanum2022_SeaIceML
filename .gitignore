@@ -248,3 +248,8 @@ verification_metrics/Data/
 SimpleUNET/TwoDayForecast/logs/
 ForecastValidation/OneDayForecasts/Data/
 ForecastValidation/TwoDayForecasts/Data/
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/Data/
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/normalized_iiee.png
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/tmp.png
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/tmp2.png
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/.vscode/settings.json
