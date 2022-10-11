@@ -17,6 +17,7 @@ from matplotlib import pyplot as plt
 
 def main():
     PATH_PERSISTANCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
+    PATH_FORECAST = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_06101041/"
     PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/"
     PATH_FIGURES = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/figures/"
 
@@ -24,22 +25,26 @@ def main():
         os.makedirs(PATH_OUTPUTS)
 
     data_2021 = sorted(glob.glob(f"{PATH_PERSISTANCE}2021/**/*.hdf5", recursive = True))
+    pred_2021 = sorted(glob.glob(f"{PATH_FORECAST}2021/**/*.hdf5", recursive = True))
 
     output_df = pd.DataFrame(columns = ['date', 'IIEE', 'a_plus', 'a_minus'])
 
-    for sample in tqdm(data_2021):
+    for sample, pred in tqdm(zip(data_2021, pred_2021), total = len(data_2021)):
         date = sample[-13:-5]
-        save_location = f"{PATH_FIGURES}{date[:4]}/{date[4:6]}/"
+        save_location = f"{PATH_FIGURES}/weights_06101041/{date[:4]}/{date[4:6]}/"
 
         if not os.path.exists(save_location):
             os.makedirs(save_location)
 
         with h5py.File(sample, 'r') as infile:
-            sic = onehot_encode_sic(infile['sic'][450:, :1840])
+            # sic = onehot_encode_sic(infile['sic'][450:, :1840])
             sic_target = infile['sic_target'][450:, :1840]
             lsmask = infile['lsmask'][450:, :1840]
 
-        a_plus, a_minus, ocean, ice, = IIEE(sic, sic_target, lsmask)
+        with h5py.File(pred, 'r') as infile:
+            sic_pred = infile['y_pred'][0, :]
+
+        a_plus, a_minus, ocean, ice, = IIEE(sic_pred, sic_target, lsmask)
         iiee = a_plus.sum() + a_minus.sum()
 
         fig = plt.figure(figsize = (20,20))
@@ -50,7 +55,7 @@ def main():
         ocean_masked = np.ma.masked_array(ocean, ocean == 0)
         ice_masked = np.ma.masked_array(ice, ice == 0)
 
-        ax.set_title(f"IIEE persistance - one day target initiated {date}", fontsize=30)
+        ax.set_title(f"IIEE forecast - two day target initiated {date}", fontsize=30)
         ax.pcolormesh(a_plus_masked, zorder=3, cmap='summer')
         ax.pcolormesh(a_minus_masked, zorder=3, cmap='Reds_r')
         ax.pcolormesh(ocean_masked, zorder=3, cmap='Blues_r')
@@ -74,7 +79,7 @@ def main():
         del ice_masked
 
     output_df = output_df.set_index('date')
-    output_df.to_csv(f"{PATH_OUTPUTS}test_iiee.csv")
+    output_df.to_csv(f"{PATH_OUTPUTS}model_06101041_iiee.csv")
     
 
 

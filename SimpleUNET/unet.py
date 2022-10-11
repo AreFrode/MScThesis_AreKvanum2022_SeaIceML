@@ -91,3 +91,12 @@ def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = 
     model = keras.models.Model(inputs=input, outputs=output)
 
     return model
+
+def main():
+    model = create_UNET((1920, 1840, 9), [64, 128, 256, 512, 1024])
+
+    keras.utils.plot_model(model)
+
+
+if __name__ == '__main__':
+    main()

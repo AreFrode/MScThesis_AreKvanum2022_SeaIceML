@@ -13,6 +13,11 @@ from unet import create_UNET
 from dataset import HDF5Generator
 
 
+class MemoryPrintingCallback(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        gpu_dict = tf.config.experimental.get_memory_info('GPU:0')
+        tf.print(f"\n GPU memory details [current: {float(gpu_dict['current']) / (1024 ** 3)} gb, peak: {float(gpu_dict['peak']) / (1024 ** 3)} gb", output_stream=sys.stdout)
+
 def main():
     current_time = datetime.now().strftime("%d%m%H%M")
     print(f"Time at start of script {current_time}")
@@ -44,7 +49,7 @@ def main():
         staircase=True
     )
 
-    model = create_UNET(input_shape = (1920, 1840, 6), channels = [64, 128, 256, 512])
+    model = create_UNET(input_shape = (1920, 1840, 9), channels = [64, 128, 256, 512, 1024])
     optimizer = keras.optimizers.Adam(learning_rate = 0.1)
 
     loss_function = keras.losses.CategoricalCrossentropy()
@@ -70,6 +75,8 @@ def main():
         save_best_only = True
     )
 
+    memory_print_callback = MemoryPrintingCallback()
+
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
@@ -77,12 +84,13 @@ def main():
         train_generator,
         epochs = 20,
         batch_size = BATCH_SIZE,
-        callbacks=[model_checkpoint_callback, tensorboard_callback],
+        callbacks=[
+            model_checkpoint_callback, 
+            tensorboard_callback,
+            memory_print_callback
+        ],
         validation_data = val_generator
     )
-
-    
-
 
     
 

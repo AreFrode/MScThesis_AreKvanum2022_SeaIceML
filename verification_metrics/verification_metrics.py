@@ -16,6 +16,7 @@ def find_ice_edge(sic, mask, threshold = 2):
     Returns:
         array: binary sea ice edge array
     """
+
     mask_padded = np.pad(mask, 1, 'constant', constant_values = 1)
     sic_padded = np.pad(sic, 1, 'constant', constant_values = 7)
     sic_padded[mask_padded] = 7
@@ -38,11 +39,11 @@ def find_ice_edge(sic, mask, threshold = 2):
 
             smallest_neighbor = np.min(neighbor)
 
-            print(f"pixel [{i-1}, {j-1}], smallest neighbor = {smallest_neighbor}", end='\r')
+            # print(f"pixel [{i-1}, {j-1}], smallest neighbor = {smallest_neighbor}", end='\r')
 
             ice_edge[i-1,j-1] = ((current >= threshold) and (smallest_neighbor < threshold)).astype(int)
 
-    print('\n')
+    # print('\n')
     ice_edge[:200, 1500:] = 0
     return ice_edge
 
@@ -67,8 +68,7 @@ def calculate_distance(current_ice_edge, other_ice_edge, x, y):
     return d
 
 
-def IIEE(sic_prediction, sic_target, mask, threshold = 2):
-    # I think this metric has a direction (not tested), the first is compared against the second
+def IIEE(sic_prediction, sic_target, mask, a = 1, threshold = 2):
     mask[:200, 1500:] = 1     # Baltic mask
     sic_target_masked = np.ma.masked_array(sic_target, mask=mask)
     sic_prediction_masked = np.ma.masked_array(sic_prediction, mask=mask)
@@ -78,10 +78,9 @@ def IIEE(sic_prediction, sic_target, mask, threshold = 2):
     ocean = np.logical_and(np.less(sic_prediction_masked, threshold), np.less(sic_target_masked, threshold)).astype(int)
     ice = np.logical_and(np.greater_equal(sic_prediction_masked, threshold), np.greater_equal(sic_target_masked, threshold)).astype(int)
 
-    return np.ma.stack((a_plus, a_minus, ocean, ice))
+    return np.ma.stack((a_plus*(a**2), a_minus*(a**2), ocean, ice))
 
 def ice_edge_length(ice_edge, s = 1):
-    # Here I am unsure about the length when using every other pixel from the original field
     ice_edge = np.pad(ice_edge, 1, 'constant')
     I, J = np.where(ice_edge == 1)
     length = 0.
