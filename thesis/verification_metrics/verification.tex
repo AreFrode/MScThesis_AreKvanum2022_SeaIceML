@@ -1,0 +1,36 @@
+\documentclass[../main/thesis.tex]{subfiles}
+
+\begin{document}
+
+\section{Forecast verification metrics}
+A robust verification scheme is essential to gain insight into how the developed forecasting product performs. Both from the point of view of a  developer which aim to increase the skill of the prediction but also from the user which may utilize the verification score to assess the quality of a given forecast \cite{Casati2008}. In the context of Sea Ice forecasting, a spatial field of continuos or discrete sea ice concentration is predicted, the latter being the case for the current work. Given the uneven distribution intra sea ice concentration classes as well as sea ice compared to ice free open water, simply comparing pixels for correctness would be biased by the large portion of open water and result in difficult to interpret values devoid of physical reasoning. \todo{Syk udokumentert påstand, må modereres} Furthermore, as the rate of maritime activity such as commercial shipping increases in the Arctic due to the sea ice decline \cite{Ho2010}, having user relevant metrics can aid and alleviate the risks surrounding Arctic navigation. As such, several studies have proposed calculating the position of the ice edge as a user relevant metric which also provides information of the distribution of the Sea Ice Concentration \cite{Dukhovskoy2015,Goessling2016,Goessling2018}. However, there is no agreement with how to best calculate the position of the Ice Edge, with the currently available metrics posing different advantages/disadvantages \cite{Palerme2019,Melsom2019}. For the purpose of this thesis, The ice edge position and length will be calculated according to \cite[Melsom 2019 et.al]{Melsom2019}, whereas the IIEE originally proposed by Goessling. H. \cite{Goessling2016} will also be utilized.
+
+\subsection{Defining the Ice Edge}
+\label{sec:iceedgelength}
+The ice edge for a given Sea Ice Concentration product is derived on a per pixel basis, and defined as the grid cells which meet the condition
+
+\begin{equation}
+    c[i,j] \geq c_q \wedge \text{min}{(c[i-1,j],c[i+1,j],c[i,j-1],c[i,j+1])} < c_e
+\end{equation}
+
+i.e. a pixel is marked as a ice edge pixel if the current pixel itself is larger than some given concentration threshold $c_e$ and the minimum of the pixel's 4-neighbors is less than the same threshold. Moreover, the marked grid cells each contribute to the total length of the ice edge, with each pixel's length contribution determined based on the number neighbors also marked as an ice edge pixel. Consequently, a neighborless pixel is assumed to yield a contribution the length of the diagonal to the ice-edge ($l = \sqrt2s$) where s is the side length of the pixel. A pixel with one neighbor a contributes a mixed horizontal - diagonasl length $l = \frac{s + \sqrt2s}{2}$. Finally a pixel with two or more neighbors contributes with a pixel side-length $l = s$.
+
+\subsection{Integrated Ice Edge Error}
+The Integrated Ice Edge Length (IIEE) is an error metric which compares the forecast to some ground truth target \cite{Goessling2016}. The metric is defined as 
+\begin{equation}
+    \text{IIEE} = \text{O} + \text{U}
+\end{equation}
+where 
+\begin{equation}
+    \text{O} = \int_A\text{max}(c_f - c_t, 0)dA
+\end{equation}
+and
+\begin{equation}
+    \text{U} = \int_A\text{max}(c_t - c_f, 0)dA
+\end{equation}
+with $c_t$ and $c_f$ being the target and forecast concentration respectively, attaining a value of $1$ if the concentration for a given pixel i above a set threshold, and 0 elsewhere. From the definition of the metric, it can be seen that the IIEE is a sum of the forecast overshoot and undershoot compared to the ground truth target. For the current work, the IIEE is an easily interpreted metric as it quantifies the total forecast error and reports on the error spatially. 
+
+Furthermore, the IIEE can be combined with the length of the Ice Edge which was derived in the previous section \ref{sec:iceedgelength}. Thus, the metric is seasonally normalized, assuming that the IIEE and Ice Edge Length is seasonally correlated. \todo{Add Figure showing IIEE and ice edge length seasonal correlation} 
+
+\biblio
+\end{document}

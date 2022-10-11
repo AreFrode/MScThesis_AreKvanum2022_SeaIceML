@@ -285,7 +285,7 @@ Section 5 touch upon data preparation and model evaluation, especially data spli
   journal   = {Quarterly Journal of the Royal Meteorological Society},
   title     = {A probabilistic verification score for contours: Methodology and application to Arctic ice-edge forecasts},
   year      = {2018},
-  month     = {apr},
+  month     = apr,
   number    = {712},
   pages     = {735--743},
   volume    = {144},
@@ -312,7 +312,59 @@ Section 5 touch upon data preparation and model evaluation, especially data spli
   author       = {Two Sigma},
   howpublished = {webpage},
   title        = {A Workaround for Non-Determinism in TensorFlow},
-  comment      = {Web-article discussing some workarounds for non-deterministic behaviour resulting from training models on GPU's},
+  comment      = {Web-article discussing some workarounds for non-deterministic behaviour resulting from training models on a GPU},
+}
+
+@Article{Casati2008,
+  author    = {B. Casati and L. J. Wilson and D. B. Stephenson and P. Nurmi and A. Ghelli and M. Pocernich and U. Damrath and E. E. Ebert and B. G. Brown and S. Mason},
+  journal   = {Meteorological Applications},
+  title     = {Forecast verification: current status and future directions},
+  year      = {2008},
+  number    = {1},
+  pages     = {3--18},
+  volume    = {15},
+  doi       = {10.1002/met.52},
+  publisher = {Wiley},
+}
+
+@Article{Dukhovskoy2015,
+  author    = {Dmitry S. Dukhovskoy and Jonathan Ubnoske and Edward Blanchard-Wrigglesworth and Hannah R. Hiester and Andrey Proshutinsky},
+  journal   = {Journal of Geophysical Research: Oceans},
+  title     = {Skill metrics for evaluation and comparison of sea ice models},
+  year      = {2015},
+  month     = {sep},
+  number    = {9},
+  pages     = {5910--5931},
+  volume    = {120},
+  comment   = {Paper introducing the Modified Hausdorff Distance as a ice edge metrics},
+  doi       = {10.1002/2015jc010989},
+  publisher = {American Geophysical Union ({AGU})},
+}
+
+@Misc{IMO2017,
+  author       = {International Maritime Organization},
+  howpublished = {webpage},
+  month        = jan,
+  title        = {International Code for Ships Operating in Polar Waters (Polar Code)},
+  year         = {2017},
+  abstract     = {IMO's International Code for Ships Operating in Polar Waters (Polar Code) is mandatory under both the International Convention for the Safety of Life at Sea (SOLAS) and the International Convention for the Prevention of Pollution from Ships (MARPOL). The Polar Code covers the full range of design, construction, equipment, operational, training, search and rescue and environmental protection matters relevant to ships operating in the inhospitable waters surrounding the two poles. The Polar Code entered into force on 1 January 2017.
+
+The Polar Code and SOLAS amendments were adopted during the 94th session of IMO’s Maritime Safety Committee (MSC), in November 2014; the environmental provisions and MARPOL amendments were adopted during the 68th session of the Marine Environment Protection Committee (MEPC) in May 2015.},
+  comment      = {Webpage announcing the Polar Code, which covers the full range of shipping-related matters relevant to navigation in Arctic waters. Not really a soruce, (since the Polar Code is not freely available...), but one standard set, which was mentioned by Cyril, is that ships may be qualified to operate in waters containing a SIC up to 10%.},
+  url          = {https://www.imo.org/en/OurWork/Safety/Pages/polar-code.aspx},
+}
+
+@Article{Ho2010,
+  author    = {Joshua Ho},
+  journal   = {Marine Policy},
+  title     = {The implications of Arctic sea ice decline on shipping},
+  year      = {2010},
+  month     = {may},
+  number    = {3},
+  pages     = {713--715},
+  volume    = {34},
+  doi       = {10.1016/j.marpol.2009.10.009},
+  publisher = {Elsevier {BV}},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}

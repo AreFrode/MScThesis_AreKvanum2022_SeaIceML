@@ -1,4 +1,4 @@
-# Timeline thesis ver. 1.0
+# Timeline thesis ver. 1.1
 
 ## Sep
 * week 35
@@ -25,12 +25,15 @@
 * Continue model development, try to branch out model development into several individual models
 * Run experiments on "finished" models, while further developing other models (Paralellize my time spent)
 
+* Write poster abstract
+
 * Write about preliminary results
 * Continue writing the methodlogy
 * Finish writing the theory and dataset (Regarding basic ML, image segmentation, UNET, AROME Arctic, Ice Charts)
 * Start discussing early results
 
 ## Nov
+* 1.Nov submit poster abstract
 * Write discussion
 * Continue writing about methodology
 * Run experiments, generate results
