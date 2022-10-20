@@ -64,7 +64,7 @@ class Decoder(keras.layers.Layer):
 
 class UNET(keras.Model):
     def __init__(self, channels, num_classes = 7, kernel_initializer = 'HeNormal', name='unet'):
-        super(UNET, self).__init__(name='name')
+        super(UNET, self).__init__(name=name)
 
         self.normalizer = keras.layers.Normalization(axis=-1)
         self.encoder = Encoder(channels = channels, kernel_initializer=kernel_initializer)
@@ -83,6 +83,39 @@ class UNET(keras.Model):
 
         return x
 
+class MultiOutputUNET(UNET):
+    # Currently contain 7 separate output layers, each with own weights and biases,
+    # could be possible to output each class with same output layer, not sure if smart
+
+    def __init__(self, channels, num_classes = 1, kernel_initializer = 'HeNormal', name = 'unet'):
+        UNET.__init__(self, channels, num_classes, kernel_initializer, name)
+        self.output_layer0 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out0')
+        self.output_layer1 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out1')
+        self.output_layer2 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out2')
+        self.output_layer3 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out3')
+        self.output_layer4 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out4')
+        self.output_layer5 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out5')
+        self.output_layer6 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out6')
+
+    @tf.autograph.experimental.do_not_convert
+    def call(self, x, training = False):
+        x = self.normalizer(x)
+        encoder_feature_maps = self.encoder(x)
+        x = encoder_feature_maps[0]
+        x = self.decoder(x, encoder_feature_maps[1:])
+        
+        out0 = self.output_layer0(x)
+        out1 = self.output_layer1(x)
+        out2 = self.output_layer2(x)
+        out3 = self.output_layer3(x)
+        out4 = self.output_layer4(x)
+        out5 = self.output_layer5(x)
+        out6 = self.output_layer6(x)
+
+        return [out0, out1, out2, out3, out4, out5, out6]
+
+
+
 
 def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 7, kernel_initializer: str = 'HeNormal'):
     input = keras.Input(shape=input_shape)
@@ -92,8 +125,18 @@ def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = 
 
     return model
 
+def create_MultiOutputUNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 1, kernel_initializer: str = 'HeNormal'):
+    input = keras.Input(shape=input_shape)
+    outputs = MultiOutputUNET(channels = channels, num_classes = num_classes, kernel_initializer = kernel_initializer)(input)
+
+    print(outputs)
+
+    model = keras.models.Model(inputs=input, outputs=outputs)
+
+    return model
+
 def main():
-    model = create_UNET((1920, 1840, 9), [64, 128, 256, 512, 1024])
+    model = create_MultiOutputUNET((1920, 1840, 9), [64, 128, 256, 512, 1024])
     model.summary(expand_nested=True)
     # keras.utils.plot_model(model)
 

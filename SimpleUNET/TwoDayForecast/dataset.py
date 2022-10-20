@@ -8,7 +8,7 @@ import glob
 import numpy as np
 
 from tensorflow import keras
-from unet import UNET
+from unet import UNET, MultiOutputUNET
 
 
 class HDF5Generator(keras.utils.Sequence):
@@ -67,8 +67,35 @@ class HDF5Generator(keras.utils.Sequence):
         # return X[:, 451::2, :1792:2, :], y[:, 451::2, :1792:2, :]
         return X[:, 450:, :1840, :], y[:, 450:, :1840, :]
 
+class MultiOutputHDF5Generator(HDF5Generator):
+    def __init__(self, data, batch_size = 1, constant_fields = ['sic', 'sst', 'lsmask'], dated_fields = ['t2m', 'xwind', 'ywind'], target = 'sic_target', num_target_classes = 7, seed=0, shuffle = True):
+        HDF5Generator.__init__(self, data, batch_size, constant_fields, dated_fields, target, num_target_classes, seed, shuffle)
 
+    def __getitem__(self, index):
+        # Get the minibatch associated with index
+        samples = self.get_dates(index)
+        X, y = self.__generate_data(samples)
+        return X, y
 
+    def __generate_data(self, samples):
+        # Helper function to read data from files
+        X = np.empty((self.batch_size, *self.dim, self.n_fields))
+        y = np.empty((self.batch_size, *self.dim, self.num_target_classes))
+
+        for idx, sample in enumerate(samples):
+            with h5py.File(sample, 'r') as hf:
+                for i, field in enumerate(self.constant_fields):
+                    X[idx, ..., i] = hf[f"{field}"][:]
+
+                for j, field in zip(range(len(self.constant_fields), len(self.constant_fields) + 2*len(self.dated_fields), 2), self.dated_fields):
+                    X[idx, ..., j]   = hf[f"ts0"][f"{field}"][:]
+                    X[idx, ..., j+1]   = hf[f"ts1"][f"{field}"][:]
+
+                onehot = hf[f'{self.target}'][:]
+                for k in range(self.num_target_classes):
+                    y[idx, ..., k] = np.where(onehot >= k, 1, 0)
+
+        return X[:, 450:, :1840, :], [y[:, 450:, :1840, k] for k in range(self.num_target_classes)]
 
 if __name__ == "__main__":
     path_data = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
@@ -77,15 +104,17 @@ if __name__ == "__main__":
     data_2020 = np.array(sorted(glob.glob(f"{path_data}2020/**/*.hdf5", recursive=True)))
     data_2021 = np.array(sorted(glob.glob(f"{path_data}2021/**/*.hdf5", recursive=True)))
 
-    train_generator = HDF5Generator(np.concatenate((data_2019, data_2020)), 1)
-    val_generator = HDF5Generator(data_2021, 1)
+    train_generator = MultiOutputHDF5Generator(np.concatenate((data_2019, data_2020)), 1, ['sic', 'sst'])
+    val_generator = MultiOutputHDF5Generator(data_2021, 1, ['sic', 'sst'])
     print(len(train_generator))
     X, y = train_generator[0]
     print(f"{X.shape=}")
-    print(f"{y.shape=}")
+    print(f"{y=}")
+    # print(f"{y.shape=}")
 
 
-    unet = UNET(channels = [64, 128, 256, 512, 1024])
+    # unet = UNET(channels = [64, 128, 256, 512, 1024])
+    unet = MultiOutputUNET(channels = [64, 128, 256])
     y_pred = unet(X)
 
     print(f"{y_pred.shape=}")

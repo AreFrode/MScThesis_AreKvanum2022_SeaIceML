@@ -13,8 +13,8 @@ import warnings
 warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning) 
 
 def main():
-    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
-    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/two_day_forecast"
+    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/testing_data/"
+    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/testing_data/"
 
     data_2019 = np.array(sorted(glob.glob(f"{path}2019/**/*.hdf5", recursive = True)))
     data_2020 = np.array(sorted(glob.glob(f"{path}2020/**/*.hdf5", recursive = True)))
@@ -61,8 +61,9 @@ def main():
 
         f_current = h5py.File(date, 'r')
         sic_onehot = f_current['sic_target']
+        sic_onehot = f_current['sic']
 
-        print(np.unique(sic_onehot))
+        # print(np.unique(sic_onehot))
 
         fig = plt.figure(figsize=(20,20))
         ax = plt.axes(projection=map_proj)

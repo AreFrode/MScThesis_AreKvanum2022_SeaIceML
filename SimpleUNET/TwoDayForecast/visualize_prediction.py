@@ -20,7 +20,7 @@ def main():
     path_pred = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/"
     path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/figures/"
 
-    weights = "weights_06101543"
+    weights = "weights_19101617"
     
     data_2021 = np.array(sorted(glob.glob(f"{path_pred}{weights}/2021/**/*.hdf5", recursive=True)))
 

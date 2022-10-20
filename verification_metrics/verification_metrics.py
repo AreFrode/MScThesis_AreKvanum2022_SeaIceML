@@ -104,7 +104,17 @@ def ice_edge_length(ice_edge, s = 1):
             length += s
 
     return 1000. * length
-    
+
+def contourAreaDistribution(icefield, num_classes=7, side_length = 1):
+    contour_matrix = np.zeros((*icefield.shape, num_classes))
+
+    for i in range(num_classes):
+        contour_matrix[...,i] = np.where(icefield == i, 1, 0)
+
+    area_array = (side_length**2) * np.sum(contour_matrix.reshape((np.prod(icefield.shape), num_classes)), axis=0)
+
+    return area_array
+
 
 
 def main():

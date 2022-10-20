@@ -1,7 +1,7 @@
 #$ -S /bin/bash
 #$ -l h_rt=10:00:00
 #$ -q research-el7.q
-#$ -l h_vmem=8G
+#$ -l h_vmem=10G
 #$ -t 1-3
 #$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
@@ -11,6 +11,8 @@ echo "Got $NSLOTS slots for job $SGE_TASK_ID."
 
 source /modules/rhel8/conda/install/etc/profile.d/conda.sh
 conda activate production-03-2022
+
+echo "Loaded conda"
 
 cat > "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/PROG/validateHDF_two_day_""$SGE_TASK_ID"".py" << EOF
 
@@ -75,6 +77,9 @@ def main():
         save_location = f"{path_figures}{year}/{month}/"
         if not os.path.exists(save_location):
             os.makedirs(save_location)
+
+        if os.path.exists(f"{save_location}{yyyymmdd}.png"):
+            continue
 
         f_current = h5py.File(date, 'r')
         sic_onehot = f_current['sic_target']
