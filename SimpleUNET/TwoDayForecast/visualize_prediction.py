@@ -20,7 +20,7 @@ def main():
     path_pred = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/"
     path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/figures/"
 
-    weights = "weights_19101617"
+    weights = "unet_benchmark"
     
     data_2021 = np.array(sorted(glob.glob(f"{path_pred}{weights}/2021/**/*.hdf5", recursive=True)))
 
@@ -30,9 +30,9 @@ def main():
     h5file = sorted(glob.glob(f"{path}*.hdf5"))[0]
 
     f = h5py.File(h5file, 'r')
-    lat = f['lat'][450:, :1840]
-    lon = f['lon'][450:, :1840]
-    lsmask = f['lsmask'][450:, :1840]
+    lat = f['lat'][578:, :1792]
+    lon = f['lon'][578:, :1792]
+    lsmask = f['lsmask'][578:, :1792]
 
     for date in data_2021:
         yyyymmdd = date[-17:-9]

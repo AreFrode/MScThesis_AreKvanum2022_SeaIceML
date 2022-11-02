@@ -26,6 +26,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from cartopy import crs as ccrs
 from cartopy import feature as cfeature
+from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 from shapely.errors import ShapelyDeprecationWarning
 
 import warnings
@@ -46,21 +47,20 @@ def main():
 
     h5file_constants = data[0][0]
     
-    f = h5py.File(h5file_constants  , 'r')
+    with h5py.File(h5file_constants  , 'r') as f:
+        lat = f['lat'][:]
+        lon = f['lon'][:]
+        lsmask = f['lsmask'][:]
 
-    lat = f['lat'][:]
-    lon = f['lon'][:]
-    lsmask = f['lsmask'][:]
+    left_lat = lat[578, 0]
+    left_lon = lon[578, 0]
+    right_lat = lat[578, -1]
+    right_lon = lon[578, -1]
 
-    left_lat = lat[450, 0]
-    left_lon = lon[450, 0]
-    right_lat = lat[450, -1]
-    right_lon = lon[450, -1]
-
-    bottom_lat = lat[0, 1840]
-    bottom_lon = lon[0, 1840]
-    top_lat = lat[-1, 1840]
-    top_lon = lon[-1, 1840]
+    bottom_lat = lat[0, 1792]
+    bottom_lon = lon[0, 1792]
+    top_lat = lat[-1, 1792]
+    top_lon = lon[-1, 1792]
 
     left_lon_t, left_lat_t = map_proj.transform_point(left_lon, left_lat, data_proj)
     right_lon_t, right_lat_t = map_proj.transform_point(right_lon, right_lat, data_proj)
@@ -87,24 +87,30 @@ def main():
         fig = plt.figure(figsize=(20,20))
         ax = plt.axes(projection=map_proj)
         ax.set_title(f"Target for two day forecast initiated {date[-13:-5]}", fontsize=30)
-        ax.set_extent([-20, 45, 60, 90], crs=data_proj)
+        ax.set_extent([-17, 42, 62.5, 90], crs=data_proj)
         ax.add_feature(cfeature.OCEAN)
         ax.add_feature(cfeature.LAND, zorder=1, edgecolor='black')
+
+        gl = ax.gridlines(crs=data_proj, draw_labels=True,
+                  linewidth=2, color='snow', alpha=.7, linestyle='--', zorder=5)
+
+        gl.xlines = False
+        gl.yformatter = LATITUDE_FORMATTER
+        gl.top_labels= False
+        gl.left_labels = False
+        gl.ylabel_style = {'size': 25}
 
         cbar = ax.pcolormesh(lon, lat, sic_onehot, transform=data_proj, zorder=2, cmap=plt.colormaps['cividis'])
         ax.pcolormesh(lon, lat, np.ma.masked_array(lsmask, lsmask < 1), transform=data_proj, zorder=3, cmap='autumn')
         ax.plot([left_lon_t, right_lon_t], [left_lat_t, right_lat_t], 'k--', transform=map_proj, zorder=4)
         ax.plot([bottom_lon_t, top_lon_t], [bottom_lat_t, top_lat_t], 'k--', transform=map_proj, zorder=4)
 
-        plt.colorbar(cbar)
+        # plt.colorbar(cbar)
 
         plt.savefig(f"{save_location}{yyyymmdd}.png")
 
         f_current.close()
         plt.close(fig)
-
-
-    h5file_constants.close()
 
 if __name__ == "__main__":
     main()

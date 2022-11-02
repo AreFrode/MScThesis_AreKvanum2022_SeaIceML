@@ -98,19 +98,27 @@ def main():
     PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 
     BATCH_SIZE = 1
-    constant_fields = ['sic', 'sst']
+    constant_fields = ['sic', 'sic_trend', 'lsmask']
     dated_fields = ['t2m', 'xwind', 'ywind']
 
 
-    weights = "weights_19101617"
+    weights = "weights_01111912"
     
     data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5", recursive=True)))
 
     # validation_generator = HDF5Generator(data_2021, batch_size=BATCH_SIZE, shuffle=False)
-    validation_generator = MultiOutputHDF5Generator(data_2021, batch_size=BATCH_SIZE, constant_fields=constant_fields, dated_fields=dated_fields, shuffle=False)
+    validation_generator = MultiOutputHDF5Generator(data_2021, 
+        batch_size=BATCH_SIZE, 
+        constant_fields=constant_fields, 
+        dated_fields=dated_fields, 
+        lower_boundary=578, 
+        rightmost_boundary=1792, 
+        augment = False,
+        shuffle=False
+    )
 
     # model = create_UNET(input_shape = (1920, 1840, 9), channels = [64, 128, 256, 512])
-    model = create_MultiOutputUNET(input_shape = (1920, 1840, len(constant_fields) + 2*len(dated_fields)), channels = [64, 128, 256, 512])
+    model = create_MultiOutputUNET(input_shape = (1792, 1792, len(constant_fields) + 2*len(dated_fields)), channels = [64, 128, 256, 512], pooling_factor=4)
 
     load_status = model.load_weights(f"{PATH_OUTPUTS}models/{weights}").expect_partial()
 

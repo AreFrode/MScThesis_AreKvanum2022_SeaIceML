@@ -10,7 +10,7 @@ from cartopy import feature as cfeature
 from datetime import datetime
 
 def main():
-    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/2020/01/"
+    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/2020/01/"
     path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/shape_test/"
 
     if not os.path.exists(path_figures):
@@ -19,17 +19,17 @@ def main():
     map_proj = ccrs.NorthPolarStereo()
     data_proj = ccrs.PlateCarree()
 
-    h5file = sorted(glob.glob(f"{path}*.hdf5"))[6]
+    h5file = sorted(glob.glob(f"{path}*.hdf5"))[0]
     
     f = h5py.File(h5file, 'r')
 
-    lat = f['lat'][451::2, :1792:2]
-    lon = f['lon'][451::2, :1792:2]
-    t2m = f['day1']['t2m'][:]
-    sic = f['sic'][:]
-    lsmask = f['lsmask'][451::2, :1792:2]
-    xwind = f['day1']['xwind'][:]
-    sic_onehot = f['sic_target'][451::2, :1792:2]
+    lat = f['lat'][578:, :1792]
+    lon = f['lon'][578, :1792:2]
+    t2m = f['ts0']['t2m'][:]
+    # sic = f['sic'][:]
+    lsmask = f['lsmask'][578, :1792:2]
+    # xwind = f['ts0']['xwind'][:]
+    sic_onehot = f['sic_target'][578, :1792:2]
 
     fig = plt.figure(figsize=(20,20))
     ax = plt.axes(projection=map_proj)

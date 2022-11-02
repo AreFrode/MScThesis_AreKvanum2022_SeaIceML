@@ -28,6 +28,7 @@ def main():
     # setup data-paths
     path_arome = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/Data/two_day_forecast/"
     path_icechart = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/"
+    path_osisaf = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/Data/"
     path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/testing_data/"
 
     paths = []
@@ -74,6 +75,7 @@ def main():
             arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}T18Z.nc")[0]
             icechart_path = glob.glob(f"{path_icechart}{year_task}/{month_task}/ICECHART_1kmAromeGrid_{yyyymmdd}T1500Z.nc")[0]
             target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_datetime[:4]}/{yyyymmdd_datetime[4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_datetime}T1500Z.nc")[0]
+            osisaf_path = glob.glob(f"{path_osisaf}{year_task}/{month_task}/OSISAF_trend_1kmgrid_{yyyymmdd}.nc")[0]
 
         except IndexError:
             continue
@@ -81,6 +83,7 @@ def main():
         print(arome_path)
         print(icechart_path)
         print(target_icechart_path)
+        print(osisaf_path)
 
         # Prepare output hdf5 file
 
@@ -108,6 +111,10 @@ def main():
             ywind = nc_a.variables['ywind'][:,:,:-1]
             sst = nc_a.variables['sst'][:,:-1]
 
+        # Open OsiSaf trend
+        with Dataset(osisaf_path, 'r') as nc_osi:
+            conc_trend = nc_osi.variables['ice_conc_trend'][0,:,:-1]
+
         #Apply Wang et.al NearestNeighbor mask to sic
         # sic = np.where(lsmask == 1, np.nan, sic)
 
@@ -120,7 +127,7 @@ def main():
 
         # Write to hdf5
         with h5py.File(hdf5_path, 'w') as outfile:
-            outfile['sic'] = sic
+            outfile['sic'] = onehot_encode_sic(sic)
             outfile['sic_target'] = onehot_encode_sic(sic_target)
             outfile['lon'] = lon
             outfile['lat'] = lat
@@ -128,6 +135,7 @@ def main():
             outfile['y'] = y
             outfile['lsmask'] = lsmask
             outfile['sst'] = sst
+            outfile['sic_trend'] = conc_trend
 
             # Two daily AA means
             for day in range(2):

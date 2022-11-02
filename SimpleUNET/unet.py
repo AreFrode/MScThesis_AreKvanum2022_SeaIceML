@@ -29,11 +29,11 @@ class convolutional_block(keras.layers.Layer):
         return x
 
 class Encoder(keras.layers.Layer):
-    def __init__(self, channels, kernel_initializer, name='encoder'):
+    def __init__(self, channels, pooling_factor, kernel_initializer, name='encoder'):
         super(Encoder, self).__init__(name=name)
 
         self.encoder_blocks = [convolutional_block(channels[i], kernel_initializer) for i in range(len(channels))]
-        self.pool = keras.layers.MaxPool2D()
+        self.pool = keras.layers.MaxPool2D(pool_size = pooling_factor)
 
     def call(self, x, training = False):
         feature_maps = []
@@ -45,11 +45,11 @@ class Encoder(keras.layers.Layer):
         return feature_maps[::-1]
 
 class Decoder(keras.layers.Layer):
-    def __init__(self, channels, kernel_initializer, name='decoder'):
+    def __init__(self, channels, pooling_factor, kernel_initializer, name='decoder'):
         super(Decoder, self).__init__(name=name)
 
         self.channels = channels
-        self.Tconvs = [keras.layers.Conv2DTranspose(filters = channels[i], kernel_size = 2, strides = 2, kernel_initializer=kernel_initializer) for i in range(len(channels))]
+        self.Tconvs = [keras.layers.Conv2DTranspose(filters = channels[i], kernel_size = pooling_factor, strides = pooling_factor, kernel_initializer=kernel_initializer) for i in range(len(channels))]
         self.decoder_blocks = [convolutional_block(channels[i], kernel_initializer) for i in range(len(channels))]
 
     def call(self, x, encoder_features, training = False):
@@ -63,12 +63,11 @@ class Decoder(keras.layers.Layer):
 
 
 class UNET(keras.Model):
-    def __init__(self, channels, num_classes = 7, kernel_initializer = 'HeNormal', name='unet'):
+    def __init__(self, channels, num_classes = 7, pooling_factor = 2, kernel_initializer = 'HeNormal', name='unet'):
         super(UNET, self).__init__(name=name)
-
-        self.normalizer = keras.layers.Normalization(axis=-1)
-        self.encoder = Encoder(channels = channels, kernel_initializer=kernel_initializer)
-        self.decoder = Decoder(channels = channels[:-1][::-1], kernel_initializer=kernel_initializer)
+        
+        self.encoder = Encoder(channels = channels, pooling_factor=pooling_factor, kernel_initializer=kernel_initializer)
+        self.decoder = Decoder(channels = channels[:-1][::-1], pooling_factor = pooling_factor, kernel_initializer=kernel_initializer)
         self.output_layer = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32)
 
     @tf.autograph.experimental.do_not_convert
@@ -87,8 +86,8 @@ class MultiOutputUNET(UNET):
     # Currently contain 7 separate output layers, each with own weights and biases,
     # could be possible to output each class with same output layer, not sure if smart
 
-    def __init__(self, channels, num_classes = 1, kernel_initializer = 'HeNormal', name = 'unet'):
-        UNET.__init__(self, channels, num_classes, kernel_initializer, name)
+    def __init__(self, channels, num_classes = 1, pooling_factor = 2, kernel_initializer = 'HeNormal', name = 'unet'):
+        UNET.__init__(self, channels, num_classes, pooling_factor, kernel_initializer, name)
         self.output_layer0 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out0')
         self.output_layer1 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out1')
         self.output_layer2 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out2')
@@ -99,7 +98,6 @@ class MultiOutputUNET(UNET):
 
     @tf.autograph.experimental.do_not_convert
     def call(self, x, training = False):
-        x = self.normalizer(x)
         encoder_feature_maps = self.encoder(x)
         x = encoder_feature_maps[0]
         x = self.decoder(x, encoder_feature_maps[1:])
@@ -125,18 +123,17 @@ def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = 
 
     return model
 
-def create_MultiOutputUNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 1, kernel_initializer: str = 'HeNormal'):
+def create_MultiOutputUNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 1, pooling_factor = 2, kernel_initializer: str = 'HeNormal'):
     input = keras.Input(shape=input_shape)
-    outputs = MultiOutputUNET(channels = channels, num_classes = num_classes, kernel_initializer = kernel_initializer)(input)
-
-    print(outputs)
+    outputs = MultiOutputUNET(channels = channels, num_classes = num_classes, pooling_factor=pooling_factor, kernel_initializer = kernel_initializer)(input)
 
     model = keras.models.Model(inputs=input, outputs=outputs)
 
     return model
 
 def main():
-    model = create_MultiOutputUNET((1920, 1840, 9), [64, 128, 256, 512, 1024])
+    # model = create_MultiOutputUNET((1920, 1840, 9), [64, 128, 256, 512, 1024])
+    model = create_MultiOutputUNET((1920, 1840, 9), [64, 128, 256, 512], pooling_factor=2)
     model.summary(expand_nested=True)
     # keras.utils.plot_model(model)
 
