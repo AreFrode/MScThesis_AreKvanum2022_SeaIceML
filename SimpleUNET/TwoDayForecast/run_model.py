@@ -23,16 +23,22 @@ def main():
     PATH_OUTPUT = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/"
     PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
     
+
+    # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
         'BATCH_SIZE': 2,
-        'constant_fields': ['sic', 'lsmask'],
+        'constant_fields': ['sic', 'sic_trend', 'lsmask'],
         'dated_fields': ['t2m', 'xwind', 'ywind'],
         'train_augment': False,
+        'train_normalization': 'normalization_constants_train',
+        'train_shuffle': True,
         'val_augment': False,
-        'learning_rate': 0.1,
-        'epochs': 20,
+        'val_normalization': 'normalization_constants_validation',
+        'val_shuffle': False,
+        'learning_rate': 0.001,
+        'epochs': 60,
         'pooling_factor': 4,
-        'channels': [64, 128, 256, 512],
+        'channels': [64, 128, 256, 512, 1024],
         'height': 1792,
         'width': 1792,
         'lower_boundary': 578,
@@ -43,9 +49,9 @@ def main():
     gpu = tf.config.list_physical_devices('GPU')[0]
     tf.config.experimental.set_memory_growth(gpu, True)
     
-    data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5", recursive=True)))
-    data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5", recursive=True)))
-    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5", recursive=True)))
+    data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))
+    data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))
+    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))
 
     if not os.path.exists(PATH_OUTPUT):
         os.makedirs(PATH_OUTPUT)
@@ -62,8 +68,10 @@ def main():
         constant_fields=config['constant_fields'], 
         dated_fields=config['dated_fields'], 
         lower_boundary=config['lower_boundary'], 
-        rightmost_boundary=config['rightmost_boundary'], 
-        augment = config['train_augment']
+        rightmost_boundary=config['rightmost_boundary'],
+        normalization_file=f"{PATH_DATA}{config['train_normalization']}.csv",
+        shuffle=config['train_shuffle'],
+        augment=config['train_augment']
     )
 
     val_generator = MultiOutputHDF5Generator(
@@ -72,8 +80,10 @@ def main():
         constant_fields=config['constant_fields'], 
         dated_fields=config['dated_fields'], 
         lower_boundary=config['lower_boundary'], 
-        rightmost_boundary=config['rightmost_boundary'], 
-        augment = config['val_augment']
+        rightmost_boundary=config['rightmost_boundary'],
+        normalization_file=f"{PATH_DATA}{config['val_normalization']}.csv",
+        shuffle=config['val_shuffle'],
+        augment=config['val_augment']
     )
     
     lr_schedule = keras.optimizers.schedules.ExponentialDecay(

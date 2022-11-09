@@ -1,5 +1,6 @@
 import sys
 sys.path.append('/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics')
+sys.path.append('/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET')
 
 import os
 import pandas as pd
@@ -10,14 +11,17 @@ import numpy as np
 
 from verification_metrics import IIEE, find_ice_edge, ice_edge_length, contourAreaDistribution
 from tqdm import tqdm
+from helper_functions import read_config_from_csv
 
 
 def main():
-    model_name = "unet_benchmark"
+    model_name = sys.argv[1]
 
     PATH_PERSISTANCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
     PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/{model_name}/"
     PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/"
+
+    config = read_config_from_csv(f"{PATH_FORECAST[:-22]}configs/{model_name}.csv")
 
     if not os.path.exists(PATH_OUTPUTS):
         os.makedirs(PATH_OUTPUTS)
@@ -26,7 +30,7 @@ def main():
     forecasts = sorted(glob.glob(f"{PATH_FORECAST}2021/**/*.hdf5", recursive = True))
 
     with h5py.File(icecharts[0], 'r') as constants:
-        lsmask = constants['lsmask'][450:, :1840]
+        lsmask = constants['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
 
     output_df = pd.DataFrame(columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6'])
 
@@ -35,7 +39,7 @@ def main():
         date = forecast[-17:-9]
 
         with h5py.File(target, 'r') as infile:
-            sic_target = infile['sic_target'][450:, :1840]
+            sic_target = infile['sic_target'][config['lower_boundary']:, :config['rightmost_boundary']]
 
         with h5py.File(forecast, 'r') as infile:
             sic_forecast = infile['y_pred'][0]

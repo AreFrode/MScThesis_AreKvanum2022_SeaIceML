@@ -87,7 +87,7 @@ def main():
         ax.plot([left_lon_t, right_lon_t], [left_lat_t, right_lat_t], 'k--', transform=map_proj, zorder=4)
         ax.plot([bottom_lon_t, top_lon_t], [bottom_lat_t, top_lat_t], 'k--', transform=map_proj, zorder=4)
 
-        # plt.colorbar(cbar)
+        plt.colorbar(cbar)
 
         plt.savefig(f"{save_location}{yyyymmdd}.png")
 

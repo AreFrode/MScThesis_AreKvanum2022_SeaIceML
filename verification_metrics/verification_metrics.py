@@ -47,6 +47,47 @@ def find_ice_edge(sic, mask, threshold = 2):
     ice_edge[:200, 1500:] = 0
     return ice_edge
 
+def find_ice_edge_from_fraction(sic, mask, threshold = 15):
+    """Calculates and defines a ice_edge mask for a given array of fractional sic
+
+    Args:
+        sic (array): input sic field
+        threshold : sic fraction. Defaults to 0.15
+
+    Returns:
+        array: binary sea ice edge array
+    """
+
+    mask_padded = np.pad(mask, 1, 'constant', constant_values = 1)
+    sic_padded = np.pad(sic, 1, 'constant', constant_values = np.nan)
+    sic_padded[mask_padded] = np.nan
+
+    ice_edge = np.zeros_like(sic_padded[1:-1, 1:-1])
+    H, W = sic_padded.shape
+
+    for i in range(1, H-1):
+        for j in range(1, W-1):
+            current = sic_padded[i,j]
+            if current == np.nan:
+                continue
+
+            left = sic_padded[i, j-1]
+            right = sic_padded[i, j+1]
+            top = sic_padded[i-1, j]
+            bottom = sic_padded[i+1, j]
+
+            neighbor = np.array([top, bottom, left, right])
+
+            smallest_neighbor = np.min(neighbor)
+
+            # print(f"pixel [{i-1}, {j-1}], smallest neighbor = {smallest_neighbor}", end='\r')
+
+            ice_edge[i-1,j-1] = ((current >= threshold) and (smallest_neighbor < threshold)).astype(int)
+
+    # print('\n')
+    # ice_edge[:200, 1500:] = 0
+    return ice_edge
+
 def calculate_distance(current_ice_edge, other_ice_edge, x, y):
     d = {'distance': [], 'i': [], 'j': []}
     I_current, J_current = np.where(current_ice_edge == 1)

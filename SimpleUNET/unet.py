@@ -65,14 +65,14 @@ class Decoder(keras.layers.Layer):
 class UNET(keras.Model):
     def __init__(self, channels, num_classes = 7, pooling_factor = 2, kernel_initializer = 'HeNormal', name='unet'):
         super(UNET, self).__init__(name=name)
-        
+        # self.normalizer = keras.layers.Normalization(axis=-1)
         self.encoder = Encoder(channels = channels, pooling_factor=pooling_factor, kernel_initializer=kernel_initializer)
         self.decoder = Decoder(channels = channels[:-1][::-1], pooling_factor = pooling_factor, kernel_initializer=kernel_initializer)
         self.output_layer = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32)
 
     @tf.autograph.experimental.do_not_convert
     def call(self, x, training = False):
-        x = self.normalizer(x)
+        # x = self.normalizer(x)
         encoder_feature_maps = self.encoder(x)
         x = encoder_feature_maps[0]
         x = self.decoder(x, encoder_feature_maps[1:])

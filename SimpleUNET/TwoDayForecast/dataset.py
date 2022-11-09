@@ -14,7 +14,21 @@ from unet import UNET, MultiOutputUNET
 
 
 class HDF5Generator(keras.utils.Sequence):
-    def __init__(self, data, batch_size = 1, constant_fields = ['sic', 'sst', 'lsmask'], dated_fields = ['t2m', 'xwind', 'ywind'], target = 'sic_target', num_target_classes = 7, lower_boundary = 450, rightmost_boundary = 1840, normalization_file = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/normalization_constants.csv', seed=0, shuffle = True, augment = True):
+    def __init__(self, 
+                 data, 
+                 batch_size = 1, 
+                 constant_fields = ['sic', 'sst', 'lsmask'], 
+                 dated_fields = ['t2m', 'xwind', 'ywind'], 
+                 target = 'sic_target', 
+                 num_target_classes = 7, 
+                 lower_boundary = 450, 
+                 rightmost_boundary = 1840, 
+                 normalization_file = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/normalization_constants.csv', 
+                 seed=0, 
+                 shuffle = True, 
+                 augment = True
+        ):
+        
         self.seed = seed
 
         self.data = data
@@ -44,8 +58,8 @@ class HDF5Generator(keras.utils.Sequence):
 
         self.data_augmentation = keras.Sequential([
             # keras.layers.RandomFlip(mode = 'horizontal'),  # Unsure if random flip is necessary for such a specific domain, also unknown probability for layer triggering
-            keras.layers.RandomRotation(factor = 0.3, fill_mode = 'nearest'),
-            keras.layers.RandomTranslation(height_factor = 0.1, width_factor = 0.1, fill_mode='nearest')
+            # keras.layers.RandomRotation(factor = 0.3, fill_mode = 'nearest'),
+            # keras.layers.RandomTranslation(height_factor = 0.1, width_factor = 0.1, fill_mode='nearest')
         ])
 
         if shuffle:
@@ -92,7 +106,18 @@ class HDF5Generator(keras.utils.Sequence):
 
 
 class MultiOutputHDF5Generator(HDF5Generator):
-    def __init__(self, data, batch_size = 1, constant_fields = ['sic', 'sst', 'lsmask'], dated_fields = ['t2m', 'xwind', 'ywind'], target = 'sic_target', num_target_classes = 7, lower_boundary = 450, rightmost_boundary = 1840, normalization_file = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/normalization_constants.csv', seed=0, shuffle = True, augment = False):
+    def __init__(self, 
+                 data, 
+                 batch_size = 1, 
+                 constant_fields = ['sic', 'sst', 'lsmask'], 
+                 dated_fields = ['t2m', 'xwind', 'ywind'], 
+                 target = 'sic_target', num_target_classes = 7, 
+                 lower_boundary = 450, rightmost_boundary = 1840,
+                 normalization_file = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/normalization_constants.csv', 
+                 seed=0, 
+                 shuffle = True, 
+                 augment = False
+        ):
         HDF5Generator.__init__(self, data, batch_size, constant_fields, dated_fields, target, num_target_classes, lower_boundary, rightmost_boundary, normalization_file, seed, shuffle, augment)
 
     def __getitem__(self, index):
@@ -100,9 +125,8 @@ class MultiOutputHDF5Generator(HDF5Generator):
         samples = self.get_dates(index)
         X, y = self.__generate_data(samples)
 
-        y = tf.transpose(y, perm = [1, 2, 3, 0])
-
         if self.augment:
+            y = tf.transpose(y, perm = [1, 2, 3, 0])
             X, y = self.__augment_data(X,y)
             y = [y[..., i] for i in range(self.num_target_classes)]
 
@@ -126,7 +150,7 @@ class MultiOutputHDF5Generator(HDF5Generator):
                 for k in range(self.num_target_classes):
                     y[idx, ..., k] = np.where(onehot >= k, 1, 0)
 
-        return X[:, self.lower_boundary:, :self.rightmost_boundary, :], np.array([y[:, self.lower_boundary:, :self.rightmost_boundary, k] for k in range(self.num_target_classes)])
+        return X[:, self.lower_boundary:, :self.rightmost_boundary, :], [y[:, self.lower_boundary:, :self.rightmost_boundary, k] for k in range(self.num_target_classes)]
 
     def __augment_data(self, X, y):
         concat = tf.concat((X, y), axis = -1)
@@ -144,8 +168,7 @@ if __name__ == "__main__":
     data_2021 = np.array(sorted(glob.glob(f"{path_data}2021/**/*.hdf5", recursive=True)))
 
     train_generator = MultiOutputHDF5Generator(np.concatenate((data_2019, data_2020)), 1, ['sic', 'sst'], lower_boundary=450, rightmost_boundary=1792)
-    val_generator = MultiOutputHDF5Generator(data_2021, 1, ['sic', 'sst'])
-    print(len(train_generator))
+    val_generator = MultiOutputHDF5Generator(data_2021, 1, ['sic', 'sst'], shuffle=False)
     X, y = train_generator[0]
     print(f"{X.shape=}")
     # print(f"{y=}")

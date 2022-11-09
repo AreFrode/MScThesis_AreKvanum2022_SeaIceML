@@ -115,9 +115,7 @@ def main():
         y_diff = y_input[1] - y_input[0]
         x_ic = np.pad(x_input, (1,1), 'constant', constant_values = (x_input[0] - x_diff, x_input[-1] + x_diff))
         y_ic = np.pad(y_input, (1,1), 'constant', constant_values = (y_input[0] - y_diff, y_input[-1] + y_diff))
-
-        print()
-
+        
         xx_ic, yy_ic = np.meshgrid(x_ic, y_ic)
 
         xx_arome, yy_arome = transform_function.transform(xx_ic, yy_ic)

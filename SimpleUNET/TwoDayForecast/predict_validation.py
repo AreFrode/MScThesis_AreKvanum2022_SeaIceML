@@ -4,6 +4,7 @@ sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/Sim
 import glob
 import h5py
 import os
+import csv
 
 import numpy as np
 import tensorflow as tf
@@ -11,6 +12,7 @@ import tensorflow as tf
 from unet import create_UNET, create_MultiOutputUNET
 from dataset import HDF5Generator, MultiOutputHDF5Generator
 from datetime import datetime, timedelta
+from helper_functions import read_config_from_csv
 
 def numpy_where_wrapper(arr):
     """Computes the index where the cumulative distribution changes
@@ -61,7 +63,7 @@ def predict_validation_multi(validation_generator, model, PATH_OUTPUTS, weights)
     total_changes = 0
 
     for i in range(samples):
-        print(f"Sample {i} of {samples}", end="\r")
+        print(f"Sample {i} of {samples}", end='\r')
         X, y = validation_generator[i]
         y_pred = model.predict(X)
         y_pred = tf.concat(y_pred, axis=-1)
@@ -87,38 +89,50 @@ def predict_validation_multi(validation_generator, model, PATH_OUTPUTS, weights)
             output_file["y_pred"] = np.expand_dims(out, 0)
             output_file["date"] = yyyymmdd
 
-
         total_changes += np.sum(local_changes)
+
+        del X
+        del y
+        del y_pred
+        del concentration_and_changes
 
     print(f"Total number of inconcistencies for 2021: {total_changes}")
 
-def main():
+def main():    
     SEED_VALUE = 0
     PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/"
     PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 
-    BATCH_SIZE = 1
-    constant_fields = ['sic', 'sic_trend', 'lsmask']
-    dated_fields = ['t2m', 'xwind', 'ywind']
+    # gpu = tf.config.list_physical_devices('GPU')[0]
+    # tf.config.experimental.set_memory_growth(gpu, True)
 
-
-    weights = "weights_01111912"
+    assert len(sys.argv) > 1, "Remember to provide weights"
+    weights = sys.argv[1]
     
-    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5", recursive=True)))
+    # Read config csv
+    config = read_config_from_csv(f"{PATH_OUTPUTS}configs/{weights}.csv")
 
-    # validation_generator = HDF5Generator(data_2021, batch_size=BATCH_SIZE, shuffle=False)
+    BATCH_SIZE = 1
+
+    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))
+
     validation_generator = MultiOutputHDF5Generator(data_2021, 
         batch_size=BATCH_SIZE, 
-        constant_fields=constant_fields, 
-        dated_fields=dated_fields, 
-        lower_boundary=578, 
-        rightmost_boundary=1792, 
-        augment = False,
-        shuffle=False
+        constant_fields=config['constant_fields'], 
+        dated_fields=config['dated_fields'],
+        lower_boundary=config['lower_boundary'], 
+        rightmost_boundary=config['rightmost_boundary'],
+        normalization_file=f"{PATH_DATA}{config['val_normalization']}.csv",
+        augment=config['val_augment'],
+        shuffle=config['val_shuffle']
     )
 
     # model = create_UNET(input_shape = (1920, 1840, 9), channels = [64, 128, 256, 512])
-    model = create_MultiOutputUNET(input_shape = (1792, 1792, len(constant_fields) + 2*len(dated_fields)), channels = [64, 128, 256, 512], pooling_factor=4)
+    model = create_MultiOutputUNET(
+        input_shape = (config['height'], config['width'], len(config['constant_fields']) + 2*len(config['dated_fields'])), 
+        channels = config['channels'],
+        pooling_factor= config['pooling_factor']
+    )
 
     load_status = model.load_weights(f"{PATH_OUTPUTS}models/{weights}").expect_partial()
 
