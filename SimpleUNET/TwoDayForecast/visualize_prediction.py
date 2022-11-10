@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
+
 import h5py
 import glob
 import os
@@ -9,8 +12,10 @@ from matplotlib import pyplot as plt
 from cartopy import crs as ccrs
 from cartopy import feature as cfeature
 from shapely.errors import ShapelyDeprecationWarning
+from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 
 from datetime import datetime, timedelta
+from helper_functions import read_config_from_csv
 
 import warnings
 warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning) 
@@ -20,7 +25,10 @@ def main():
     path_pred = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/"
     path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/figures/"
 
-    weights = "weights_06101543"
+    assert len(sys.argv) > 1, "Remember to provide weights"
+    weights = sys.argv[1]
+
+    config = read_config_from_csv(f"{path_pred[:-5]}configs/{weights}.csv")
     
     data_2021 = np.array(sorted(glob.glob(f"{path_pred}{weights}/2021/**/*.hdf5", recursive=True)))
 
@@ -30,9 +38,9 @@ def main():
     h5file = sorted(glob.glob(f"{path}*.hdf5"))[0]
 
     f = h5py.File(h5file, 'r')
-    lat = f['lat'][450:, :1840]
-    lon = f['lon'][450:, :1840]
-    lsmask = f['lsmask'][450:, :1840]
+    lat = f['lat'][config['lower_boundary']:, :config['rightmost_boundary']]
+    lon = f['lon'][config['lower_boundary']:, :config['rightmost_boundary']]
+    lsmask = f['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
 
     for date in data_2021:
         yyyymmdd = date[-17:-9]
@@ -59,12 +67,23 @@ def main():
         ax.set_extent([-18, 45, 65, 90], crs=data_proj)
         ax.add_feature(cfeature.OCEAN)
         ax.add_feature(cfeature.LAND, zorder=1, edgecolor='black')
-        # ax.add_feature(cfeature.LAND, zorder=3, edgecolor='black', facecolor='none')
 
-        # ax.pcolormesh(lon, lat, t2m, transform = data_proj, zorder=3, alpha=1.)
-        # ax.pcolormesh(lon, lat, xwind, transform = data_proj, zorder=2, alpha=1.)
-        # ax.pcolormesh(lon, lat, sic, transform=data_proj, zorder=2, cmap=plt.colormaps['PiYG'])
-        # ax.pcolormesh(lon, lat, y, transform=data_proj, zorder=2, cmap=plt.colormaps['PiYG'])
+        gl = ax.gridlines(
+            crs=data_proj, 
+            draw_labels=True,
+            linewidth=2,
+            color='snow',
+            alpha=.7,
+            linestyle='--',
+            zorder = 5
+        )
+
+        gl.xlines = False
+        gl.yformatter = LATITUDE_FORMATTER
+        gl.top_labels = False
+        gl.left_labels = False
+        gl.ylabel_style = {'size': 25}
+
         cbar = ax.pcolormesh(lon, lat, y_pred, transform=data_proj, zorder=2, cmap=cmap)
         ax.pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap='autumn')
 

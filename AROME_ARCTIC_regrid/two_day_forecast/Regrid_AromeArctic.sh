@@ -110,12 +110,14 @@ def main():
         t2m_arome = nc.variables['air_temperature_2m'][:]
         uwind_arome = nc.variables['x_wind_10m'][:]
         vwind_arome = nc.variables['y_wind_10m'][:]
+        lsmask_arome = nc.variables['land_area_fraction'][:]
         sst_arome = nc_sfx.variables['SST'][:]
 
         # Allocate target arrays
         lat_target = np.zeros((ny, nx))
         lon_target = np.zeros((ny, nx))
         sst_target = np.zeros((ny, nx))
+        lsmask_target = np.zeros((ny, nx))
         t2m_target = np.zeros((2, ny, nx))
         xwind_target = np.zeros((2, ny, nx))
         ywind_target = np.zeros((2, ny, nx))
@@ -125,6 +127,7 @@ def main():
         lat_target[...] = griddata((xx_input_flat, yy_input_flat), lat_arome.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
         lon_target[...] = griddata((xx_input_flat, yy_input_flat), lon_arome.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
         sst_target[...] = griddata((xx_input_flat, yy_input_flat), sst_arome[0, ...].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
+        lsmask_target[...] = griddata((xx_input_flat, yy_input_flat), lsmask_arome[0, ...].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
 
         starts = [0, 18]
         stops = [18, 42]
@@ -190,12 +193,17 @@ def main():
         sst_out.units = 'K'
         sst_out.standard_name = 'Sea Surface Temperature'
 
+        lsmask_out = output_netcdf.createVariable('lsmask', 'l', ('y', 'x'))
+        lsmask_out.units = '1'
+        lsmask_out .standard_name = 'Land Area Fraction'
+
         yc[:] = y_target
         xc[:] = x_target
         tc[:] = np.linspace(0,1,2)
         latc[:] = lat_target
         lonc[:] = lon_target
         sst_out[:] = sst_target
+        lsmask_out[:] = lsmask_target
         t2m_out[:] = t2m_target
         xwind_out[:] = xwind_target
         ywind_out[:] = ywind_target
@@ -211,4 +219,4 @@ if __name__ == "__main__":
 ########################################################################################################################################################################
 EOF
 
-python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/PROG/regrid_arome_1km_two_day_forecast""$SGE_TASK_ID"".py" << EOF
+python3 "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/PROG/regrid_arome_1km_two_day_forecast""$SGE_TASK_ID"".py"

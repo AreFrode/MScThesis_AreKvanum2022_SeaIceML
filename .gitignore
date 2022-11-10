@@ -262,4 +262,12 @@ thesis/bib/*.pdf
 *.synctex.gz
 *.run.xml
 thesis/model_development/figures/
-
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/Data/
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/normalized_iiee.png
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/tmp.png
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/tmp2.png
+ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/.vscode/settings.json
+PrepareDataset/figures/
+OSI_SAF_regrid/data_processing_files/
+PrepareDataset/two_day_forecast/logs/
+ForecastValidation/TwoDayForecasts/logs/
