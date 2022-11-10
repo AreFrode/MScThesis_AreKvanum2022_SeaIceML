@@ -1,0 +1,14 @@
+\documentclass[../main/thesis.tex]{subfiles}
+
+\begin{document}
+\section{Data pipeline}
+The main motivation for writing this section is to outline the production pipeline which collects and merges different sources of data into the finished data-generator used to train the Deep Learning model. Ideally, this section will be somewhat exhausting such that all steps taken are presented clearly with the intent of providing a source for the inspiration as well as the necessity of the step. However, source code will be presented sparingly.
+
+\subsection*{Sea Ice Charts}
+The Sea Ice Charts used are a derived dataset of the Sea Ice Charts presented in a previous section \todo{label sections}. The present Ice Chart dataset has been postprocessed by Nick Hughes of the National Ice Service, such that they are presented on a 1km Arome Arctic grid. Furthermore, the Ice Charts does not feature a land-mask, which has been replaced with interpolated values resulting in a spatially consistent dataset where all values present are according to the WMO Sea Ice Concentration intervals \cite{JETSI2014}. 
+
+% Local bibliography
+\biblio
+
+
+\end{document}

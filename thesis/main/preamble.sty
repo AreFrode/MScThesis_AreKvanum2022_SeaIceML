@@ -5,10 +5,15 @@
 \usepackage{unicode-math}
 \usepackage{amsmath}
 \usepackage{polyglossia}
+\setdefaultlanguage{english}
 \usepackage{microtype}
 \usepackage{todonotes}
 
 % \usepackage{subfiles}
+
+% Setup Biblatex
+\usepackage{csquotes}
+\usepackage[language = english, sortlocale=nb_NO, backend=biber]{biblatex}
 
 \usepackage{listings}
 \lstset{
@@ -46,6 +51,9 @@
 
 \usepackage{tikz}
 
+\usepackage{caption}
+\usepackage{subcaption}
+
 \definecolor{linkcolor}{rgb}{0,0,0}
 \definecolor{urlcolor}{rgb}{0,0,1}
 \usepackage{hyperref}
@@ -64,7 +72,9 @@ pdftoolbar=true,
 
 \usepackage{geometry}
 
+
 \providecommand{\bib}{../bib}
-\def\biblio{\bibliographystyle{unsrt}\bibliography{\bib/master_thesis}}
+\addbibresource{\bib/master_thesis.bib}
+\def\biblio{\printbibliography}
 
 %---------------- end preamble ----------------

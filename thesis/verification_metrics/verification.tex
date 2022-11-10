@@ -10,6 +10,7 @@ A robust verification scheme is essential to gain insight into how the developed
 The ice edge for a given Sea Ice Concentration product is derived on a per pixel basis, and defined as the grid cells which meet the condition
 
 \begin{equation}
+    \label{eq:iceedge}
     c[i,j] \geq c_q \wedge \text{min}{(c[i-1,j],c[i+1,j],c[i,j-1],c[i,j+1])} < c_e
 \end{equation}
 
@@ -18,6 +19,7 @@ i.e. a pixel is marked as a ice edge pixel if the current pixel itself is larger
 \subsection{Integrated Ice Edge Error}
 The Integrated Ice Edge Length (IIEE) is an error metric which compares the forecast to some ground truth target \cite{Goessling2016}. The metric is defined as 
 \begin{equation}
+    \label{eq:IIEE}
     \text{IIEE} = \text{O} + \text{U}
 \end{equation}
 where 
@@ -30,7 +32,21 @@ and
 \end{equation}
 with $c_t$ and $c_f$ being the target and forecast concentration respectively, attaining a value of $1$ if the concentration for a given pixel i above a set threshold, and 0 elsewhere. From the definition of the metric, it can be seen that the IIEE is a sum of the forecast overshoot and undershoot compared to the ground truth target. For the current work, the IIEE is an easily interpreted metric as it quantifies the total forecast error and reports on the error spatially. 
 
-Furthermore, the IIEE can be combined with the length of the Ice Edge which was derived in the previous section \ref{sec:iceedgelength}. Thus, the metric is seasonally normalized, assuming that the IIEE and Ice Edge Length is seasonally correlated. \todo{Add Figure showing IIEE and ice edge length seasonal correlation} 
+Furthermore, the IIEE can be combined with the length of the Ice Edge which was derived in the previous section \ref{sec:iceedgelength}. Thus, the metric is seasonally normalized, assuming that the IIEE and Ice Edge Length is seasonally correlated.
+
+\section{Impact of increased resolution on the IIEE}
+From both the definition of Equation (\ref{eq:iceedge}) and (\ref{eq:IIEE}), it can be seen that there is a dependance on the number of pixels which constitutes the ice edge. However, what effect would a change of resolution, i.e. change in number of pixels, have on the IIEE / ice edge length ratio? To answer this question, the "two day" ice edge targets where compared against persistance on all valid two day forecasts samples for the period 2019 - 2021. Furthermore, the original target resolution of 1km will be assessed, as well as a regrided product downscaled onto a 10km resolution.
+
+The Pearson correlation coefficient was computed directly from the DataFrames containing the metrics for both 1km and 10km resolution, using the statistical Python package Pandas \cite{reback2020pandas,mckinney-proc-scipy-2010}. For clarity, the correlation between mean\_length and IIEE for 1km and 10km was calculated. From the resulting computations, the correlation coefficient gets reported as $r_{mean\_length} = 0.9458$ and $r_{IIEE} = 0.9995$. Furthermore, the IIEE divided by the mean length correlation is reported as $r_{normalized\_IIEE} = 0.9747$. Finally, Figure (\ref{fig:normIIEE}) display the mean monthly IIEE computed along the inspected three year period.
+
+By inspecting Figure (\ref{fig:normIIEE}) in conjunction with the reported correlation coefficients, it can be seen that increasing the working resolution of the dataset from 1km to 10km has a negligible impact on the reported metrics. Though the 1km ice edge is about $~13$ times longer than the 10km, coarser resolution ice edge, it does not impact the overall stability of the normalized IIEE metric. However, the normalized IIEE is reduced for the 1km grid, as a consequence of the increased ice edge length due to resolution. Note that the from the definition of the IIEE given in Equation (\ref{eq:IIEE}), the un-normalized metric is dependent on pixel spatial size. Thus, the number of pixels constituting the sum is inverse proportional with the size of each pixel, hence keeping the stability of the values. However, a discrepancy may arise due to the coarser resolution pixels covering a larger area, thus losing out on the fine details. However, for the current work, the ration of 1km IIEE and 10km IIEE is $0.9986$, indicating that they are close to equal. 
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/verification_metrics/figures/normalized_iiee.png}
+
+    \caption{\label{fig:normIIEE}Monthly mean of Normalized IIEE spanning 2019 - 2021}
+\end{figure}
+
 
 \biblio
 \end{document}

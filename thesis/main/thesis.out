@@ -4,3 +4,14 @@
 \BOOKMARK [1][-]{section.3}{Forecast\040verification\040metrics}{}% 4
 \BOOKMARK [2][-]{subsection.3.1}{Defining\040the\040Ice\040Edge}{section.3}% 5
 \BOOKMARK [2][-]{subsection.3.2}{Integrated\040Ice\040Edge\040Error}{section.3}% 6
+\BOOKMARK [1][-]{section.4}{Impact\040of\040increased\040resolution\040on\040the\040IIEE}{}% 7
+\BOOKMARK [1][-]{section.5}{Model\040development\040log\040and\040notes}{}% 8
+\BOOKMARK [2][-]{subsection.5.1}{Two\040day\040forecast}{section.5}% 9
+\BOOKMARK [2][-]{subsection.5.2}{Model\040Architecture}{section.5}% 10
+\BOOKMARK [2][-]{subsection.5.3}{CategoricalCrossEntropy-Loss}{section.5}% 11
+\BOOKMARK [2][-]{subsection.5.4}{FocalLoss}{section.5}% 12
+\BOOKMARK [2][-]{subsection.5.5}{Cumulative\040probability\040distribution\040model}{section.5}% 13
+\BOOKMARK [3][-]{subsubsection.5.5.1}{Separate\040convolutionial\040layers\040as\040output}{subsection.5.5}% 14
+\BOOKMARK [3][-]{subsubsection.5.5.2}{Single\040convolutional\040layer\040for\040multiple\040outputs}{subsection.5.5}% 15
+\BOOKMARK [1][-]{section.6}{Methodology}{}% 16
+\BOOKMARK [2][-]{subsection.6.1}{unet}{section.6}% 17

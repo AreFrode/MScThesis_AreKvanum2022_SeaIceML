@@ -1,46 +1,21 @@
-This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
-Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
-The top-level auxiliary file: verification.aux
-The style file: unsrt.bst
-Database file #1: ../bib/master_thesis.bib
-You've used 7 entries,
-            1791 wiz_defined-function locations,
-            505 strings with 4989 characters,
-and the built_in function-call counts, 1929 in all, are:
-= -- 170
-> -- 100
-< -- 0
-+ -- 36
-- -- 29
-* -- 185
-:= -- 316
-add.period$ -- 21
-call.type$ -- 7
-change.case$ -- 7
-chr.to.int$ -- 0
-cite$ -- 7
-duplicate$ -- 63
-empty$ -- 172
-format.name$ -- 29
-if$ -- 399
-int.to.chr$ -- 0
-int.to.str$ -- 7
-missing$ -- 7
-newline$ -- 38
-num.names$ -- 7
-pop$ -- 7
-preamble$ -- 1
-purify$ -- 0
-quote$ -- 0
-skip$ -- 22
-stack$ -- 0
-substring$ -- 184
-swap$ -- 7
-text.length$ -- 0
-text.prefix$ -- 0
-top$ -- 0
-type$ -- 0
-warning$ -- 0
-while$ -- 21
-width$ -- 8
-write$ -- 79
+[0] Config.pm:302> INFO - This is Biber 2.9
+[0] Config.pm:305> INFO - Logfile is 'verification.blg'
+[17] biber:313> INFO - === Wed Nov  9, 2022, 16:22:35
+[30] Biber.pm:371> INFO - Reading 'verification.bcf'
+[69] Biber.pm:857> INFO - Found 9 citekeys in bib section 0
+[78] Biber.pm:3981> INFO - Processing section 0
+[84] Biber.pm:4154> INFO - Looking for bibtex format file '../bib/master_thesis.bib' for section 0
+[86] bibtex.pm:1468> INFO - LaTeX decoding ...
+[125] bibtex.pm:1294> INFO - Found BibTeX data source '../bib/master_thesis.bib'
+[142] Utils.pm:169> WARN - month field 'may' in entry 'Ho2010' is not an integer - this will probably not sort properly.
+[148] Utils.pm:169> WARN - month field 'sep' in entry 'Dukhovskoy2015' is not an integer - this will probably not sort properly.
+[154] Utils.pm:169> WARN - month field 'feb' in entry 'Goessling2016' is not an integer - this will probably not sort properly.
+[163] Utils.pm:169> WARN - month field 'may' in entry 'Palerme2019' is not an integer - this will probably not sort properly.
+[168] Utils.pm:169> WARN - month field 'may' in entry 'Melsom2019' is not an integer - this will probably not sort properly.
+[187] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[187] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[187] Biber.pm:3809> INFO - Sorting list 'nty/global//global/global' of type 'entry' with template 'nty' and locale 'en-US'
+[187] Biber.pm:3815> INFO - No sort tailoring available for locale 'en-US'
+[196] bbl.pm:617> INFO - Writing 'verification.bbl' with encoding 'UTF-8'
+[199] bbl.pm:720> INFO - Output to verification.bbl
+[199] Biber.pm:110> INFO - WARNINGS: 5

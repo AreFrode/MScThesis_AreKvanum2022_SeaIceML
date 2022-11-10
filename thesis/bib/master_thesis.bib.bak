@@ -1,3 +1,14 @@
+@InProceedings{Nair2010,
+  author    = {Vinod Nair and Geoffrey E. Hinton},
+  booktitle = {ICML},
+  title     = {Rectified Linear Units Improve Restricted Boltzmann Machines},
+  year      = {2010},
+  pages     = {807-814},
+  cdate     = {1262304000000},
+  comment   = {Paper presenting the ReLU activation function},
+  url       = {https://icml.cc/Conferences/2010/papers/432.pdf},
+}
+
 @Article{Palerme2021,
   author    = {Cyril Palerme and Malte Müller},
   title     = {Calibration of sea ice drift forecasts using random forest algorithms},
@@ -365,6 +376,108 @@ The Polar Code and SOLAS amendments were adopted during the 94th session of IMO�
   volume    = {34},
   doi       = {10.1016/j.marpol.2009.10.009},
   publisher = {Elsevier {BV}},
+}
+
+@software{reback2020pandas,
+    author       = {The pandas development team},
+    title        = {pandas-dev/pandas: Pandas},
+    month        = feb,
+    year         = 2020,
+    publisher    = {Zenodo},
+    version      = {latest},
+    doi          = {10.5281/zenodo.3509134},
+    url          = {https://doi.org/10.5281/zenodo.3509134}
+}
+
+@InProceedings{mckinney-proc-scipy-2010,
+  author    = {{W}es {M}c{K}inney},
+  booktitle = {{P}roceedings of the 9th {P}ython in {S}cience {C}onference},
+  title     = {{D}ata {S}tructures for {S}tatistical {C}omputing in {P}ython},
+  year      = {2010},
+  editor    = {{S}t\'efan van der {W}alt and {J}arrod {M}illman},
+  pages     = {56 - 61},
+  doi       = {10.25080/Majora-92bf1922-00a},
+}
+
+@Article{Shelhamer2017,
+  author    = {Evan Shelhamer and Jonathan Long and Trevor Darrell},
+  journal   = {{IEEE} Transactions on Pattern Analysis and Machine Intelligence},
+  title     = {Fully Convolutional Networks for Semantic Segmentation},
+  year      = {2017},
+  month     = {apr},
+  number    = {4},
+  pages     = {640--651},
+  volume    = {39},
+  comment   = {Paper presenting the FCN model for semantic image segmentation},
+  doi       = {10.1109/tpami.2016.2572683},
+  file      = {:Long2017.pdf:PDF},
+  publisher = {Institute of Electrical and Electronics Engineers ({IEEE})},
+}
+
+@Article{Mueller2017,
+  author    = {Malte Müller and Yurii Batrak and J{\o}rn Kristiansen and Morten A. {\O}. K{\o}ltzow and Gunnar Noer and Anton Korosov},
+  journal   = {Monthly Weather Review},
+  title     = {Characteristics of a Convective-Scale Weather Forecasting System for the European Arctic},
+  year      = {2017},
+  month     = {dec},
+  number    = {12},
+  pages     = {4771--4787},
+  volume    = {145},
+  comment   = {Paper presenting the convective-scale atmospheric prediction system AROME ARCTIC},
+  doi       = {10.1175/mwr-d-17-0194.1},
+  file      = {:Muller2017.pdf:PDF},
+  publisher = {American Meteorological Society},
+}
+
+@Article{Lin2017,
+  author        = {Tsung-Yi Lin and Priya Goyal and Ross Girshick and Kaiming He and Piotr Dollár},
+  title         = {Focal Loss for Dense Object Detection},
+  year          = {2017},
+  month         = aug,
+  abstract      = {The highest accuracy object detectors to date are based on a two-stage approach popularized by R-CNN, where a classifier is applied to a sparse set of candidate object locations. In contrast, one-stage detectors that are applied over a regular, dense sampling of possible object locations have the potential to be faster and simpler, but have trailed the accuracy of two-stage detectors thus far. In this paper, we investigate why this is the case. We discover that the extreme foreground-background class imbalance encountered during training of dense detectors is the central cause. We propose to address this class imbalance by reshaping the standard cross entropy loss such that it down-weights the loss assigned to well-classified examples. Our novel Focal Loss focuses training on a sparse set of hard examples and prevents the vast number of easy negatives from overwhelming the detector during training. To evaluate the effectiveness of our loss, we design and train a simple dense detector we call RetinaNet. Our results show that when trained with the focal loss, RetinaNet is able to match the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors. Code is at: https://github.com/facebookresearch/Detectron.},
+  archiveprefix = {arXiv},
+  eprint        = {1708.02002},
+  file          = {:http\://arxiv.org/pdf/1708.02002v2:PDF;:Lin2018.pdf:PDF},
+  keywords      = {cs.CV},
+  primaryclass  = {cs.CV},
+}
+
+@Misc{He2015,
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  title     = {Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification},
+  year      = {2015},
+  copyright = {arXiv.org perpetual, non-exclusive license},
+  doi       = {10.48550/ARXIV.1502.01852},
+  file      = {:He2015.pdf:PDF},
+  keywords  = {Computer Vision and Pattern Recognition (cs.CV), Artificial Intelligence (cs.AI), Machine Learning (cs.LG), FOS: Computer and information sciences},
+  publisher = {arXiv},
+}
+
+@InProceedings{Krizhevsky2012,
+  author    = {Krizhevsky, Alex and Sutskever, Ilya and Hinton, Geoffrey E},
+  booktitle = {Advances in Neural Information Processing Systems},
+  title     = {ImageNet Classification with Deep Convolutional Neural Networks},
+  year      = {2012},
+  editor    = {F. Pereira and C.J. Burges and L. Bottou and K.Q. Weinberger},
+  publisher = {Curran Associates, Inc.},
+  volume    = {25},
+  comment   = {Paper presenting the AlexNet CNN},
+  url       = {https://proceedings.neurips.cc/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf},
+}
+
+@Article{Wang2017,
+  author    = {Lei Wang and K. Scott and David Clausi},
+  journal   = {Remote Sensing},
+  title     = {Sea Ice Concentration Estimation during Freeze-Up from {SAR} Imagery Using a Convolutional Neural Network},
+  year      = {2017},
+  month     = {apr},
+  number    = {5},
+  pages     = {408},
+  volume    = {9},
+  comment   = {Paper presenting a LandSea mask interpolation technique for should be but can't NaN values covered by a mask.},
+  doi       = {10.3390/rs9050408},
+  file      = {:Wang2017.pdf:PDF},
+  publisher = {{MDPI} {AG}},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
