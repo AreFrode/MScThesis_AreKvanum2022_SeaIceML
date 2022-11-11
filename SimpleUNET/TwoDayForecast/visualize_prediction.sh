@@ -8,4 +8,4 @@ source /modules/rhel8/conda/install/etc/profile.d/conda.sh
 
 conda activate production-03-2022
 
-python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/visualize_prediction.py weights_04111245
+python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/visualize_prediction.py weights_05111353

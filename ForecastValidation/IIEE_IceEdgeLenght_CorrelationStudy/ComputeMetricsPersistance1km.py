@@ -25,7 +25,7 @@ def main():
     icecharts = sorted(glob.glob(f"{PATH_ICECHARTS}**/**/*.hdf5"))
 
     with h5py.File(icecharts[0], 'r') as constants:
-        lsmask = constants['lsmask'][450:, :1840]
+        lsmask = constants['lsmask'][578:, :1792]
 
     output_df = pd.DataFrame(columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus'])
     for target in tqdm(icecharts):
@@ -34,8 +34,8 @@ def main():
         date = (date + timedelta(days = 2)).strftime('%Y%m%d')
 
         with h5py.File(target, 'r') as intarget:
-            sic_forecast = onehot_encode_sic(intarget['sic'][450:, :1840])
-            sic_target = intarget['sic_target'][450:, :1840]
+            sic_forecast = intarget['sic'][578:, :1792]
+            sic_target = intarget['sic_target'][578:, :1792]
 
         ice_edge_target = find_ice_edge(sic_target, lsmask)
         target_length = ice_edge_length(ice_edge_target)

@@ -26,8 +26,8 @@ def main():
     if not os.path.exists(PATH_OUTPUTS):
         os.makedirs(PATH_OUTPUTS)
 
-    icecharts = sorted(glob.glob(f"{PATH_PERSISTANCE}2021/**/*.hdf5", recursive = True))
-    forecasts = sorted(glob.glob(f"{PATH_FORECAST}2021/**/*.hdf5", recursive = True))
+    icecharts = sorted(glob.glob(f"{PATH_PERSISTANCE}2021/**/*.hdf5"))
+    forecasts = sorted(glob.glob(f"{PATH_FORECAST}2021/**/*.hdf5"))
 
     with h5py.File(icecharts[0], 'r') as constants:
         lsmask = constants['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
@@ -54,8 +54,8 @@ def main():
         a_plus = iiee[0].sum()
         a_minus = iiee[1].sum()
 
-        area_dist_target = contourAreaDistribution(sic_target)
-        area_dist_forecast = contourAreaDistribution(sic_forecast)
+        area_dist_target = contourAreaDistribution(sic_target, lsmask)
+        area_dist_forecast = contourAreaDistribution(sic_forecast, lsmask)
 
         df_column_values = [pd.to_datetime(date, format="%Y%m%d"), target_length, forecast_length, np.mean([target_length, forecast_length]), a_plus + a_minus, a_plus, a_minus] + area_dist_target.tolist() + area_dist_forecast.tolist()
 

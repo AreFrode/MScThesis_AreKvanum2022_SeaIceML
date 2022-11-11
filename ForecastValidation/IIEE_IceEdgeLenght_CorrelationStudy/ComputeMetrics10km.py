@@ -16,8 +16,8 @@ def main():
     # Define data-paths
     PATH_ICECHARTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 
-    # Two day forecast with bottleneck at 1024 channels - architecture
-    PATH_FORECASTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_06101543/"
+    # Best unet as of 10.11
+    PATH_FORECASTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_05111353/"
 
     PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/Data/"
 
@@ -37,8 +37,8 @@ def main():
     nx = 1845
     ny = 2370
 
-    x_input = np.linspace(x_min, x_max, nx)[:1840]
-    y_input = np.linspace(y_min, y_max, ny)[450:]
+    x_input = np.linspace(x_min, x_max, nx)[:1792]
+    y_input = np.linspace(y_min, y_max, ny)[578:]
     xx_input, yy_input = np.meshgrid(x_input, y_input)
     xx_input_flat = xx_input.flatten()
     yy_input_flat = yy_input.flatten()
@@ -52,7 +52,7 @@ def main():
     lsmask = np.zeros((ny_target, nx_target), dtype='int')
 
     with h5py.File(icecharts[0], 'r') as constants:
-        lsmask[...] = griddata((xx_input_flat, yy_input_flat), constants['lsmask'][450:, :1840].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
+        lsmask[...] = griddata((xx_input_flat, yy_input_flat), constants['lsmask'][578:, :1792].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
 
 
     output_df = pd.DataFrame(columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus'])
@@ -62,7 +62,7 @@ def main():
         sic_forecast = np.zeros((ny_target, nx_target))
 
         with h5py.File(target, 'r') as intarget:
-            sic_target[...] = griddata((xx_input_flat, yy_input_flat), intarget['sic_target'][450:, :1840].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
+            sic_target[...] = griddata((xx_input_flat, yy_input_flat), intarget['sic_target'][578:, :1792].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
 
         with h5py.File(forecast, 'r') as inforecast:
             sic_forecast[...] = griddata((xx_input_flat, yy_input_flat), inforecast['y_pred'][0].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')

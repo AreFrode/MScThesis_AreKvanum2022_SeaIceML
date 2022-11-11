@@ -15,28 +15,28 @@ def main():
     # Define data-paths
     PATH_ICECHARTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 
-    # Two day forecast with bottleneck at 1024 channels - architecture
-    PATH_FORECASTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_06101543/"
+    # Best unet as of 10.11
+    PATH_FORECASTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_05111353/"
 
     PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/Data/"
 
     if not os.path.exists(PATH_OUTPUTS):
         os.makedirs(PATH_OUTPUTS)
 
-    icecharts = sorted(glob.glob(f"{PATH_ICECHARTS}2021/**/*.hdf5", recursive = True))
-
-    forecasts = sorted(glob.glob(f"{PATH_FORECASTS}2021/**/*.hdf5", recursive = True))
+    icecharts = sorted(glob.glob(f"{PATH_ICECHARTS}2021/**/*.hdf5"))
+    forecasts = sorted(glob.glob(f"{PATH_FORECASTS}2021/**/*.hdf5"))
 
     with h5py.File(icecharts[0], 'r') as constants:
-        lsmask = constants['lsmask'][450:, :1840]
+        lsmask = constants['lsmask'][578:, :1792]
 
 
     output_df = pd.DataFrame(columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus'])
+
     for target, forecast in tqdm(zip(icecharts, forecasts), total=len(icecharts)):
         date = forecast[-17:-9]
 
         with h5py.File(target, 'r') as intarget:
-            sic_target = intarget['sic_target'][450:, :1840]
+            sic_target = intarget['sic_target'][578:, :1792]
 
         with h5py.File(forecast, 'r') as inforecast:
             sic_forecast = inforecast['y_pred'][0]

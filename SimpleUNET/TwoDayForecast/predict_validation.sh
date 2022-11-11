@@ -1,7 +1,7 @@
 #$ -S /bin/bash
 #$ -l h_rt=10:00:00
 #$ -q research-el7.q
-#$ -l h_vmem=80G
+#$ -l h_vmem=40G
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/logs/predictions
 
 module load Python-devel/3.8.7-TF2.4.1

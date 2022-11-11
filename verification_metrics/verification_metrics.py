@@ -6,6 +6,8 @@ import h5py
 import numpy as np
 import pandas as pd
 
+from matplotlib import pyplot as plt
+
 def find_ice_edge(sic, mask, threshold = 2):
     """Calculates and defines a ice_edge mask for a given array
 
@@ -19,11 +21,11 @@ def find_ice_edge(sic, mask, threshold = 2):
 
     mask_padded = np.pad(mask, 1, 'constant', constant_values = 1)
     sic_padded = np.pad(sic, 1, 'constant', constant_values = 7)
-    sic_padded[mask_padded] = 7
+    sic_padded = np.where(mask_padded == 1, 7, sic_padded)
 
     ice_edge = np.zeros_like(sic_padded[1:-1, 1:-1])
     H, W = sic_padded.shape
-
+    plt.contourf(sic_padded, cmap='cividis')
     for i in range(1, H-1):
         for j in range(1, W-1):
             current = sic_padded[i,j]
@@ -146,8 +148,9 @@ def ice_edge_length(ice_edge, s = 1):
 
     return 1000. * length
 
-def contourAreaDistribution(icefield, num_classes=7, side_length = 1):
+def contourAreaDistribution(icefield, mask, num_classes=7, side_length = 1):
     contour_matrix = np.zeros((*icefield.shape, num_classes))
+    icefield = np.where(mask == 1, 7, icefield)
 
     for i in range(num_classes):
         contour_matrix[...,i] = np.where(icefield == i, 1, 0)
@@ -156,6 +159,63 @@ def contourAreaDistribution(icefield, num_classes=7, side_length = 1):
 
     return area_array
 
+def greatCircleDistance(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
+    """Computes the Great Circle Distance between two points 
+        AUTHOR: Cyril Palerme
+
+    Args:
+        lon1 (float): longitude point1
+        lat1 (float): latitude point1
+        lon2 (float): longitude point2
+        lat2 (float): latitude point2
+
+    Returns:
+        float: Great Circle Distance between point1 and point2
+    """
+
+    # Convert from degrees to radians
+    pi = 3.14159265
+    lon1 = lon1 * 2 * pi / 360.
+    lat1 = lat1 * 2 * pi / 360.
+    lon2 = lon2 * 2 * pi / 360.
+    lat2 = lat2 * 2 * pi / 360.
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = np.sin(dlat / 2.) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2.) ** 2
+    c = 2 * np.arcsin(np.sqrt(a))
+    distance = 6.371e6 * c
+    return distance
+
+
+
+def test_DistanceToIceEdge():
+    # Define global paths
+    PATH_TARGETS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
+    PATH_PREDICTIONS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_05111353/"
+    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/test_data/"
+
+    year = "2021"
+    month = "**"
+
+    southern_boundary = 578
+    eastern_boundary = 1792
+
+    target_path = sorted(glob.glob(f"{PATH_TARGETS}{year}/{month}/*.hdf5"))[0]
+    prediction_path = sorted(glob.glob(f"{PATH_PREDICTIONS}{year}/{month}/*.hdf5"))[0]
+
+    with h5py.File(target_path, 'r') as infile_target:
+        sic_target = infile_target['sic_target'][southern_boundary:, :eastern_boundary]
+        lsmask = infile_target['lsmask'][southern_boundary:, :eastern_boundary]
+        lat = infile_target['lat'][southern_boundary:, :eastern_boundary]
+        lon = infile_target['lon'][southern_boundary:, :eastern_boundary]
+
+    with h5py.File(prediction_path, 'r') as infile_forecast:
+        sic_forecast = infile_forecast['y_pred'][0]
+
+    target_ice_edge = find_ice_edge(sic_target, lsmask)
+    plt.contourf(target_ice_edge)
+    plt.show()
+    print(ice_edge_length(target_ice_edge))
 
 
 def main():
@@ -234,4 +294,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    test_DistanceToIceEdge()
+    # main()

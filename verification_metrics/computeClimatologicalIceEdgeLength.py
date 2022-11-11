@@ -53,10 +53,6 @@ def main():
     xx_arome_flat = xx_arome.flatten()
     yy_arome_flat = yy_arome.flatten()
 
-    lat_arome = griddata((xx_arome_flat, yy_arome_flat), lat_input.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
-
-    lon_arome = griddata((xx_arome_flat, yy_arome_flat), lon_input.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
-
     baltic_mask = np.zeros((len(y_target), len(x_target)))
     baltic_mask[0:52, 50:len(x_target)] = 1
 
