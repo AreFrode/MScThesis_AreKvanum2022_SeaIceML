@@ -183,9 +183,31 @@ def greatCircleDistance(lon1: float, lat1: float, lon2: float, lat2: float) -> f
     dlat = lat2 - lat1
     a = np.sin(dlat / 2.) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2.) ** 2
     c = 2 * np.arcsin(np.sqrt(a))
-    distance = 6.371e6 * c
+    distance = 6.371e6 * c   # Convert to meter
     return distance
 
+
+def minimumDistanceToIceEdge(wrongly_classified_field, target_ice_edge, lat, lon):
+    wrongly_classified_field = np.ma.filled(wrongly_classified_field, 0)
+
+    wrongly_classified_indexes = np.where(wrongly_classified_field != 0)
+    ice_edge_indexes = np.where(target_ice_edge == 1)
+    ice_edge_indexes_stacked = np.dstack((ice_edge_indexes[0], ice_edge_indexes[1]))[0]
+
+    min_distances = []
+
+    for idx in np.dstack((wrongly_classified_indexes[0], wrongly_classified_indexes[1]))[0]:
+        idx_full = np.full_like(ice_edge_indexes_stacked, idx).T
+        idx_tuple = (idx_full[0], idx_full[1])
+
+        min_distances.append(greatCircleDistance(
+            lon[idx_tuple], 
+            lat[idx_tuple],
+            lon[ice_edge_indexes],
+            lat[ice_edge_indexes]
+        ).min())
+
+    return np.array(min_distances)
 
 
 def test_DistanceToIceEdge():
@@ -213,11 +235,17 @@ def test_DistanceToIceEdge():
         sic_forecast = infile_forecast['y_pred'][0]
 
     target_ice_edge = find_ice_edge(sic_target, lsmask)
-    plt.contourf(target_ice_edge)
-    plt.show()
-    print(ice_edge_length(target_ice_edge))
+    iiee = IIEE(sic_forecast, sic_target, lsmask)
+    a_plus = iiee[0]
+    a_minus = iiee[1]
 
+    a_plus_minimum_distance = minimumDistanceToIceEdge(a_plus, target_ice_edge, lat, lon)
+    print(a_plus_minimum_distance.mean())
 
+    a_minus_minumum_distance = minimumDistanceToIceEdge(a_minus, target_ice_edge, lat, lon)
+    print(a_minus_minumum_distance.mean())
+
+    
 def main():
     
     # Define global paths
