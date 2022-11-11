@@ -1,3 +1,14 @@
+@InProceedings{Nair2010,
+  author    = {Vinod Nair and Geoffrey E. Hinton},
+  booktitle = {ICML},
+  title     = {Rectified Linear Units Improve Restricted Boltzmann Machines},
+  year      = {2010},
+  pages     = {807-814},
+  cdate     = {1262304000000},
+  comment   = {Paper presenting the ReLU activation function},
+  url       = {https://icml.cc/Conferences/2010/papers/432.pdf},
+}
+
 @Article{Palerme2021,
   author    = {Cyril Palerme and Malte Müller},
   title     = {Calibration of sea ice drift forecasts using random forest algorithms},
@@ -224,7 +235,7 @@ Section 5 touch upon data preparation and model evaluation, especially data spli
   abstract      = {There is large consent that successful training of deep networks requires many thousand annotated training samples. In this paper, we present a network and training strategy that relies on the strong use of data augmentation to use the available annotated samples more efficiently. The architecture consists of a contracting path to capture context and a symmetric expanding path that enables precise localization. We show that such a network can be trained end-to-end from very few images and outperforms the prior best method (a sliding-window convolutional network) on the ISBI challenge for segmentation of neuronal structures in electron microscopic stacks. Using the same network trained on transmitted light microscopy images (phase contrast and DIC) we won the ISBI cell tracking challenge 2015 in these categories by a large margin. Moreover, the network is fast. Segmentation of a 512x512 image takes less than a second on a recent GPU. The full implementation (based on Caffe) and the trained networks are available at http://lmb.informatik.uni-freiburg.de/people/ronneber/u-net .},
   archiveprefix = {arXiv},
   eprint        = {1505.04597},
-  file          = {:http\://arxiv.org/pdf/1505.04597v1:PDF},
+  file          = {:http\://arxiv.org/pdf/1505.04597v1:PDF;:Ronneberger2015.pdf:PDF},
   keywords      = {cs.CV},
   primaryclass  = {cs.CV},
 }
@@ -332,17 +343,4 @@ Section 5 touch upon data preparation and model evaluation, especially data spli
   journal   = {Journal of Geophysical Research: Oceans},
   title     = {Skill metrics for evaluation and comparison of sea ice models},
   year      = {2015},
-  month     = {sep},
-  number    = {9},
-  pages     = {5910--5931},
-  volume    = {120},
-  comment   = {Paper introducing the Modified Hausdorff Distance as a ice edge metrics},
-  doi       = {10.1002/2015jc010989},
-  publisher = {American Geophysical Union ({AGU})},
-}
-
-@Misc{IMO2017,
-  author       = {International Maritime Organization},
-  howpublished = {webpage},
-  month        = jan,
-  title        = {Internat
+  month 

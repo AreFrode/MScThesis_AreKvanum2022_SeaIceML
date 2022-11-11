@@ -1,44 +1,458 @@
-\begin{thebibliography}{1}
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.9 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
 
-\bibitem{Casati2008}
-B.~Casati, L.~J. Wilson, D.~B. Stephenson, P.~Nurmi, A.~Ghelli, M.~Pocernich,
-  U.~Damrath, E.~E. Ebert, B.~G. Brown, and S.~Mason.
-\newblock Forecast verification: current status and future directions.
-\newblock {\em Meteorological Applications}, 15(1):3--18, 2008.
 
-\bibitem{Ho2010}
-Joshua Ho.
-\newblock The implications of arctic sea ice decline on shipping.
-\newblock {\em Marine Policy}, 34(3):713--715, may 2010.
+\refsection{0}
+  \datalist[entry]{nty/global//global/global}
+    \entry{Casati2008}{article}{}
+      \name{author}{10}{}{%
+        {{hash=c5c979f437b9474fdfca4910c6e8e1b8}{%
+           family={Casati},
+           familyi={C\bibinitperiod},
+           given={B.},
+           giveni={B\bibinitperiod}}}%
+        {{hash=ba6b028f2f0681ffff1da2974b1dfe52}{%
+           family={Wilson},
+           familyi={W\bibinitperiod},
+           given={L.\bibnamedelimi J.},
+           giveni={L\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=84785a5fdca6a7c945a5d2dd6c10b3dd}{%
+           family={Stephenson},
+           familyi={S\bibinitperiod},
+           given={D.\bibnamedelimi B.},
+           giveni={D\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+        {{hash=c73d765299fc928acdd9c1b8e8038c4f}{%
+           family={Nurmi},
+           familyi={N\bibinitperiod},
+           given={P.},
+           giveni={P\bibinitperiod}}}%
+        {{hash=aa495dbbf95aee84cdc19a0f95606f52}{%
+           family={Ghelli},
+           familyi={G\bibinitperiod},
+           given={A.},
+           giveni={A\bibinitperiod}}}%
+        {{hash=b6f256ada26300bcd289ca1dd0cb7b18}{%
+           family={Pocernich},
+           familyi={P\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod}}}%
+        {{hash=14d1dc296e95520c1cd67b6d280c30f3}{%
+           family={Damrath},
+           familyi={D\bibinitperiod},
+           given={U.},
+           giveni={U\bibinitperiod}}}%
+        {{hash=6f468476fe89039f5fae89683e74eeae}{%
+           family={Ebert},
+           familyi={E\bibinitperiod},
+           given={E.\bibnamedelimi E.},
+           giveni={E\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=6d246a616e3fe51dba3960abb12c9429}{%
+           family={Brown},
+           familyi={B\bibinitperiod},
+           given={B.\bibnamedelimi G.},
+           giveni={B\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+        {{hash=08408aeff6190cd119e3121c835c7460}{%
+           family={Mason},
+           familyi={M\bibinitperiod},
+           given={S.},
+           giveni={S\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Wiley}%
+      }
+      \strng{namehash}{f279c33ef72a920fcb6b244114426846}
+      \strng{fullhash}{696c17bb988963c1ab9c3d7f30951d36}
+      \strng{bibnamehash}{f279c33ef72a920fcb6b244114426846}
+      \strng{authorbibnamehash}{f279c33ef72a920fcb6b244114426846}
+      \strng{authornamehash}{f279c33ef72a920fcb6b244114426846}
+      \strng{authorfullhash}{696c17bb988963c1ab9c3d7f30951d36}
+      \field{sortinit}{C}
+      \field{sortinithash}{963e9d84a3da2344e8833203de5aed05}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Meteorological Applications}
+      \field{number}{1}
+      \field{title}{Forecast verification: current status and future directions}
+      \field{volume}{15}
+      \field{year}{2008}
+      \field{pages}{3\bibrangedash 18}
+      \range{pages}{16}
+      \verb{doi}
+      \verb 10.1002/met.52
+      \endverb
+    \endentry
+    \entry{Dukhovskoy2015}{article}{}
+      \name{author}{5}{}{%
+        {{hash=16de3ebad6201042c0e510fa1f48dfe2}{%
+           family={Dukhovskoy},
+           familyi={D\bibinitperiod},
+           given={Dmitry\bibnamedelima S.},
+           giveni={D\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+        {{hash=160026dc6e0afd1d2ed0887bb5d53bf4}{%
+           family={Ubnoske},
+           familyi={U\bibinitperiod},
+           given={Jonathan},
+           giveni={J\bibinitperiod}}}%
+        {{hash=3e1baf4a42e014ffb145b8f470e879e6}{%
+           family={Blanchard-Wrigglesworth},
+           familyi={B\bibinithyphendelim W\bibinitperiod},
+           given={Edward},
+           giveni={E\bibinitperiod}}}%
+        {{hash=18b0a4c429e4c751e8bc339e2b7f333a}{%
+           family={Hiester},
+           familyi={H\bibinitperiod},
+           given={Hannah\bibnamedelima R.},
+           giveni={H\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=77a38082f419235a5c5d7b56a2c3f5fb}{%
+           family={Proshutinsky},
+           familyi={P\bibinitperiod},
+           given={Andrey},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {American Geophysical Union ({AGU})}%
+      }
+      \strng{namehash}{ce8551f50c401be0ba79c5053fe2c8ec}
+      \strng{fullhash}{f05736fd062e79c76a4f5c341ea3086e}
+      \strng{bibnamehash}{ce8551f50c401be0ba79c5053fe2c8ec}
+      \strng{authorbibnamehash}{ce8551f50c401be0ba79c5053fe2c8ec}
+      \strng{authornamehash}{ce8551f50c401be0ba79c5053fe2c8ec}
+      \strng{authorfullhash}{f05736fd062e79c76a4f5c341ea3086e}
+      \field{sortinit}{D}
+      \field{sortinithash}{2ef1bd9a78cc71eb74d7231c635177b8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Geophysical Research: Oceans}
+      \field{month}{9}
+      \field{number}{9}
+      \field{title}{Skill metrics for evaluation and comparison of sea ice models}
+      \field{volume}{120}
+      \field{year}{2015}
+      \field{pages}{5910\bibrangedash 5931}
+      \range{pages}{22}
+      \verb{doi}
+      \verb 10.1002/2015jc010989
+      \endverb
+    \endentry
+    \entry{Goessling2018}{article}{}
+      \name{author}{2}{}{%
+        {{hash=9bd509c6416c193c256e08a757463585}{%
+           family={Goessling},
+           familyi={G\bibinitperiod},
+           given={H.\bibnamedelimi F.},
+           giveni={H\bibinitperiod\bibinitdelim F\bibinitperiod}}}%
+        {{hash=db72a75276a3cd354a823eb8084cf4d2}{%
+           family={Jung},
+           familyi={J\bibinitperiod},
+           given={T.},
+           giveni={T\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Wiley}%
+      }
+      \strng{namehash}{0a2107fbf274ece04722ec3d8cfec795}
+      \strng{fullhash}{0a2107fbf274ece04722ec3d8cfec795}
+      \strng{bibnamehash}{0a2107fbf274ece04722ec3d8cfec795}
+      \strng{authorbibnamehash}{0a2107fbf274ece04722ec3d8cfec795}
+      \strng{authornamehash}{0a2107fbf274ece04722ec3d8cfec795}
+      \strng{authorfullhash}{0a2107fbf274ece04722ec3d8cfec795}
+      \field{sortinit}{G}
+      \field{sortinithash}{5e8d2bf9d38de41b1528bd307546008f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Quarterly Journal of the Royal Meteorological Society}
+      \field{month}{4}
+      \field{number}{712}
+      \field{title}{A probabilistic verification score for contours: Methodology and application to Arctic ice-edge forecasts}
+      \field{volume}{144}
+      \field{year}{2018}
+      \field{pages}{735\bibrangedash 743}
+      \range{pages}{9}
+      \verb{doi}
+      \verb 10.1002/qj.3242
+      \endverb
+      \verb{file}
+      \verb Article that introduces SPS:Goessling2018.pdf:PDF
+      \endverb
+    \endentry
+    \entry{Goessling2016}{article}{}
+      \name{author}{5}{}{%
+        {{hash=9bd509c6416c193c256e08a757463585}{%
+           family={Goessling},
+           familyi={G\bibinitperiod},
+           given={H.\bibnamedelimi F.},
+           giveni={H\bibinitperiod\bibinitdelim F\bibinitperiod}}}%
+        {{hash=2d1e01ec98731c7c8d58939193e4f254}{%
+           family={Tietsche},
+           familyi={T\bibinitperiod},
+           given={S.},
+           giveni={S\bibinitperiod}}}%
+        {{hash=6f37612eae558e689aa66351ec121d68}{%
+           family={Day},
+           familyi={D\bibinitperiod},
+           given={J.\bibnamedelimi J.},
+           giveni={J\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=cd5ac3f765640e1f367f2e4bf9908104}{%
+           family={Hawkins},
+           familyi={H\bibinitperiod},
+           given={E.},
+           giveni={E\bibinitperiod}}}%
+        {{hash=db72a75276a3cd354a823eb8084cf4d2}{%
+           family={Jung},
+           familyi={J\bibinitperiod},
+           given={T.},
+           giveni={T\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {American Geophysical Union ({AGU})}%
+      }
+      \strng{namehash}{f52cbadca7241c7fb79d827feea1da83}
+      \strng{fullhash}{a3ece5bc1500830f459e9b736f2a7c63}
+      \strng{bibnamehash}{f52cbadca7241c7fb79d827feea1da83}
+      \strng{authorbibnamehash}{f52cbadca7241c7fb79d827feea1da83}
+      \strng{authornamehash}{f52cbadca7241c7fb79d827feea1da83}
+      \strng{authorfullhash}{a3ece5bc1500830f459e9b736f2a7c63}
+      \field{sortinit}{G}
+      \field{sortinithash}{5e8d2bf9d38de41b1528bd307546008f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Geophysical Research Letters}
+      \field{month}{2}
+      \field{number}{4}
+      \field{title}{Predictability of the Arctic sea ice edge}
+      \field{volume}{43}
+      \field{year}{2016}
+      \field{pages}{1642\bibrangedash 1650}
+      \range{pages}{9}
+      \verb{doi}
+      \verb 10.1002/2015gl067232
+      \endverb
+      \verb{file}
+      \verb Article that introduces IIEE:Goessling2016.pdf:PDF
+      \endverb
+    \endentry
+    \entry{Ho2010}{article}{}
+      \name{author}{1}{}{%
+        {{hash=9f588cb8ea65ee2cc3d7dd1539b52e7a}{%
+           family={Ho},
+           familyi={H\bibinitperiod},
+           given={Joshua},
+           giveni={J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier {BV}}%
+      }
+      \strng{namehash}{9f588cb8ea65ee2cc3d7dd1539b52e7a}
+      \strng{fullhash}{9f588cb8ea65ee2cc3d7dd1539b52e7a}
+      \strng{bibnamehash}{9f588cb8ea65ee2cc3d7dd1539b52e7a}
+      \strng{authorbibnamehash}{9f588cb8ea65ee2cc3d7dd1539b52e7a}
+      \strng{authornamehash}{9f588cb8ea65ee2cc3d7dd1539b52e7a}
+      \strng{authorfullhash}{9f588cb8ea65ee2cc3d7dd1539b52e7a}
+      \field{sortinit}{H}
+      \field{sortinithash}{5f15a7bc777ad49ff15aa4d2831b1681}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Marine Policy}
+      \field{month}{5}
+      \field{number}{3}
+      \field{title}{The implications of Arctic sea ice decline on shipping}
+      \field{volume}{34}
+      \field{year}{2010}
+      \field{pages}{713\bibrangedash 715}
+      \range{pages}{3}
+      \verb{doi}
+      \verb 10.1016/j.marpol.2009.10.009
+      \endverb
+    \endentry
+    \entry{mckinney-proc-scipy-2010}{inproceedings}{}
+      \name{author}{1}{}{%
+        {{hash=27ca77940a5e8c07c5d89d0f3fb11d75}{%
+           family={McKinney},
+           familyi={M\bibinitperiod},
+           given={Wes},
+           giveni={W\bibinitperiod}}}%
+      }
+      \name{editor}{2}{}{%
+        {{hash=385cf725d4d28f79a6a6e5c6e0635ba4}{%
+           family={Walt},
+           familyi={W\bibinitperiod},
+           given={Stéfan},
+           giveni={S\bibinitperiod},
+           prefix={van\bibnamedelima der},
+           prefixi={v\bibinitperiod\bibinitdelim d\bibinitperiod}}}%
+        {{hash=eca9aeefdc8563b0e153fbedf08bc1a1}{%
+           family={Millman},
+           familyi={M\bibinitperiod},
+           given={Jarrod},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{27ca77940a5e8c07c5d89d0f3fb11d75}
+      \strng{fullhash}{27ca77940a5e8c07c5d89d0f3fb11d75}
+      \strng{bibnamehash}{27ca77940a5e8c07c5d89d0f3fb11d75}
+      \strng{authorbibnamehash}{27ca77940a5e8c07c5d89d0f3fb11d75}
+      \strng{authornamehash}{27ca77940a5e8c07c5d89d0f3fb11d75}
+      \strng{authorfullhash}{27ca77940a5e8c07c5d89d0f3fb11d75}
+      \strng{editorbibnamehash}{12fe4e27bdbead70c9dd4e881eb1ba50}
+      \strng{editornamehash}{12fe4e27bdbead70c9dd4e881eb1ba50}
+      \strng{editorfullhash}{12fe4e27bdbead70c9dd4e881eb1ba50}
+      \field{sortinit}{M}
+      \field{sortinithash}{cfd219b90152c06204fab207bc6c7cab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the 9th Python in Science Conference}
+      \field{title}{Data Structures for Statistical Computing in Python}
+      \field{year}{2010}
+      \field{pages}{56\bibrangedash 61}
+      \range{pages}{6}
+      \verb{doi}
+      \verb 10.25080/Majora-92bf1922-00a
+      \endverb
+    \endentry
+    \entry{Melsom2019}{article}{}
+      \name{author}{3}{}{%
+        {{hash=9da5c500b19127d9570a552b37201ec6}{%
+           family={Melsom},
+           familyi={M\bibinitperiod},
+           given={Arne},
+           giveni={A\bibinitperiod}}}%
+        {{hash=f5eb7c2afdf27df202185d27aaaf727a}{%
+           family={Palerme},
+           familyi={P\bibinitperiod},
+           given={Cyril},
+           giveni={C\bibinitperiod}}}%
+        {{hash=3e77914d3874fe522f83db58128f3841}{%
+           family={Müller},
+           familyi={M\bibinitperiod},
+           given={Malte},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Copernicus {GmbH}}%
+      }
+      \strng{namehash}{4957cf54c19d9033b2d10897f6d9114f}
+      \strng{fullhash}{4957cf54c19d9033b2d10897f6d9114f}
+      \strng{bibnamehash}{4957cf54c19d9033b2d10897f6d9114f}
+      \strng{authorbibnamehash}{4957cf54c19d9033b2d10897f6d9114f}
+      \strng{authornamehash}{4957cf54c19d9033b2d10897f6d9114f}
+      \strng{authorfullhash}{4957cf54c19d9033b2d10897f6d9114f}
+      \field{sortinit}{M}
+      \field{sortinithash}{cfd219b90152c06204fab207bc6c7cab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Ocean Science}
+      \field{month}{5}
+      \field{number}{3}
+      \field{title}{Validation metrics for ice edge position forecasts}
+      \field{volume}{15}
+      \field{year}{2019}
+      \field{pages}{615\bibrangedash 630}
+      \range{pages}{16}
+      \verb{doi}
+      \verb 10.5194/os-15-615-2019
+      \endverb
+      \verb{file}
+      \verb Validation metrics for ice edge position forecasts:Melsom2019.pdf:PDF
+      \endverb
+    \endentry
+    \entry{Palerme2019}{article}{}
+      \name{author}{3}{}{%
+        {{hash=f5eb7c2afdf27df202185d27aaaf727a}{%
+           family={Palerme},
+           familyi={P\bibinitperiod},
+           given={Cyril},
+           giveni={C\bibinitperiod}}}%
+        {{hash=3e77914d3874fe522f83db58128f3841}{%
+           family={Müller},
+           familyi={M\bibinitperiod},
+           given={Malte},
+           giveni={M\bibinitperiod}}}%
+        {{hash=9da5c500b19127d9570a552b37201ec6}{%
+           family={Melsom},
+           familyi={M\bibinitperiod},
+           given={Arne},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {American Geophysical Union ({AGU})}%
+      }
+      \strng{namehash}{3dc258db8d2b92759fa5b1a2a5e12f54}
+      \strng{fullhash}{3dc258db8d2b92759fa5b1a2a5e12f54}
+      \strng{bibnamehash}{3dc258db8d2b92759fa5b1a2a5e12f54}
+      \strng{authorbibnamehash}{3dc258db8d2b92759fa5b1a2a5e12f54}
+      \strng{authornamehash}{3dc258db8d2b92759fa5b1a2a5e12f54}
+      \strng{authorfullhash}{3dc258db8d2b92759fa5b1a2a5e12f54}
+      \field{sortinit}{P}
+      \field{sortinithash}{8d51b3d5b78d75b54308d706b9bbe285}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Geophysical Research Letters}
+      \field{month}{5}
+      \field{number}{9}
+      \field{title}{An Intercomparison of Verification Scores for Evaluating the Sea Ice Edge Position in Seasonal Forecasts}
+      \field{volume}{46}
+      \field{year}{2019}
+      \field{pages}{4757\bibrangedash 4763}
+      \range{pages}{7}
+      \verb{doi}
+      \verb 10.1029/2019gl082482
+      \endverb
+      \verb{file}
+      \verb Sea Ice Edge position verification for seasonal forecasting:Palerme2019.pdf:PDF
+      \endverb
+    \endentry
+    \entry{reback2020pandas}{software}{}
+      \name{author}{1}{}{%
+        {{hash=f311fed50efbf5617ea6695f4961e38e}{%
+           family={team},
+           familyi={t\bibinitperiod},
+           given={The},
+           giveni={T\bibinitperiod},
+           prefix={pandas\bibnamedelima development},
+           prefixi={p\bibinitperiod\bibinitdelim d\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Zenodo}%
+      }
+      \strng{namehash}{f311fed50efbf5617ea6695f4961e38e}
+      \strng{fullhash}{f311fed50efbf5617ea6695f4961e38e}
+      \strng{bibnamehash}{f311fed50efbf5617ea6695f4961e38e}
+      \strng{authorbibnamehash}{f311fed50efbf5617ea6695f4961e38e}
+      \strng{authornamehash}{f311fed50efbf5617ea6695f4961e38e}
+      \strng{authorfullhash}{f311fed50efbf5617ea6695f4961e38e}
+      \field{sortinit}{t}
+      \field{sortinithash}{6f7aff9db9dcfeb7f95fd5bbd2f78df9}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{2}
+      \field{title}{pandas-dev/pandas: Pandas}
+      \field{version}{latest}
+      \field{year}{2020}
+      \verb{doi}
+      \verb 10.5281/zenodo.3509134
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.5281/zenodo.3509134
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.5281/zenodo.3509134
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
 
-\bibitem{Dukhovskoy2015}
-Dmitry~S. Dukhovskoy, Jonathan Ubnoske, Edward Blanchard-Wrigglesworth,
-  Hannah~R. Hiester, and Andrey Proshutinsky.
-\newblock Skill metrics for evaluation and comparison of sea ice models.
-\newblock {\em Journal of Geophysical Research: Oceans}, 120(9):5910--5931, sep
-  2015.
-
-\bibitem{Goessling2016}
-H.~F. Goessling, S.~Tietsche, J.~J. Day, E.~Hawkins, and T.~Jung.
-\newblock Predictability of the arctic sea ice edge.
-\newblock {\em Geophysical Research Letters}, 43(4):1642--1650, feb 2016.
-
-\bibitem{Goessling2018}
-H.~F. Goessling and T.~Jung.
-\newblock A probabilistic verification score for contours: Methodology and
-  application to arctic ice-edge forecasts.
-\newblock {\em Quarterly Journal of the Royal Meteorological Society},
-  144(712):735--743, April 2018.
-
-\bibitem{Palerme2019}
-Cyril Palerme, Malte Müller, and Arne Melsom.
-\newblock An intercomparison of verification scores for evaluating the sea ice
-  edge position in seasonal forecasts.
-\newblock {\em Geophysical Research Letters}, 46(9):4757--4763, may 2019.
-
-\bibitem{Melsom2019}
-Arne Melsom, Cyril Palerme, and Malte Müller.
-\newblock Validation metrics for ice edge position forecasts.
-\newblock {\em Ocean Science}, 15(3):615--630, may 2019.
-
-\end{thebibliography}
