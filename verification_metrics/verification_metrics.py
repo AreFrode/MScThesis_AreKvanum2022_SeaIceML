@@ -8,15 +8,17 @@ import pandas as pd
 
 from matplotlib import pyplot as plt
 
-def find_ice_edge(sic, mask, threshold = 2):
-    """Calculates and defines a ice_edge mask for a given array
+def find_ice_edge(sic, mask, threshold: int = 2):
+    """Creates an Ice-Edge mask containing spatially aware ice-edge pixels,
+        code inspired by derivation performed in [Melsom, 2019]
 
     Args:
         sic (array): input sic field
-        threshold : sic class. Defaults to 2, i.e. very open ice
+        mask (array): arbitrary mask (usually land sea mask)
+        threshold: sic class thresholding the ice edge. Defaults to 2, i.e. very open ice
 
     Returns:
-        array: binary sea ice edge array
+        array: sea ice edge mask
     """
 
     mask_padded = np.pad(mask, 1, 'constant', constant_values = 1)
@@ -50,14 +52,15 @@ def find_ice_edge(sic, mask, threshold = 2):
     return ice_edge
 
 def find_ice_edge_from_fraction(sic, mask, threshold = 15):
-    """Calculates and defines a ice_edge mask for a given array of fractional sic
+    """Calculates and defines a ice_edge mask for a given array containing fractional sic values
 
     Args:
-        sic (array): input sic field
-        threshold : sic fraction. Defaults to 0.15
+        sic (array): input fractional sic field
+        mask (array): arbitrary mask (usually land sea mask)
+        threshold : sic fraction for ice edge thresholding. Defaults to 0.15
 
     Returns:
-        array: binary sea ice edge array
+        array: sea ice edge mask
     """
 
     mask_padded = np.pad(mask, 1, 'constant', constant_values = 1)
@@ -86,11 +89,22 @@ def find_ice_edge_from_fraction(sic, mask, threshold = 15):
 
             ice_edge[i-1,j-1] = ((current >= threshold) and (smallest_neighbor < threshold)).astype(int)
 
-    # print('\n')
-    # ice_edge[:200, 1500:] = 0
     return ice_edge
 
 def calculate_distance(current_ice_edge, other_ice_edge, x, y):
+    """computes the euclidean distance to the nearest ice edge grid cell between two products for all ice edge cells (only correct for equidistant grid)
+    Code implemnted according to derivation in [Melsom, 2019]
+
+    Args:
+        current_ice_edge (array): Ice edge grid cells to loop through
+        other_ice_edge (array): Ice edge grid cells to compute distance against
+        x (array): x-values
+        y (array): y-values
+
+    Returns:
+        array: distance to the nearest "other" ice edge cell for all "current" ice edge cells
+    """
+
     d = {'distance': [], 'i': [], 'j': []}
     I_current, J_current = np.where(current_ice_edge == 1)
     I_other, J_other = np.where(other_ice_edge == 1)
@@ -111,7 +125,20 @@ def calculate_distance(current_ice_edge, other_ice_edge, x, y):
     return d
 
 
-def IIEE(sic_prediction, sic_target, mask, a = 1, threshold = 2):
+def IIEE(sic_prediction, sic_target, mask, a: int = 1, threshold: int = 2):
+    """Computes the IIEE between two SIC fields, implemented according to [Goessling, 2016]
+
+    Args:
+        sic_prediction (array): SIC field serving as the forecast
+        sic_target (array): SIC field serving as the target
+        mask (lasmask): Arbitrary mask (usually land sea mask)
+        a (int, optional): Grid cell side length in km. Defaults to 1.
+        threshold (int, optional): SIC Class thresholding open water and sea ice. Defaults to 2.
+
+    Returns:
+        Masked array: Stack consisting of [a_plus, a_minus, ocean, ice]
+    """
+
     mask[:200, 1500:] = 1     # Baltic mask
     sic_target_masked = np.ma.masked_array(sic_target, mask=mask)
     sic_prediction_masked = np.ma.masked_array(sic_prediction, mask=mask)
@@ -123,7 +150,18 @@ def IIEE(sic_prediction, sic_target, mask, a = 1, threshold = 2):
 
     return np.ma.stack((a_plus*(a**2), a_minus*(a**2), ocean, ice))
 
-def ice_edge_length(ice_edge, s = 1):
+def ice_edge_length(ice_edge, s = 1) -> float:
+    """Computes the ice edge length given a ice_edge mask array, 
+    implemented according to [Melsom, 2019]
+
+    Args:
+        ice_edge (array): Ice Edge mask array
+        s (int, optional): Grid cell side length in km. Defaults to 1.
+
+    Returns:
+        float: ice edge length in meter
+    """
+
     ice_edge = np.pad(ice_edge, 1, 'constant')
     I, J = np.where(ice_edge == 1)
     length = 0.
@@ -149,6 +187,18 @@ def ice_edge_length(ice_edge, s = 1):
     return 1000. * length
 
 def contourAreaDistribution(icefield, mask, num_classes=7, side_length = 1):
+    """Computes the area for each sea ice concentration class contour
+
+    Args:
+        icefield (array): Sea Ice Concentration field
+        mask (array): Arbitrary mask (usually land sea mask)
+        num_classes (int, optional): Number of sea ice classes. Defaults to 7.
+        side_length (int, optional): Grid cell side length in km. Defaults to 1.
+
+    Returns:
+        array: 1d-array containing contour area for each respective index
+    """
+
     contour_matrix = np.zeros((*icefield.shape, num_classes))
     icefield = np.where(mask == 1, 7, icefield)
 
@@ -188,6 +238,18 @@ def greatCircleDistance(lon1: float, lat1: float, lon2: float, lat2: float) -> f
 
 
 def minimumDistanceToIceEdge(wrongly_classified_field, target_ice_edge, lat, lon):
+    """Computes the great circle distance between a set of pixels and their nearest ice edge pixel
+
+    Args:
+        wrongly_classified_field (array): binary array (usually a_plus / a_minus)
+        target_ice_edge (array): Ice edge set for the ground truth 
+        lat (array): Region latitude array
+        lon (array): Regional longitude array
+
+    Returns:
+        array: 1-d array containing minimum distance to target ice edge for each pixel in wrongly classified field
+    """
+
     wrongly_classified_field = np.ma.filled(wrongly_classified_field, 0)
 
     wrongly_classified_indexes = np.where(wrongly_classified_field != 0)

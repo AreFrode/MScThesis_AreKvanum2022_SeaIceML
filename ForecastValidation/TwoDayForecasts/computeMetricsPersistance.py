@@ -52,6 +52,8 @@ def main():
         area_dist_target = contourAreaDistribution(sic_target, lsmask)
         area_dist_forecast = contourAreaDistribution(sic_persistance, lsmask)
 
+        
+
         df_column_values = [pd.to_datetime(yyyymmdd_target, format="%Y%m%d"), target_length, forecast_length, np.mean([target_length, forecast_length]), a_plus + a_minus, a_plus, a_minus] + area_dist_target.tolist() + area_dist_forecast.tolist()
 
         tmp_df = pd.DataFrame([df_column_values], columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6'])
