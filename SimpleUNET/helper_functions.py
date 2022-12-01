@@ -2,6 +2,8 @@ import csv
 
 from ast import literal_eval
 
+import re
+
 def read_config_from_csv(fpath):
     config = {}
     with open(fpath) as f:
@@ -16,3 +18,4 @@ def read_config_from_csv(fpath):
             config[key] = value
 
     return config
+

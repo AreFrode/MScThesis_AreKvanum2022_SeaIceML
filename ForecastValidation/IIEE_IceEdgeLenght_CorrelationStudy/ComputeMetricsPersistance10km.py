@@ -63,12 +63,12 @@ def main():
             sic_target[...] = griddata((xx_input_flat, yy_input_flat), intarget['sic_target'][578:, :1792].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
 
         ice_edge_target = find_ice_edge(sic_target, lsmask)
-        target_length = ice_edge_length(ice_edge_target)
+        target_length = ice_edge_length(ice_edge_target, s = 10)
 
         ice_edge_forecast = find_ice_edge(sic_forecast, lsmask)
-        forecast_length = ice_edge_length(ice_edge_forecast)
+        forecast_length = ice_edge_length(ice_edge_forecast, s = 10)
 
-        iiee = IIEE(sic_forecast, sic_target, lsmask)
+        iiee = IIEE(sic_forecast, sic_target, lsmask, a = 10)
         a_plus = iiee[0].sum()
         a_minus = iiee[1].sum()
 

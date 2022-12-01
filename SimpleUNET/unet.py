@@ -4,27 +4,30 @@ import tensorflow.keras.backend as K
 
 from typing import List
 
-
-# This initial version is attempting to recreate the architecture of (RONNEBERGER,2015), obviously with the spatial dimensionality of the icechart data.
+# The initial version is attempting to recreate the architecture of (RONNEBERGER,2015), obviously with the spatial dimensionality of the icechart data.
 
 class convolutional_block(keras.layers.Layer):
     def __init__(self, out_channel, kernel_initializer, name='unet_conv_block'):
         super(convolutional_block, self).__init__(name=name)
 
         self.conv1 = keras.layers.Conv2D(filters = out_channel, kernel_size = 3, padding='same', kernel_initializer=kernel_initializer)
-        self.bn1 = keras.layers.BatchNormalization()
+        # self.bn1 = keras.layers.BatchNormalization()
+        self.gn1 = keras.layers.GroupNormalization()
 
         self.conv2 = keras.layers.Conv2D(filters = out_channel, kernel_size = 3, padding='same', kernel_initializer = kernel_initializer)
-        self.bn2 = keras.layers.BatchNormalization()
+        # self.bn2 = keras.layers.BatchNormalization()
+        self.gn2 = keras.layers.GroupNormalization()
 
     def call(self, input_tensor, training = False):
         x = self.conv1(input_tensor)
         x = tf.nn.relu(x)
-        x = self.bn1(x, training=training)
+        # x = self.bn1(x, training=training)
+        x = self.gn1(x)
 
         x = self.conv2(x)
         x = tf.nn.relu(x)
-        x = self.bn2(x, training=training)
+        # x = self.bn2(x, training=training)
+        x = self.gn2(x)
 
         return x
 

@@ -1,5 +1,6 @@
 import sys
-sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
+# sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
+sys.path.append("/mnt/SimpleUNET")
 
 import glob
 import h5py
@@ -100,8 +101,12 @@ def predict_validation_multi(validation_generator, model, PATH_OUTPUTS, weights)
 
 def main():    
     SEED_VALUE = 0
-    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/"
-    PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
+    # PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/"
+    # PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
+
+    # Rewrite paths for singularity compatibility
+    PATH_OUTPUTS = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
+    PATH_DATA = "/mnt/PrepareDataset/Data/two_day_forecast/"
 
     # gpu = tf.config.list_physical_devices('GPU')[0]
     # tf.config.experimental.set_memory_growth(gpu, True)

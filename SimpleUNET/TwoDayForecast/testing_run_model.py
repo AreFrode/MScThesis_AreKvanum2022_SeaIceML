@@ -6,6 +6,7 @@ import glob
 import os
 import csv
 import time
+import h5py
 from datetime import datetime
 
 import numpy as np
@@ -15,7 +16,7 @@ from tensorflow import keras
 from unet import create_UNET, create_MultiOutputUNET
 from dataset import HDF5Generator, MultiOutputHDF5Generator
 from focalLoss import categorical_focal_loss
-from customCallbacks import MemoryPrintingCallback
+from customCallbacks import MemoryPrintingCallback, IIEECallback
 
 def main():
     current_time = datetime.now().strftime("%d%m%H%M")
@@ -35,7 +36,7 @@ def main():
 
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
-        'BATCH_SIZE': 1,
+        'BATCH_SIZE': 2,
         'constant_fields': ['sic', 'sic_trend', 'lsmask'],
         'dated_fields': ['t2m', 'xwind', 'ywind'],
         'train_augment': False,
@@ -56,12 +57,12 @@ def main():
         'GroupNorm': True
     }
 
-    gpu = tf.config.list_physical_devices('GPU')[0]
-    tf.config.experimental.set_memory_growth(gpu, True)
+    # gpu = tf.config.list_physical_devices('GPU')[0]
+    # tf.config.experimental.set_memory_growth(gpu, True)
     
-    data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))
-    data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))
-    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))
+    data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))[:10]
+    data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))[:10]
+    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))[:10]
 
     if not os.path.exists(PATH_OUTPUT):
         os.makedirs(PATH_OUTPUT)
@@ -153,6 +154,11 @@ def main():
     )
 
     memory_print_callback = MemoryPrintingCallback()
+    
+    with h5py.File(data_2019[0], 'r') as infile:
+        lsmask = infile['lsmask']
+
+    iiee_callback = IIEECallback(lsmask = lsmask)
 
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -163,10 +169,11 @@ def main():
         epochs = config['epochs'],
         batch_size = config['BATCH_SIZE'],
         callbacks=[
-            model_checkpoint_callback, 
-            tensorboard_callback,
-            csvlogger_callback,
-            memory_print_callback
+            # model_checkpoint_callback, 
+            # tensorboard_callback,
+            # csvlogger_callback,
+            # memory_print_callback
+            iiee_callback
         ],
         validation_data = val_generator
     )

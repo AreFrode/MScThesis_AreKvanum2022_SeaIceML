@@ -131,12 +131,12 @@ def IIEE(sic_prediction, sic_target, mask, a: int = 1, threshold: int = 2):
     Args:
         sic_prediction (array): SIC field serving as the forecast
         sic_target (array): SIC field serving as the target
-        mask (lasmask): Arbitrary mask (usually land sea mask)
+        mask (lsmask): Arbitrary mask (usually land sea mask)
         a (int, optional): Grid cell side length in km. Defaults to 1.
         threshold (int, optional): SIC Class thresholding open water and sea ice. Defaults to 2.
 
     Returns:
-        Masked array: Stack consisting of [a_plus, a_minus, ocean, ice]
+        Masked array: Stack consisting of [a_plus, a_minus, ocean, ice], cell values in km
     """
 
     mask[:200, 1500:] = 1     # Baltic mask
