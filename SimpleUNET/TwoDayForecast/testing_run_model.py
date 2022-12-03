@@ -36,7 +36,7 @@ def main():
 
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
-        'BATCH_SIZE': 2,
+        'BATCH_SIZE': 1,
         'constant_fields': ['sic', 'sic_trend', 'lsmask'],
         'dated_fields': ['t2m', 'xwind', 'ywind'],
         'train_augment': False,
@@ -46,7 +46,7 @@ def main():
         'val_normalization': 'normalization_constants_validation',
         'val_shuffle': False,
         'learning_rate': 0.001,
-        'epochs': 40,
+        'epochs': 2,
         'pooling_factor': 4,
         'channels': [64, 128, 256, 512],
         'height': 1792,
@@ -60,9 +60,9 @@ def main():
     # gpu = tf.config.list_physical_devices('GPU')[0]
     # tf.config.experimental.set_memory_growth(gpu, True)
     
-    data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))[:10]
-    data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))[:10]
-    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))[:10]
+    data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))[:5]
+    data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))[:5]
+    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))[:5]
 
     if not os.path.exists(PATH_OUTPUT):
         os.makedirs(PATH_OUTPUT)
@@ -158,7 +158,11 @@ def main():
     with h5py.File(data_2019[0], 'r') as infile:
         lsmask = infile['lsmask']
 
-    iiee_callback = IIEECallback(lsmask = lsmask)
+    iiee_callback = IIEECallback(
+        validation_data = val_generator,
+        lsmask = lsmask,
+        batch_size = config['BATCH_SIZE']
+    )
 
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)

@@ -8,4 +8,4 @@ module use module use /modules/MET/centos7/GeneralModules
 
 module load Python-devel/3.8.7
 
-python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/computeMetrics.py weights_30111329
+python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/computeMetrics.py weights_30112150

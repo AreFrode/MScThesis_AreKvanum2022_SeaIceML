@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from verification_metrics import find_ice_edge_from_fraction, ice_edge_length
 from datetime import datetime
 
+from matplotlib import pyplot as plt
 
 def main():
     # path to data
@@ -65,6 +66,7 @@ def main():
 
             lsmask = np.where(np.isnan(sic_output), 1, 0)
             ice_edge = find_ice_edge_from_fraction(sic_output, lsmask)
+
             sics.append(sic_output)
             edges.append(ice_edge)
             outputs.append(ice_edge_length(ice_edge, s = 25))

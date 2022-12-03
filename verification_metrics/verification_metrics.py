@@ -27,7 +27,10 @@ def find_ice_edge(sic, mask, threshold: int = 2):
 
     ice_edge = np.zeros_like(sic_padded[1:-1, 1:-1])
     H, W = sic_padded.shape
-    plt.contourf(sic_padded, cmap='cividis')
+    # plt.figure()
+    # cbar = plt.pcolormesh(sic_padded == 7)
+    # plt.colorbar(cbar)
+    # plt.savefig('ice_edge.png')
     for i in range(1, H-1):
         for j in range(1, W-1):
             current = sic_padded[i,j]
@@ -48,7 +51,7 @@ def find_ice_edge(sic, mask, threshold: int = 2):
             ice_edge[i-1,j-1] = ((current >= threshold) and (smallest_neighbor < threshold)).astype(int)
 
     # print('\n')
-    ice_edge[:200, 1500:] = 0
+    # ice_edge[:200, 1500:] = 0
     return ice_edge
 
 def find_ice_edge_from_fraction(sic, mask, threshold = 15):
@@ -139,7 +142,7 @@ def IIEE(sic_prediction, sic_target, mask, a: int = 1, threshold: int = 2):
         Masked array: Stack consisting of [a_plus, a_minus, ocean, ice], cell values in km
     """
 
-    mask[:200, 1500:] = 1     # Baltic mask
+    # mask[:200, 1500:] = 1     # Baltic mask
     sic_target_masked = np.ma.masked_array(sic_target, mask=mask)
     sic_prediction_masked = np.ma.masked_array(sic_prediction, mask=mask)
 
@@ -272,7 +275,35 @@ def minimumDistanceToIceEdge(wrongly_classified_field, target_ice_edge, lat, lon
     return np.array(min_distances)
 
 
+def coarse_grid_cell_ice_edge_fraction(neighborhood, n):
+    H,W = neighborhood.shape
+
+    for i in range(0, H, n):
+        for j in range(0, W, n):
+            view = neighborhood[i:i+3,j:j+3]
+            print(view)
+
+
 def test_DistanceToIceEdge():
+    observed = np.array([[0,0,1,0,0,0], 
+                         [0,0,1,0,0,0],
+                         [0,0,0,1,0,0],
+                         [0,0,0,0,1,1],
+                         [0,0,0,0,0,0],
+                         [0,0,0,0,0,0]])
+
+    modeled = np.array([[0,0,0,0,0,0],
+                         [1,1,0,0,0,0],
+                         [0,0,1,1,0,0],
+                         [0,0,0,0,1,1],
+                         [0,0,0,0,0,1],
+                         [0,0,0,0,0,0]])
+
+    view = coarse_grid_cell_ice_edge_fraction(observed, n = 3)
+    print(view)
+
+    exit()
+
     # Define global paths
     PATH_TARGETS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
     PATH_PREDICTIONS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_05111353/"
@@ -287,6 +318,7 @@ def test_DistanceToIceEdge():
     target_path = sorted(glob.glob(f"{PATH_TARGETS}{year}/{month}/*.hdf5"))[0]
     prediction_path = sorted(glob.glob(f"{PATH_PREDICTIONS}{year}/{month}/*.hdf5"))[0]
 
+
     with h5py.File(target_path, 'r') as infile_target:
         sic_target = infile_target['sic_target'][southern_boundary:, :eastern_boundary]
         lsmask = infile_target['lsmask'][southern_boundary:, :eastern_boundary]
@@ -296,24 +328,37 @@ def test_DistanceToIceEdge():
     with h5py.File(prediction_path, 'r') as infile_forecast:
         sic_forecast = infile_forecast['y_pred'][0]
 
+    forecast_ice_edge = find_ice_edge(sic_forecast, lsmask)
     target_ice_edge = find_ice_edge(sic_target, lsmask)
-    iiee = IIEE(sic_forecast, sic_target, lsmask)
-    a_plus = iiee[0]
-    a_minus = iiee[1]
 
-    a_plus_minimum_distance = minimumDistanceToIceEdge(a_plus, target_ice_edge, lat, lon)
-    print(a_plus_minimum_distance.mean())
 
-    a_minus_minumum_distance = minimumDistanceToIceEdge(a_minus, target_ice_edge, lat, lon)
-    print(a_minus_minumum_distance.mean())
+    # iiee = IIEE(sic_forecast, sic_target, lsmask)
+    # a_plus = iiee[0]
+    # a_minus = iiee[1]
+
+    # print(a_plus.sum())
+    # print(a_minus.sum())
+
+    # plt.pcolormesh(a_plus)
+    # plt.savefig('a_plus.png')
+
+    # plt.pcolormesh(a_minus)
+    # plt.savefig('a_minus.png')
+
+    # a_plus_minimum_distance = minimumDistanceToIceEdge(a_plus, target_ice_edge, lat, lon)
+    # print(a_plus_minimum_distance.mean())
+
+    # a_minus_minumum_distance = minimumDistanceToIceEdge(a_minus, target_ice_edge, lat, lon)
+    # print(a_minus_minumum_distance.mean())
+
 
     
 def main():
     
     # Define global paths
-    PATH_TARGETS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/one_day_forecast/"
-    PATH_PREDICTIONS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/outputs/Data/weights_20091742/"
-    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/Data/"
+    PATH_TARGETS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
+    PATH_PREDICTIONS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_28112014/"
+    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/test_data/"
 
     year = "2021"
     month = "01"
@@ -348,7 +393,10 @@ def main():
             ice_edge_target = f['ice_edge_target'][:]
             ice_edge_pred = f['ice_edge_pred'][:]
 
+    
 
+
+    """
     d_pred = calculate_distance(ice_edge_pred, ice_edge_target, x, y)
     d_target = calculate_distance(ice_edge_target, ice_edge_pred, x, y)
     
@@ -378,7 +426,7 @@ def main():
 
     print(f"{D_iiee=}")
     print(f"{delta=}")
-
+    """
 
 
 

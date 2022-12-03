@@ -55,6 +55,7 @@ class HDF5Generator(keras.utils.Sequence):
                 self.stds[row[0]] = float(row[2])
 
         self.augment = augment
+        self.shuffle = shuffle
 
         self.data_augmentation = keras.Sequential([
             # keras.layers.RandomFlip(mode = 'horizontal'),  # Unsure if random flip is necessary for such a specific domain, also unknown probability for layer triggering
@@ -62,7 +63,7 @@ class HDF5Generator(keras.utils.Sequence):
             # keras.layers.RandomTranslation(height_factor = 0.1, width_factor = 0.1, fill_mode='nearest')
         ])
 
-        if shuffle:
+        if self.shuffle:
             self.rng.shuffle(self.data)
 
     def __len__(self):
