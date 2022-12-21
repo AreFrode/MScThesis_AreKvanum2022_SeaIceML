@@ -273,3 +273,4 @@ PrepareDataset/two_day_forecast/logs/
 ForecastValidation/TwoDayForecasts/logs/
 ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/logs/
 verification_metrics/*.png
+PrepareDataset/Data/two_day_forecast/*.csv
