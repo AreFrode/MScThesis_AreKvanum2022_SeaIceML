@@ -30,7 +30,6 @@ def main():
 
     num_days = 5
 
-
     # AROME grid
     x_min = 279103.2
     x_max = 2123103.2
@@ -50,7 +49,7 @@ def main():
             p = f"{PATH_OSISAF}{year}/{month:02d}/"
             paths.append(p)
 
-    path_data_task = paths[2] # This should be the only path
+    path_data_task = paths[0] # This should be the only path
     print(f"path_data_task = {path_data_task}")
     path_output_task = path_data_task.replace(PATH_OSISAF, PATH_OUTPUT)
     print(f"path_output_task = {path_output_task}")
@@ -104,7 +103,13 @@ def main():
 
         for i in range(1, num_days):
             yyyymmdd_current = (yyyymmdd_datetime - timedelta(days = i)).strftime('%Y%m%d')
-            path_current = glob.glob(f"{PATH_OSISAF}{yyyymmdd_current[:4]}/{yyyymmdd_current[4:6]}/ice_conc_nh_ease-125_multi_{yyyymmdd_current}1200.nc")[0]
+
+            try:
+                path_current = glob.glob(f"{PATH_OSISAF}{yyyymmdd_current[:4]}/{yyyymmdd_current[4:6]}/ice_conc_nh_ease-125_multi_{yyyymmdd_current}1200.nc")[0]
+            
+            # If missing days, compute trend from remainder of days
+            except IndexError:
+                continue
 
             with Dataset(path_current, 'r') as nc:
                 tmp_ice_conc = nc.variables['ice_conc'][0,:,:]
@@ -134,21 +139,32 @@ def main():
 
         lon_arome = griddata((xx_arome_flat, yy_arome_flat), lon_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
 
-        ice_conc_arome = griddata((xx_arome_flat, yy_arome_flat), ice_conc_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+        raw_ice_conc_flat = (np.pad(raw_ice_conc[..., 0], ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
+
+        ice_conc_arome = griddata((xx_arome_flat, yy_arome_flat), raw_ice_conc_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+
+        ice_conc_trend = griddata((xx_arome_flat, yy_arome_flat), ice_conc_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
 
         baltic_mask_flat = (np.pad(baltic_mask, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
 
         baltic_arome = griddata((xx_arome_flat, yy_arome_flat), baltic_mask_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
 
+        ice_conc_days = np.zeros((3, *ice_conc_arome.shape))
+        
+        for i in range(3):
+            ice_conc_days[i] = ice_conc_arome + (i + 1) * ice_conc_trend
 
+        ice_conc_days[ice_conc_days < 0] = 0
+        ice_conc_days[ice_conc_days > 100] = 100
 
         # Write to file
-        output_filename = f"OSISAF_trend_1kmgrid_{yyyymmdd}.nc"
+        output_filename = f"OSISAF_{num_days}trend_1kmgrid_{yyyymmdd}.nc"
 
         with Dataset(f"{path_output_task}{output_filename}", "w", format = "NETCDF4") as nc_out:
             nc_out.createDimension('x', len(x_target))
             nc_out.createDimension('y', len(y_target))
             nc_out.createDimension('t', 1)
+            nc_out.createDimension('time', 3)
 
             yc = nc_out.createVariable('y', 'd', ('y'))
             yc.units = 'km'
@@ -175,10 +191,21 @@ def main():
             lonc.standard_name = 'Longitude'
             lonc[:] = lon_arome
 
-            ice_conc_out = nc_out.createVariable('ice_conc_trend', 'd', ('t', 'y', 'x'))
+            ice_conc_trend_out = nc_out.createVariable('ice_conc_trend', 'd', ('t', 'y', 'x'))
+            ice_conc_trend_out.units = '%'
+            ice_conc_trend_out.standard_name = 'Sea Ice Concentration Trend'
+            ice_conc_trend_out[:] = ice_conc_trend
+
+            ice_conc_out = nc_out.createVariable('ice_conc', 'd', ('t', 'y', 'x'))
             ice_conc_out.units = '%'
-            ice_conc_out.standard_name = 'Sea Ice Concentration Trend'
+            ice_conc_out.standard_name = 'Sea Ice Concentration'
             ice_conc_out[:] = ice_conc_arome
+
+            ice_conc_days_out = nc_out.createVariable('ice_conc_forecast_2days', 'd', ('time', 'y', 'x'))
+            ice_conc_days_out.units = '%'
+            ice_conc_days_out.standard_name = 'Sea Ice Concentration trend "time"-days forecast'
+            ice_conc_days_out[:] = ice_conc_days
+
 
             baltic_out = nc_out.createVariable('BalticMask', 'd', ('t', 'y', 'x'))
             baltic_out[:] = baltic_arome

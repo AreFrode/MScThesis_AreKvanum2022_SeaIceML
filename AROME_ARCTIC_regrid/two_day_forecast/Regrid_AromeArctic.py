@@ -15,6 +15,7 @@ from calendar import monthrange
 from netCDF4 import Dataset
 from scipy.interpolate import griddata
 from rotate_wind_from_UV_to_xy import rotate_wind_from_UV_to_xy
+from rotate_winds import rotate
 
 
 def main():
@@ -128,10 +129,22 @@ def main():
             vwind_flat = vwind_arome[start:stop, ...].mean(axis=0).flatten()
 
             t2m_target[t] = griddata((xx_input_flat, yy_input_flat), t2m_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
-            uwind_target = griddata((xx_input_flat, yy_input_flat), uwind_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
-            vwind_target = griddata((xx_input_flat, yy_input_flat), vwind_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+            uwind_regrid = griddata((xx_input_flat, yy_input_flat), uwind_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+            vwind_regrid = griddata((xx_input_flat, yy_input_flat), vwind_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
 
-            xwind_target[t], ywind_target[t] = rotate_wind_from_UV_to_xy(x_target, y_target, proj4_arome, uwind_target, vwind_target)
+            # ROTATION assuming proj4-arome
+            # xwind_rotated, ywind_rotated = rotate(uwind_regrid.flatten(), vwind_regrid.flatten(), lat_target.flatten(), lon_target.flatten(), proj4_arome)
+            # xwind_target[t] = xwind_rotated.reshape(*xwind_target[t].shape)
+            # ywind_target[t] = ywind_rotated.reshape(*ywind_target[t].shape)
+
+            # ROTATION assuming u: zonal, v: meridional
+            xwind_rotated, ywind_rotated = rotate(uwind_regrid.flatten(), vwind_regrid.flatten(), lat_target.flatten(), lon_target.flatten(), 'proj+=longlat', proj4_arome)
+            xwind_target[t] = xwind_rotated.reshape(*xwind_target[t].shape)
+            ywind_target[t] = ywind_rotated.reshape(*ywind_target[t].shape)
+
+            # NO ROTATION CASE
+            # xwind_target[t] = uwind_regrid
+            # ywind_target[t] = vwind_regrid
 
 
         nc.close()

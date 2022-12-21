@@ -1,12 +1,8 @@
 import os
 import glob
-from re import A
 import h5py
 
 import numpy as np
-import pandas as pd
-
-from matplotlib import pyplot as plt
 
 def find_ice_edge(sic, mask, threshold: int = 2):
     """Creates an Ice-Edge mask containing spatially aware ice-edge pixels,

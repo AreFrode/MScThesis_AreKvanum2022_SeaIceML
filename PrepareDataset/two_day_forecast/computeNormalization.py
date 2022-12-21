@@ -37,7 +37,6 @@ def main():
     data_train = np.concatenate((data2019, data2020))
 
     fields = ['sic', 
-               'sst', 
                'sic_trend', 
                'ts0/t2m',
                'ts1/t2m',

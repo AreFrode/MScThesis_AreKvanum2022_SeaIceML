@@ -1,13 +1,16 @@
 #$ -S /bin/bash
-#$ -l h_rt=10:00:00
-#$ -q research-el7.q
-#$ -l h_vmem=8G
+#$ -l h_rt=24:00:00
+#$ -q research-r8.q
+#$ -l h_rss=8G
+#$ -l mem_free=8G
 #$ -t 1-36
 #$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/data_processing_files/OUT/
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
+
+module use /modules/MET/centos7/GeneralModules
 
 module load Python-devel/3.8.7
 
@@ -120,8 +123,13 @@ def main():
 
         for i in range(1, num_days):
             yyyymmdd_current = (yyyymmdd_datetime - timedelta(days = i)).strftime('%Y%m%d')
-            path_current = glob.glob(f"{PATH_OSISAF}{yyyymmdd_current[:4]}/{yyyymmdd_current[4:6]}/ice_conc_nh_ease-125_multi_{yyyymmdd_current}1200.nc")[0]
-
+            try:
+                path_current = glob.glob(f"{PATH_OSISAF}{yyyymmdd_current[:4]}/{yyyymmdd_current[4:6]}/ice_conc_nh_ease-125_multi_{yyyymmdd_current}1200.nc")[0]
+            
+            # If missing days, compute trend from remainder of days
+            except IndexError:
+                continue
+                
             with Dataset(path_current, 'r') as nc:
                 tmp_ice_conc = nc.variables['ice_conc'][0,:,:]
                 sic_interpolator = NearestNDInterpolator(mask_T, tmp_ice_conc[mask])
@@ -141,6 +149,8 @@ def main():
         lat_flat = (np.pad(lat_input, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
         lon_flat = (np.pad(lon_input, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
 
+        raw_ice_conc_flat = (np.pad(raw_ice_conc[..., 0], ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
+
         # Interpolate osisaf as with raw icecharts, NN over land
         ice_conc_trend = np.apply_along_axis(compute_trend_1d, axis = -1, arr = raw_ice_conc)
 
@@ -150,7 +160,17 @@ def main():
 
         lon_arome = griddata((xx_arome_flat, yy_arome_flat), lon_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
 
-        ice_conc_arome = griddata((xx_arome_flat, yy_arome_flat), ice_conc_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+        ice_conc_arome = griddata((xx_arome_flat, yy_arome_flat), raw_ice_conc_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+
+        ice_conc_trend = griddata((xx_arome_flat, yy_arome_flat), ice_conc_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+        
+        ice_conc_days = np.zeros((3, *ice_conc_arome.shape))
+
+        for i in range(3):
+            ice_conc_days[i] = ice_conc_arome + (i + 1) * ice_conc_trend
+
+        ice_conc_days[ice_conc_days < 0] = 0
+        ice_conc_days[ice_conc_days > 100] = 100
 
         # Write to file
         output_filename = f"OSISAF_trend_1kmgrid_{yyyymmdd}.nc"
@@ -159,6 +179,7 @@ def main():
             nc_out.createDimension('x', len(x_target))
             nc_out.createDimension('y', len(y_target))
             nc_out.createDimension('t', 1)
+            nc_out.createDimension('time', 3)
 
             yc = nc_out.createVariable('y', 'd', ('y'))
             yc.units = 'km'
@@ -185,10 +206,20 @@ def main():
             lonc.standard_name = 'Longitude'
             lonc[:] = lon_arome
 
-            ice_conc_out = nc_out.createVariable('ice_conc_trend', 'd', ('t', 'y', 'x'))
+            ice_conc_trend_out = nc_out.createVariable('ice_conc_trend', 'd', ('t', 'y', 'x'))
+            ice_conc_trend_out.units = '%'
+            ice_conc_trend_out.standard_name = 'Sea Ice Concentration Trend'
+            ice_conc_trend_out[:] = ice_conc_trend
+
+            ice_conc_out = nc_out.createVariable('ice_conc', 'd', ('t', 'y', 'x'))
             ice_conc_out.units = '%'
-            ice_conc_out.standard_name = 'Sea Ice Concentration Trend'
+            ice_conc_out.standard_name = 'Sea Ice Concentration'
             ice_conc_out[:] = ice_conc_arome
+
+            ice_conc_days_out = nc_out.createVariable('ice_conc_trend_forecast', 'd', ('time', 'y', 'x'))
+            ice_conc_days_out.units = '%'
+            ice_conc_days_out.standard_name = 'Sea Ice Concentration trend "time"-days forecast'
+            ice_conc_days_out[:] = ice_conc_days
 
 
 if __name__ == "__main__":

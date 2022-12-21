@@ -1,13 +1,16 @@
 #$ -S /bin/bash
 #$ -l h_rt=10:00:00
-#$ -q research-el7.q
-#$ -l h_vmem=8G
+#$ -q research-r8.q
+#$ -l h_rss=8G
+#$ -l mem_free=8G
 #$ -t 1-36
 #$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
+
+module use /modules/MET/centos7/GeneralModules
 
 module load Python-devel/3.8.7
 
@@ -66,7 +69,7 @@ def main():
 
 
     # Create global land-sea mask
-    with Dataset(f"{path_data_task}AROME_1kmgrid_{year_task}{month_task}01T18Z.nc") as constants:
+    with Dataset(f"{paths[0]}AROME_1kmgrid_20190101T18Z.nc") as constants:
         lsmask = constants['lsmask'][:,:-1]
 
     baltic_mask = np.zeros_like(lsmask)
@@ -80,7 +83,8 @@ def main():
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(f"{yyyymmdd}")
         yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
-        yyyymmdd_datetime = (yyyymmdd_datetime + timedelta(days = 2)).strftime('%Y%m%d')
+        yyyymmdd_target = (yyyymmdd_datetime + timedelta(days = 2)).strftime('%Y%m%d')
+        yyyymmdd_osi = (yyyymmdd_datetime + timedelta(days = -1)).strftime('%Y%m%d')
 
         try:
             # Assert that arome forecast exist for current day
@@ -88,8 +92,8 @@ def main():
             # Assert that target icechart exist two timesteps forward in time
             arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}T18Z.nc")[0]
             icechart_path = glob.glob(f"{path_icechart}{year_task}/{month_task}/ICECHART_1kmAromeGrid_{yyyymmdd}T1500Z.nc")[0]
-            target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_datetime[:4]}/{yyyymmdd_datetime[4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_datetime}T1500Z.nc")[0]
-            osisaf_path = glob.glob(f"{path_osisaf}{year_task}/{month_task}/OSISAF_trend_1kmgrid_{yyyymmdd}.nc")[0]
+            target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_target[:4]}/{yyyymmdd_target[4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_target}T1500Z.nc")[0]
+            osisaf_path = glob.glob(f"{path_osisaf}{yyyymmdd_osi[:4]}/{yyyymmdd_osi[4:6]}/OSISAF_trend_1kmgrid_{yyyymmdd_osi}.nc")[0]
 
         except IndexError:
             continue
@@ -123,7 +127,6 @@ def main():
             t2m = nc_a.variables['t2m'][:,:,:-1]
             xwind = nc_a.variables['xwind'][:,:,:-1]
             ywind = nc_a.variables['ywind'][:,:,:-1]
-            sst = nc_a.variables['sst'][:,:-1]
 
         with Dataset(osisaf_path, 'r') as nc_osi:
             conc_trend = nc_osi.variables['ice_conc_trend'][0,:,:-1]
@@ -147,7 +150,6 @@ def main():
             outfile['x'] = x
             outfile['y'] = y
             outfile['lsmask'] = lsmask
-            outfile['sst'] = sst
             outfile['sic_trend'] = conc_trend
 
             # Two daily AA means

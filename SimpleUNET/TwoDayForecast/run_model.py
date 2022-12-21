@@ -6,6 +6,7 @@ import glob
 import os
 import csv
 import time
+import h5py
 from datetime import datetime
 
 import numpy as np
@@ -15,7 +16,8 @@ from tensorflow import keras
 from unet import create_UNET, create_MultiOutputUNET
 from dataset import HDF5Generator, MultiOutputHDF5Generator
 from focalLoss import categorical_focal_loss
-from customCallbacks import MemoryPrintingCallback
+from customCallbacks import MemoryPrintingCallback, IIEECallback
+from helper_functions import read_ice_edge_from_csv
 
 def main():
     current_time = datetime.now().strftime("%d%m%H%M")
@@ -31,11 +33,12 @@ def main():
     # Comment above and uncomment below if running tensorflow2.11-singularity container
     PATH_OUTPUT = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
     PATH_DATA = "/mnt/PrepareDataset/Data/two_day_forecast/"
+    # PATH_CLIMATOLOGICAL_ICEEDGE = "/mnt/verification_metrics/Data/climatological_ice_edge.csv"
     log_dir = f"/mnt/SimpleUNET/TwoDayForecast/logs/fit/{datetime.now().strftime('%d%m%H%M')}"
 
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
-        'BATCH_SIZE': 1,
+        'BATCH_SIZE': 4,
         'constant_fields': ['sic', 'sic_trend', 'lsmask'],
         'dated_fields': ['t2m', 'xwind', 'ywind'],
         'train_augment': False,
@@ -47,13 +50,15 @@ def main():
         'learning_rate': 0.001,
         'epochs': 40,
         'pooling_factor': 4,
-        'channels': [64, 128, 256, 512],
+        'channels': [64, 128, 256, 512, 1024],
         'height': 1792,
         'width': 1792,
         'lower_boundary': 578,
         'rightmost_boundary': 1792,
         'model_name': f'weights_{current_time}',
-        'GroupNorm': True
+        'GroupNorm': True,
+        'AveragePool': True,
+        'LeakyReLU': False
     }
 
     gpu = tf.config.list_physical_devices('GPU')[0]
@@ -107,7 +112,9 @@ def main():
     model = create_MultiOutputUNET(
         input_shape = (config['height'], config['width'], len(config['constant_fields']) + 2*len(config['dated_fields'])), 
         channels = config['channels'],
-        pooling_factor= config['pooling_factor']
+        pooling_factor= config['pooling_factor'],
+        average_pool=config['AveragePool'],
+        leaky_relu = config['LeakyReLU']
     )
 
     optimizer = keras.optimizers.Adam(learning_rate = lr_schedule)
@@ -128,7 +135,6 @@ def main():
 
     model.summary()
 
-    
     checkpoint_filepath = f"{PATH_OUTPUT}models/{config['model_name']}"
 
     tensorboard_callback = keras.callbacks.TensorBoard(
@@ -154,6 +160,35 @@ def main():
 
     memory_print_callback = MemoryPrintingCallback()
 
+    ########### SETUP IIEECallback #################
+    """
+    # The following code is only necesarry if computing IIEE each epoch
+    with h5py.File(data_2019[0], 'r') as infile:
+        lsmask = infile['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
+
+    iiee_val_generator = MultiOutputHDF5Generator(
+        data_2021, 
+        batch_size=1, 
+        constant_fields=config['constant_fields'], 
+        dated_fields=config['dated_fields'], 
+        lower_boundary=config['lower_boundary'], 
+        rightmost_boundary=config['rightmost_boundary'],
+        normalization_file=f"{PATH_DATA}{config['val_normalization']}.csv",
+        shuffle=config['val_shuffle'],
+        augment=config['val_augment']
+    )
+
+    climatoloigcal_ice_edge = read_ice_edge_from_csv(PATH_CLIMATOLOGICAL_ICEEDGE)
+
+    iiee_callback = IIEECallback(
+        validation_data = iiee_val_generator,
+        lsmask = lsmask,
+        batch_size = 1,
+        ice_edge = climatoloigcal_ice_edge
+    )
+    """
+    ######## END SETUP IIEECallback #################
+
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
@@ -165,8 +200,9 @@ def main():
         callbacks=[
             model_checkpoint_callback, 
             tensorboard_callback,
-            csvlogger_callback,
-            memory_print_callback
+            memory_print_callback,
+            # iiee_callback,   # REMOVE IF NOT COMPUTING IIEE every epoch
+            csvlogger_callback
         ],
         validation_data = val_generator
     )

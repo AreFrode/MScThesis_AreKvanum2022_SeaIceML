@@ -274,3 +274,9 @@ ForecastValidation/TwoDayForecasts/logs/
 ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/logs/
 verification_metrics/*.png
 PrepareDataset/Data/two_day_forecast/*.csv
+PrepareDataset/Data/two_day_forecast/normalization_constants_*.csv
+PrepareDataset/Data/two_day_forecast_bak/normalization_constants_*.csv
+PrepareDataset/Data/two_day_forecast/normalization_constants.csv
+PrepareDataset/Data/two_day_forecast/normalization_constants_validation.csv
+PrepareDataset/Data/two_day_forecast/normalization_constants_train.csv
+PrepareDataset/Data/two_day_forecast/normalization_constants_old.csv

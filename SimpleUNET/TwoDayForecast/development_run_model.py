@@ -17,6 +17,7 @@ from unet import create_UNET, create_MultiOutputUNET
 from dataset import HDF5Generator, MultiOutputHDF5Generator
 from focalLoss import categorical_focal_loss
 from customCallbacks import MemoryPrintingCallback, IIEECallback
+from helper_functions import read_ice_edge_from_csv
 
 def main():
     current_time = datetime.now().strftime("%d%m%H%M")
@@ -32,6 +33,7 @@ def main():
     # Comment above and uncomment below if running tensorflow2.11-singularity container
     PATH_OUTPUT = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
     PATH_DATA = "/mnt/PrepareDataset/Data/two_day_forecast/"
+    PATH_CLIMATOLOGICAL_ICEEDGE = "/mnt/verification_metrics/Data/climatological_ice_edge.csv"
     log_dir = f"/mnt/SimpleUNET/TwoDayForecast/logs/fit/{datetime.now().strftime('%d%m%H%M')}"
 
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
@@ -156,12 +158,15 @@ def main():
     memory_print_callback = MemoryPrintingCallback()
     
     with h5py.File(data_2019[0], 'r') as infile:
-        lsmask = infile['lsmask']
+        lsmask = infile['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
 
+    climatoloigcal_ice_edge = read_ice_edge_from_csv(PATH_CLIMATOLOGICAL_ICEEDGE) 
+        
     iiee_callback = IIEECallback(
         validation_data = val_generator,
         lsmask = lsmask,
-        batch_size = config['BATCH_SIZE']
+        batch_size = config['BATCH_SIZE'],
+        ice_edge = climatoloigcal_ice_edge
     )
 
     if not os.path.exists(log_dir):
@@ -175,9 +180,9 @@ def main():
         callbacks=[
             # model_checkpoint_callback, 
             # tensorboard_callback,
-            # csvlogger_callback,
             # memory_print_callback
-            iiee_callback
+            iiee_callback,
+            csvlogger_callback
         ],
         validation_data = val_generator
     )

@@ -21,7 +21,7 @@ class IceEdgeStatisticsFigure:
         self.ax.set_ylabel(ylabel)
     
     def addPersistantce(self, df):
-        df.plot(ax = self.ax, label = 'Persistance', ls='--', ms='5')
+        df.plot(ax = self.ax, label = 'Persistence', ls='--', ms='5')
 
     def addNewPlot(self, df, label):
         df.plot(ax = self.ax, label = label)
@@ -31,8 +31,8 @@ class IceEdgeStatisticsFigure:
         sns.boxplot(data = df, 
                     x = x_label, 
                     y = y_label, 
-                    hue = hue_label, 
-                    flierprops={"marker": "x"},
+                    hue = hue_label,
+                    palette='deep',
                     showmeans = True,
                     meanprops={"marker": 'D', "markeredgecolor": 'black',
                       "markerfacecolor": 'firebrick'},
@@ -42,8 +42,10 @@ class IceEdgeStatisticsFigure:
     def addNewErrorPlot(self, df, label):
         self.ax.errorbar(x= df.index, y = df['mean'], yerr = (df['min'], df['max']), label = label)
 
-    def savefig(self):
+    def savefig(self, xlabel, ylabel):
         # self.ax.set_xlim([datetime.date(2020, 12, 30), datetime.date(2022, 1, 2)])
+        self.ax.set_xlabel(xlabel)
+        self.ax.set_ylabel(ylabel)
         plt.legend()
         self.figure.savefig(self.fname)
 
@@ -59,6 +61,9 @@ def plot_area(df, path, num_classes=7):
         ax_area.clear()
 
 def main():
+    sns.set_theme()
+    sns.despine()
+
     # Define paths
     PATH_FORECAST_STATISTICS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/"
     PATH_CLIMATOLOGICAL_ICEEDGE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/Data/climatological_ice_edge.csv"
@@ -127,7 +132,7 @@ def main():
     seasonal_mean_lengths = []
     seasonal_mean_IIEE = []
 
-    b = [4, -3, -1]
+    b = [4, -4, -2]
 
     for forecast in [files[i] for i in b]:
         local_filename = filename_regex.findall(forecast)[0]
@@ -200,7 +205,7 @@ def main():
     # seasonal_mean_IIEE_df['max'] = seasonal_mean_IIEE_df.max(axis = 1)
     # IIEE_figure.addNewErrorPlot(monthly_mean_IIEE_df, 'forecasts')
     IIEE_figure.addBoxPlot(df = fetched_dataframe, x_label = 'met_index', y_label = 'Normalized_IIEE', hue_label = 'forecast_name')
-    IIEE_figure.savefig()
+    IIEE_figure.savefig('Months', 'Normalized_IIEE [km]')
     
 
 

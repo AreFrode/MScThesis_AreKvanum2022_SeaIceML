@@ -1,13 +1,14 @@
 #$ -S /bin/bash
 #$ -l h_rt=10:00:00
-#$ -q research-el7.q
-#$ -l h_vmem=8G
+#$ -q research-r8.q
+#$ -l h_rss=8G
+#$ -l mem_free=8G
 #$ -t 1-36
-#$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
-#$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/OUT/
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
+
+module use /modules/MET/centos7/GeneralModules
 
 module load Python-devel/3.8.7
 
@@ -26,7 +27,7 @@ import numpy as np
 from calendar import monthrange
 from netCDF4 import Dataset
 from scipy.interpolate import griddata
-from rotate_wind_from_UV_to_xy import rotate_wind_from_UV_to_xy
+from rotate_winds import rotate
 
 
 def main():
@@ -111,12 +112,10 @@ def main():
         uwind_arome = nc.variables['x_wind_10m'][:]
         vwind_arome = nc.variables['y_wind_10m'][:]
         lsmask_arome = nc.variables['land_area_fraction'][:]
-        sst_arome = nc_sfx.variables['SST'][:]
 
         # Allocate target arrays
         lat_target = np.zeros((ny, nx))
         lon_target = np.zeros((ny, nx))
-        sst_target = np.zeros((ny, nx))
         lsmask_target = np.zeros((ny, nx))
         t2m_target = np.zeros((2, ny, nx))
         xwind_target = np.zeros((2, ny, nx))
@@ -126,7 +125,6 @@ def main():
         # Regrid and assign
         lat_target[...] = griddata((xx_input_flat, yy_input_flat), lat_arome.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
         lon_target[...] = griddata((xx_input_flat, yy_input_flat), lon_arome.flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
-        sst_target[...] = griddata((xx_input_flat, yy_input_flat), sst_arome[0, ...].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
         lsmask_target[...] = griddata((xx_input_flat, yy_input_flat), lsmask_arome[0, ...].flatten(), (x_target[None, :], y_target[:, None]), method = 'nearest')
 
         starts = [0, 18]
@@ -141,7 +139,9 @@ def main():
             uwind_target = griddata((xx_input_flat, yy_input_flat), uwind_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
             vwind_target = griddata((xx_input_flat, yy_input_flat), vwind_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
 
-            xwind_target[t], ywind_target[t] = rotate_wind_from_UV_to_xy(x_target, y_target, proj4_arome, uwind_target, vwind_target)
+            xwind_rotated, ywind_rotated = rotate(uwind_target.flatten(), vwind_target.flatten(), lat_target.flatten(), lon_target.flatten(), 'proj+=longlat', proj4_arome)
+            xwind_target[t] = xwind_rotated.reshape(*xwind_target[t].shape)
+            ywind_target[t] = ywind_rotated.reshape(*ywind_target[t].shape)
 
 
         nc.close()
@@ -189,10 +189,6 @@ def main():
         ywind_out.units = 'm/s'
         ywind_out.standard_name = 'y 10 metre wind (Y10M)'
 
-        sst_out = output_netcdf.createVariable('sst', 'd', ('y', 'x'))
-        sst_out.units = 'K'
-        sst_out.standard_name = 'Sea Surface Temperature'
-
         lsmask_out = output_netcdf.createVariable('lsmask', 'l', ('y', 'x'))
         lsmask_out.units = '1'
         lsmask_out .standard_name = 'Land Area Fraction'
@@ -202,7 +198,6 @@ def main():
         tc[:] = np.linspace(0,1,2)
         latc[:] = lat_target
         lonc[:] = lon_target
-        sst_out[:] = sst_target
         lsmask_out[:] = lsmask_target
         t2m_out[:] = t2m_target
         xwind_out[:] = xwind_target

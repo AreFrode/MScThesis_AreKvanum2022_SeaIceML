@@ -49,10 +49,7 @@ def main():
     if not os.path.isdir(f"{path_output}{year_task}/{month_task}"):
         os.makedirs(f"{path_output}{year_task}/{month_task}")
 
-
-    # Create global land-sea mask
-    # This should be something using glob.glob, 01 does not exist for 2020/12
-    with Dataset(f"{path_data_task}AROME_1kmgrid_{year_task}{month_task}01T18Z.nc") as constants:
+    with Dataset(f"{paths[0]}AROME_1kmgrid_20190101T18Z.nc") as constants:
         lsmask = constants['lsmask'][:,:-1]
 
     baltic_mask = np.zeros_like(lsmask)
@@ -66,7 +63,8 @@ def main():
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(f"{yyyymmdd}")
         yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
-        yyyymmdd_datetime = (yyyymmdd_datetime + timedelta(days = 2)).strftime('%Y%m%d')
+        yyyymmdd_target = (yyyymmdd_datetime + timedelta(days = 2)).strftime('%Y%m%d')
+        yyyymmdd_osi = (yyyymmdd_datetime + timedelta(days = -1)).strftime('%Y%m%d')
 
         try:
             # Assert that arome forecast exist for current day
@@ -74,8 +72,8 @@ def main():
             # Assert that target icechart exist two timesteps forward in time
             arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}T18Z.nc")[0]
             icechart_path = glob.glob(f"{path_icechart}{year_task}/{month_task}/ICECHART_1kmAromeGrid_{yyyymmdd}T1500Z.nc")[0]
-            target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_datetime[:4]}/{yyyymmdd_datetime[4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_datetime}T1500Z.nc")[0]
-            osisaf_path = glob.glob(f"{path_osisaf}{year_task}/{month_task}/OSISAF_trend_1kmgrid_{yyyymmdd}.nc")[0]
+            target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_target[:4]}/{yyyymmdd_target[4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_datetime}T1500Z.nc")[0]
+            osisaf_path = glob.glob(f"{path_osisaf}{year_task}/{month_task}/OSISAF_trend_1kmgrid_{yyyymmdd_osi}.nc")[0]
 
         except IndexError:
             continue
