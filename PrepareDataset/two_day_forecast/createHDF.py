@@ -32,7 +32,7 @@ def main():
     path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/testing_data/"
 
     paths = []
-    for year in range(2019, 2022):
+    for year in range(2019, 2023):
         for month in range(1, 13):
             p = f"{path_arome}{year}/{month:02d}/"
             paths.append(p)

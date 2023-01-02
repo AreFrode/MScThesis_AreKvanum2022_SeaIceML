@@ -13,8 +13,6 @@ from verification_metrics import IIEE, find_ice_edge, ice_edge_length, contourAr
 from tqdm import tqdm
 from datetime import datetime, timedelta
 
-from matplotlib import pyplot as plt
-
 def main():
     PATH_PERSISTANCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
     PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/"
@@ -22,12 +20,13 @@ def main():
     if not os.path.exists(PATH_OUTPUTS):
         os.makedirs(PATH_OUTPUTS)
 
-    icecharts = sorted(glob.glob(f"{PATH_PERSISTANCE}2021/**/*.hdf5"))
+    icecharts = sorted(glob.glob(f"{PATH_PERSISTANCE}2022/**/*.hdf5"))
 
     with h5py.File(icecharts[0], 'r') as constants:
         lsmask = constants['lsmask'][578:, :1792]
 
-    output_df = pd.DataFrame(columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6'])
+    output_list = []
+
 
     for icechart in tqdm(icecharts):
         yyyymmdd = icechart[-13:-5]
@@ -52,13 +51,10 @@ def main():
         area_dist_target = contourAreaDistribution(sic_target, lsmask)
         area_dist_forecast = contourAreaDistribution(sic_persistance, lsmask)
 
-        
+        output_list.append([pd.to_datetime(yyyymmdd_target, format="%Y%m%d"), target_length, forecast_length, np.mean([target_length, forecast_length]), a_plus + a_minus, a_plus, a_minus] + area_dist_target.tolist() + area_dist_forecast.tolist())
 
-        df_column_values = [pd.to_datetime(yyyymmdd_target, format="%Y%m%d"), target_length, forecast_length, np.mean([target_length, forecast_length]), a_plus + a_minus, a_plus, a_minus] + area_dist_target.tolist() + area_dist_forecast.tolist()
 
-        tmp_df = pd.DataFrame([df_column_values], columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6'])
-        output_df = pd.concat([output_df, tmp_df])
-
+    output_df = pd.DataFrame(output_list, columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6'])
     output_df = output_df.set_index('date')
     output_df.to_csv(f"{PATH_OUTPUTS}persistance.csv")
     

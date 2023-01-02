@@ -102,7 +102,7 @@ def main():
     # Create figure classes
 
     # ice_edge_length_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}ice_edge_length_seasons_box.png", "Ice Edge Length Comparison", "Ice Edge Length [km]")
-    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}IIEE_spread_seasons.png", "Normalized IIEE comparison", "IIEE [km]")
+    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}IIEE_spread_seasons_2.png", "Normalized IIEE comparison", "IIEE [km]")
 
 
     # Fill figures
@@ -132,7 +132,7 @@ def main():
     seasonal_mean_lengths = []
     seasonal_mean_IIEE = []
 
-    b = [4, -4, -2]
+    b = [4, 5, -4, -2]
 
     for forecast in [files[i] for i in b]:
         local_filename = filename_regex.findall(forecast)[0]
@@ -147,6 +147,7 @@ def main():
         df['forecast_length'] = df['forecast_length'] / 1000.
 
         df['forecast_name'] = local_filename
+
 
         monthly_mean = df.groupby(pd.PeriodIndex(df.index, freq="M")).mean()
 

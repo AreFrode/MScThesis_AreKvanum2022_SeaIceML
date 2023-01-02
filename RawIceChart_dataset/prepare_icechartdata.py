@@ -8,11 +8,12 @@ import numpy as np
 from calendar import monthrange
 from netCDF4 import Dataset
 from datetime import datetime, timedelta
+from tqdm import tqdm
 
 
 def main():
     # Define paths
-    icechart_path = "/lustre/storeB/users/nicholsh/icecharts.nc"
+    icechart_path = "/lustre/storeB/users/nicholsh/icecharts_2011-2022.nc"
     previous_icecharts = "/lustre/storeB/project/copernicus/sea_ice/SIW-METNO-ARC-SEAICE_HR-OBS/" # match dates
     path_output = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/'
 
@@ -27,14 +28,14 @@ def main():
     # Define datetime
     t0 = datetime(1981, 1, 1)
         
-    for i in range(len(icechart_time)):
+    for i in tqdm(range(len(icechart_time))):
         time = t0 + timedelta(seconds=int(icechart_time[i]))
         year_task = time.year
         month_task = time.month
         day_task = time.day
 
         yyyymmdd = f"{year_task}{month_task:02d}{day_task:02}"
-        print(f"{i}: {yyyymmdd}")
+        # print(f"{i}: {yyyymmdd}")
 
         
         path_output_task = f"{path_output}{year_task}/{month_task:02d}/"

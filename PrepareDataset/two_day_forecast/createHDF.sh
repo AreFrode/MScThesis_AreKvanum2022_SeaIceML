@@ -3,7 +3,7 @@
 #$ -q research-r8.q
 #$ -l h_rss=8G
 #$ -l mem_free=8G
-#$ -t 1-36
+#$ -t 1-48
 #$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT/
@@ -49,8 +49,11 @@ def main():
     path_osisaf = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/Data/"
     path_output = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 
+    # Set number_of_days osisaf
+    osisaf_trend_days = 5
+
     paths = []
-    for year in range(2019, 2022):
+    for year in range(2019, 2023):
         for month in range(1, 13):
             p = f"{path_arome}{year}/{month:02d}/"
             paths.append(p)
@@ -93,7 +96,7 @@ def main():
             arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}T18Z.nc")[0]
             icechart_path = glob.glob(f"{path_icechart}{year_task}/{month_task}/ICECHART_1kmAromeGrid_{yyyymmdd}T1500Z.nc")[0]
             target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_target[:4]}/{yyyymmdd_target[4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_target}T1500Z.nc")[0]
-            osisaf_path = glob.glob(f"{path_osisaf}{yyyymmdd_osi[:4]}/{yyyymmdd_osi[4:6]}/OSISAF_trend_1kmgrid_{yyyymmdd_osi}.nc")[0]
+            osisaf_path = glob.glob(f"{path_osisaf}{yyyymmdd_osi[:4]}/{yyyymmdd_osi[4:6]}/OSISAF_trend_{osisaf_trend_days}_days_1kmgrid_{yyyymmdd_osi}.nc")[0]
 
         except IndexError:
             continue

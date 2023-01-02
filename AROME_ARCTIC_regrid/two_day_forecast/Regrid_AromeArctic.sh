@@ -3,7 +3,7 @@
 #$ -q research-r8.q
 #$ -l h_rss=8G
 #$ -l mem_free=8G
-#$ -t 1-36
+#$ -t 1-12
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/OUT/
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
@@ -57,7 +57,7 @@ def main():
     # Dataset
     ################################################
     paths = []
-    for year in range(2019, 2022):
+    for year in range(2022, 2023):
         for month in range(1, 13):
             p = f"{path_data}{year}/{month:02d}/"
             paths.append(p)
@@ -86,18 +86,21 @@ def main():
         print(yyyymmdd)
 
         path_day = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T18Z.nc")
+        path_day_det = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_det_2_5km_{yyyymmdd}T18Z.nc")
         path_day_sfx = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_sfx_2_5km_{yyyymmdd}T18Z.nc")
 
         try:
             dataset = path_day[0]
-            dataset_sfx = path_day_sfx[0]
 
         except IndexError:
-            continue
+            try:
+                dataset = path_day_det[0]
+            
+            except IndexError:
+                continue
 
         # Fetch variables from Arome Arctic
         nc = Dataset(dataset, 'r')
-        nc_sfx = Dataset(dataset_sfx, 'r')
 
         x_input = nc.variables['x'][:]
         y_input = nc.variables['y'][:]
@@ -145,7 +148,6 @@ def main():
 
 
         nc.close()
-        nc_sfx.close()
 
         ################################################
         # Output netcdf file

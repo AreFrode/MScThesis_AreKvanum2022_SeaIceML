@@ -81,11 +81,15 @@ def predict_validation_multi(validation_generator, model, PATH_OUTPUTS, weights)
         out = concentration_and_changes[...,0]
         local_changes = concentration_and_changes[...,1]
 
+        x_vals, y_vals = validation_generator.get_xy(i)
+
         hdf_path = f"{PATH_OUTPUTS}Data/{weights}/{yyyymmdd[:4]}/{yyyymmdd[4:6]}/"
         if not os.path.exists(hdf_path):
             os.makedirs(hdf_path)
 
         with h5py.File(f"{hdf_path}SIC_SimpleUNET_two_day_forecast_{yyyymmdd}T15Z.hdf5", "w") as output_file:
+            output_file['xc'] = x_vals
+            output_file['yc'] = y_vals
             output_file["y"] = y
             output_file["y_pred"] = np.expand_dims(out, 0)
             output_file["date"] = yyyymmdd
@@ -136,7 +140,9 @@ def main():
     model = create_MultiOutputUNET(
         input_shape = (config['height'], config['width'], len(config['constant_fields']) + 2*len(config['dated_fields'])), 
         channels = config['channels'],
-        pooling_factor= config['pooling_factor']
+        pooling_factor= config['pooling_factor'],
+        average_pool=config['AveragePool'],
+        leaky_relu = config['LeakyReLU']
     )
 
     load_status = model.load_weights(f"{PATH_OUTPUTS}models/{weights}").expect_partial()

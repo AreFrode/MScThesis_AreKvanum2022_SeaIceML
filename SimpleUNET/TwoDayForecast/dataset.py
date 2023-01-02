@@ -76,6 +76,13 @@ class HDF5Generator(keras.utils.Sequence):
     def get_dates(self, index):
         return self.data[index*self.batch_size:(index+1)*self.batch_size]
 
+    def get_xy(self, index):
+        with h5py.File(self.get_dates(index)[0]) as hf:
+            x_vals = hf['x'][:]
+            y_vals = hf['y'][:]
+
+        return x_vals[:self.rightmost_boundary], y_vals[self.lower_boundary:]
+
     def __getitem__(self, index):
         # Get the minibatch associated with index
         samples = self.get_dates(index)
@@ -104,7 +111,6 @@ class HDF5Generator(keras.utils.Sequence):
 
         # return X[:, 451::2, :1792:2, :], y[:, 451::2, :1792:2, :]
         return X[:, self.lower_boundary:, :self.rightmost_boundary, :], y[:, self.lower_boundary:, :self.rightmost_boundary, :]
-
 
 class MultiOutputHDF5Generator(HDF5Generator):
     def __init__(self, 

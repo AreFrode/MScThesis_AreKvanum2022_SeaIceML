@@ -11,10 +11,17 @@ from datetime import datetime, timedelta
 from scipy.interpolate import NearestNDInterpolator
 from numpy.polynomial import Polynomial
 
-
 def compute_trend_1d(arr):
-    trend = Polynomial.fit(x = range(len(arr)), y = arr[::-1], deg = 1).convert()
+    sic_vals = arr[::-1]
+    idx = np.isfinite(sic_vals)  # Skip missing entries
+    trend = Polynomial.fit(x = range(len(sic_vals[idx])), y = sic_vals[idx], deg = 1)
     return trend.coef[-1]
+
+
+def has_missing_data(status_flags, xx_arome_flat, yy_arome_flat, x_target, y_target):
+    status_flags_flat = (np.pad(status_flags, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
+    status_flags_arome = griddata((xx_arome_flat, yy_arome_flat), status_flags_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+    return (status_flags_arome == 101).any()
 
 def main():
     # Define paths
@@ -44,12 +51,12 @@ def main():
 
     # Dataset
     paths = []
-    for year in range(2019, 2022):
+    for year in range(2021, 2022):
         for month in range(1, 13):
             p = f"{PATH_OSISAF}{year}/{month:02d}/"
             paths.append(p)
 
-    path_data_task = paths[0] # This should be the only path
+    path_data_task = paths[1] # This should be the only path
     print(f"path_data_task = {path_data_task}")
     path_output_task = path_data_task.replace(PATH_OSISAF, PATH_OUTPUT)
     print(f"path_output_task = {path_output_task}")
@@ -69,7 +76,7 @@ def main():
     baltic_mask[575:800, 475:600] = 1
 
     # Data processing
-    for dd in range(1, nb_days_task + 1):
+    for dd in range(22, 24):
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(yyyymmdd)
 
@@ -79,6 +86,7 @@ def main():
 
         # Read input
         raw_ice_conc = np.empty((849, 849, num_days))
+        raw_ice_conc.fill(np.nan)
 
         try:
             dataset = path_osisaf[0]
@@ -90,10 +98,27 @@ def main():
             x_input = nc.variables['xc'][:] * 1000
             y_input = nc.variables['yc'][:] * 1000
 
+            x_diff = x_input[1] - x_input[0]
+            y_diff = y_input[1] - y_input[0]
+            x_ic = np.pad(x_input, (1,1), 'constant', constant_values = (x_input[0] - x_diff, x_input[-1] + x_diff))
+            y_ic = np.pad(y_input, (1,1), 'constant', constant_values = (y_input[0] - y_diff, y_input[-1] + y_diff))
+
+            xx_ic, yy_ic = np.meshgrid(x_ic, y_ic)
+
+            xx_arome, yy_arome = transform_function.transform(xx_ic, yy_ic)
+            xx_arome_flat = xx_arome.flatten()
+            yy_arome_flat = yy_arome.flatten()
+
             lat_input = nc.variables['lat'][:]
             lon_input = nc.variables['lon'][:]
 
+            status_flags = nc.variables['status_flag'][0, :]
+
+            if has_missing_data(status_flags, xx_arome_flat, yy_arome_flat, x_target, y_target):
+                continue
+
             tmp_ice_conc = np.ma.filled(nc.variables['ice_conc'][0,:,:], fill_value = -999)
+
             mask = np.where(~np.logical_or((tmp_ice_conc == -999), (baltic_mask == 1)))
             mask_T = np.transpose(mask)
 
@@ -110,25 +135,22 @@ def main():
             # If missing days, compute trend from remainder of days
             except IndexError:
                 continue
-
+                
             with Dataset(path_current, 'r') as nc:
+                status_flags = nc.variables['status_flag'][0, :]
+
+                if has_missing_data(status_flags, xx_arome_flat, yy_arome_flat, x_target, y_target):
+                    continue
+
                 tmp_ice_conc = nc.variables['ice_conc'][0,:,:]
                 sic_interpolator = NearestNDInterpolator(mask_T, tmp_ice_conc[mask])
                 raw_ice_conc[..., i] = sic_interpolator(*np.indices(tmp_ice_conc.shape))
 
-        x_diff = x_input[1] - x_input[0]
-        y_diff = y_input[1] - y_input[0]
-        x_ic = np.pad(x_input, (1,1), 'constant', constant_values = (x_input[0] - x_diff, x_input[-1] + x_diff))
-        y_ic = np.pad(y_input, (1,1), 'constant', constant_values = (y_input[0] - y_diff, y_input[-1] + y_diff))
-        
-        xx_ic, yy_ic = np.meshgrid(x_ic, y_ic)
-
-        xx_arome, yy_arome = transform_function.transform(xx_ic, yy_ic)
-        xx_arome_flat = xx_arome.flatten()
-        yy_arome_flat = yy_arome.flatten()
 
         lat_flat = (np.pad(lat_input, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
         lon_flat = (np.pad(lon_input, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
+
+        raw_ice_conc_flat = (np.pad(raw_ice_conc[..., 0], ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
 
         # Interpolate osisaf as with raw icecharts, NN over land
         ice_conc_trend = np.apply_along_axis(compute_trend_1d, axis = -1, arr = raw_ice_conc)
@@ -139,18 +161,16 @@ def main():
 
         lon_arome = griddata((xx_arome_flat, yy_arome_flat), lon_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
 
-        raw_ice_conc_flat = (np.pad(raw_ice_conc[..., 0], ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
-
         ice_conc_arome = griddata((xx_arome_flat, yy_arome_flat), raw_ice_conc_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
 
         ice_conc_trend = griddata((xx_arome_flat, yy_arome_flat), ice_conc_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
-
-        baltic_mask_flat = (np.pad(baltic_mask, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
-
-        baltic_arome = griddata((xx_arome_flat, yy_arome_flat), baltic_mask_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
-
-        ice_conc_days = np.zeros((3, *ice_conc_arome.shape))
         
+        ice_conc_days = np.zeros((3, *ice_conc_arome.shape))
+
+        plt.figure()
+        plt.pcolormesh(ice_conc_arome)
+        plt.savefig('test_regrid.png')
+
         for i in range(3):
             ice_conc_days[i] = ice_conc_arome + (i + 1) * ice_conc_trend
 
@@ -158,7 +178,7 @@ def main():
         ice_conc_days[ice_conc_days > 100] = 100
 
         # Write to file
-        output_filename = f"OSISAF_{num_days}trend_1kmgrid_{yyyymmdd}.nc"
+        output_filename = f"OSISAF_trend_{num_days}_days_1kmgrid_{yyyymmdd}.nc"
 
         with Dataset(f"{path_output_task}{output_filename}", "w", format = "NETCDF4") as nc_out:
             nc_out.createDimension('x', len(x_target))
@@ -201,17 +221,10 @@ def main():
             ice_conc_out.standard_name = 'Sea Ice Concentration'
             ice_conc_out[:] = ice_conc_arome
 
-            ice_conc_days_out = nc_out.createVariable('ice_conc_forecast_2days', 'd', ('time', 'y', 'x'))
+            ice_conc_days_out = nc_out.createVariable('ice_conc_trend_forecast', 'd', ('time', 'y', 'x'))
             ice_conc_days_out.units = '%'
             ice_conc_days_out.standard_name = 'Sea Ice Concentration trend "time"-days forecast'
             ice_conc_days_out[:] = ice_conc_days
-
-
-            baltic_out = nc_out.createVariable('BalticMask', 'd', ('t', 'y', 'x'))
-            baltic_out[:] = baltic_arome
-
-
-        exit()
 
 
 if __name__ == "__main__":

@@ -1,8 +1,11 @@
 #$ -S /bin/bash
 #$ -l h_rt=10:00:00
-#$ -q research-el7.q
-#$ -l h_vmem=8G
+#$ -q research-r8.q
+#$ -l h_rss=8G
+#$ -l mem_free=8G
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/logs
+
+module use /modules/MET/centos7/GeneralModules
 
 module load Python-devel/3.8.7
 

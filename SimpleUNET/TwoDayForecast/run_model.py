@@ -50,15 +50,16 @@ def main():
         'learning_rate': 0.001,
         'epochs': 40,
         'pooling_factor': 4,
-        'channels': [64, 128, 256, 512, 1024],
+        'channels': [64, 128, 256, 512],
         'height': 1792,
         'width': 1792,
         'lower_boundary': 578,
         'rightmost_boundary': 1792,
         'model_name': f'weights_{current_time}',
         'GroupNorm': True,
-        'AveragePool': True,
-        'LeakyReLU': False
+        'AveragePool': False,
+        'LeakyReLU': False,
+        'ResidualUNET': True
     }
 
     gpu = tf.config.list_physical_devices('GPU')[0]

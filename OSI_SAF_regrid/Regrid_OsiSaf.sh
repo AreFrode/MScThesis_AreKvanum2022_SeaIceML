@@ -3,7 +3,7 @@
 #$ -q research-r8.q
 #$ -l h_rss=8G
 #$ -l mem_free=8G
-#$ -t 1-36
+#$ -t 1-48
 #$ -o /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/data_processing_files/OUT/OUT_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -e /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/data_processing_files/ERR/ERR_$JOB_NAME.$JOB_ID.$HOSTNAME.$TASK_ID
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/data_processing_files/OUT/
@@ -30,11 +30,17 @@ from datetime import datetime, timedelta
 from scipy.interpolate import NearestNDInterpolator
 from numpy.polynomial import Polynomial
 
-
 def compute_trend_1d(arr):
-    trend = Polynomial.fit(x = range(len(arr)), y = arr[::-1], deg = 1)
+    sic_vals = arr[::-1]
+    idx = np.isfinite(sic_vals)  # Skip missing entries
+    trend = Polynomial.fit(x = range(len(sic_vals[idx])), y = sic_vals[idx], deg = 1)
     return trend.coef[-1]
 
+
+def has_missing_data(status_flags, xx_arome_flat, yy_arome_flat, x_target, y_target):
+    status_flags_flat = (np.pad(status_flags, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
+    status_flags_arome = griddata((xx_arome_flat, yy_arome_flat), status_flags_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
+    return (status_flags_arome == 101).any()
 
 def main():
     # Define paths
@@ -64,7 +70,7 @@ def main():
 
     # Dataset
     paths = []
-    for year in range(2019, 2022):
+    for year in range(2019, 2023):
         for month in range(1, 13):
             p = f"{PATH_OSISAF}{year}/{month:02d}/"
             paths.append(p)
@@ -99,6 +105,7 @@ def main():
 
         # Read input
         raw_ice_conc = np.empty((849, 849, num_days))
+        raw_ice_conc.fill(np.nan)
 
         try:
             dataset = path_osisaf[0]
@@ -110,10 +117,27 @@ def main():
             x_input = nc.variables['xc'][:] * 1000
             y_input = nc.variables['yc'][:] * 1000
 
+            x_diff = x_input[1] - x_input[0]
+            y_diff = y_input[1] - y_input[0]
+            x_ic = np.pad(x_input, (1,1), 'constant', constant_values = (x_input[0] - x_diff, x_input[-1] + x_diff))
+            y_ic = np.pad(y_input, (1,1), 'constant', constant_values = (y_input[0] - y_diff, y_input[-1] + y_diff))
+
+            xx_ic, yy_ic = np.meshgrid(x_ic, y_ic)
+
+            xx_arome, yy_arome = transform_function.transform(xx_ic, yy_ic)
+            xx_arome_flat = xx_arome.flatten()
+            yy_arome_flat = yy_arome.flatten()
+
             lat_input = nc.variables['lat'][:]
             lon_input = nc.variables['lon'][:]
 
+            status_flags = nc.variables['status_flag'][0, :]
+
+            if has_missing_data(status_flags, xx_arome_flat, yy_arome_flat, x_target, y_target):
+                continue
+
             tmp_ice_conc = np.ma.filled(nc.variables['ice_conc'][0,:,:], fill_value = -999)
+
             mask = np.where(~np.logical_or((tmp_ice_conc == -999), (baltic_mask == 1)))
             mask_T = np.transpose(mask)
 
@@ -123,6 +147,7 @@ def main():
 
         for i in range(1, num_days):
             yyyymmdd_current = (yyyymmdd_datetime - timedelta(days = i)).strftime('%Y%m%d')
+
             try:
                 path_current = glob.glob(f"{PATH_OSISAF}{yyyymmdd_current[:4]}/{yyyymmdd_current[4:6]}/ice_conc_nh_ease-125_multi_{yyyymmdd_current}1200.nc")[0]
             
@@ -131,20 +156,15 @@ def main():
                 continue
                 
             with Dataset(path_current, 'r') as nc:
+                status_flags = nc.variables['status_flag'][0, :]
+
+                if has_missing_data(status_flags, xx_arome_flat, yy_arome_flat, x_target, y_target):
+                    continue
+
                 tmp_ice_conc = nc.variables['ice_conc'][0,:,:]
                 sic_interpolator = NearestNDInterpolator(mask_T, tmp_ice_conc[mask])
                 raw_ice_conc[..., i] = sic_interpolator(*np.indices(tmp_ice_conc.shape))
 
-        x_diff = x_input[1] - x_input[0]
-        y_diff = y_input[1] - y_input[0]
-        x_ic = np.pad(x_input, (1,1), 'constant', constant_values = (x_input[0] - x_diff, x_input[-1] + x_diff))
-        y_ic = np.pad(y_input, (1,1), 'constant', constant_values = (y_input[0] - y_diff, y_input[-1] + y_diff))
-
-        xx_ic, yy_ic = np.meshgrid(x_ic, y_ic)
-
-        xx_arome, yy_arome = transform_function.transform(xx_ic, yy_ic)
-        xx_arome_flat = xx_arome.flatten()
-        yy_arome_flat = yy_arome.flatten()
 
         lat_flat = (np.pad(lat_input, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
         lon_flat = (np.pad(lon_input, ((1,1), (1,1)), 'constant', constant_values=np.nan)).flatten()
@@ -173,7 +193,7 @@ def main():
         ice_conc_days[ice_conc_days > 100] = 100
 
         # Write to file
-        output_filename = f"OSISAF_trend_1kmgrid_{yyyymmdd}.nc"
+        output_filename = f"OSISAF_trend_{num_days}_days_1kmgrid_{yyyymmdd}.nc"
 
         with Dataset(f"{path_output_task}{output_filename}", "w", format = "NETCDF4") as nc_out:
             nc_out.createDimension('x', len(x_target))
