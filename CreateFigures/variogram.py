@@ -30,6 +30,7 @@ def main():
     print(t2m.shape)
     V = skg.Variogram(coords, t2m[0].flatten(), maxlag='meadian', n_lags = 15, normalize = 15)
     fig = V.plot(show = True)
+    fig.savefig('Variogram_t2m.png')
 
     print('Done')
 
