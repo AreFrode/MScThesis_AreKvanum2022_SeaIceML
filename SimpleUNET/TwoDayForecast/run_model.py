@@ -30,23 +30,19 @@ def main():
     # PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
     # log_dir = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/logs/fit/{datetime.now().strftime('%d%m%H%M')}"
 
-    # Comment above and uncomment below if running tensorflow2.11-singularity container
-    PATH_OUTPUT = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
-    PATH_DATA = "/mnt/PrepareDataset/Data/two_day_forecast/"
-    # PATH_CLIMATOLOGICAL_ICEEDGE = "/mnt/verification_metrics/Data/climatological_ice_edge.csv"
-    log_dir = f"/mnt/SimpleUNET/TwoDayForecast/logs/fit/{datetime.now().strftime('%d%m%H%M')}"
-
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
         'BATCH_SIZE': 4,
-        'constant_fields': ['sic', 'sic_trend', 'lsmask'],
-        'dated_fields': ['t2m', 'xwind', 'ywind'],
+        'fields': ['sic', 'sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
         'train_augment': False,
         'train_normalization': 'normalization_constants_train',
         'train_shuffle': True,
         'val_augment': False,
         'val_normalization': 'normalization_constants_validation',
         'val_shuffle': False,
+        'test_augment': False,
+        'test_normalization': 'normalization_constants_test',
+        'test_shuffle': False,
         'learning_rate': 0.001,
         'epochs': 40,
         'pooling_factor': 4,
@@ -59,8 +55,17 @@ def main():
         'GroupNorm': True,
         'AveragePool': False,
         'LeakyReLU': False,
-        'ResidualUNET': True
+        'ResidualUNET': True,
+        'lead_time': 2,
+        'osisaf_trend': 5
     }
+
+    # Comment above and uncomment below if running tensorflow2.11-singularity container
+    PATH_OUTPUT = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
+    PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/osisaf_trend_{config['osisaf_trend']}/"
+
+    # PATH_CLIMATOLOGICAL_ICEEDGE = "/mnt/verification_metrics/Data/climatological_ice_edge.csv"
+    log_dir = f"/mnt/SimpleUNET/TwoDayForecast/logs/fit/{datetime.now().strftime('%d%m%H%M')}"
 
     gpu = tf.config.list_physical_devices('GPU')[0]
     tf.config.experimental.set_memory_growth(gpu, True)
@@ -81,8 +86,7 @@ def main():
     train_generator = MultiOutputHDF5Generator(
         np.concatenate((data_2019, data_2020)), 
         batch_size=config['BATCH_SIZE'], 
-        constant_fields=config['constant_fields'], 
-        dated_fields=config['dated_fields'], 
+        fields=config['fields'], 
         lower_boundary=config['lower_boundary'], 
         rightmost_boundary=config['rightmost_boundary'],
         normalization_file=f"{PATH_DATA}{config['train_normalization']}.csv",
@@ -93,8 +97,7 @@ def main():
     val_generator = MultiOutputHDF5Generator(
         data_2021, 
         batch_size=config['BATCH_SIZE'], 
-        constant_fields=config['constant_fields'], 
-        dated_fields=config['dated_fields'], 
+        fields=config['fields'],
         lower_boundary=config['lower_boundary'], 
         rightmost_boundary=config['rightmost_boundary'],
         normalization_file=f"{PATH_DATA}{config['val_normalization']}.csv",
@@ -111,7 +114,7 @@ def main():
 
     # model = create_UNET(input_shape = (1920, 1840, 9), channels = [64, 128, 256, 512])
     model = create_MultiOutputUNET(
-        input_shape = (config['height'], config['width'], len(config['constant_fields']) + 2*len(config['dated_fields'])), 
+        input_shape = (config['height'], config['width'], len(config['fields'])), 
         channels = config['channels'],
         pooling_factor= config['pooling_factor'],
         average_pool=config['AveragePool'],

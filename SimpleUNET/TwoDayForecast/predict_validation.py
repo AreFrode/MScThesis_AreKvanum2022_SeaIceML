@@ -59,17 +59,17 @@ def predict_validation_single(validation_generator, model, PATH_OUTPUTS, weights
 
         output_file.close()
 
-def predict_validation_multi(validation_generator, model, PATH_OUTPUTS, weights):
-    samples = len(validation_generator)
+def predict_test_multi(test_generator, model, PATH_OUTPUTS, weights):
+    samples = len(test_generator)
     total_changes = 0
 
     for i in range(samples):
         print(f"Sample {i} of {samples}", end='\r')
-        X, y = validation_generator[i]
+        X, y = test_generator[i]
         y_pred = model.predict(X)
         y_pred = tf.concat(y_pred, axis=-1)
         
-        yyyymmdd = validation_generator.get_dates(i)[0][-13:-5]
+        yyyymmdd = test_generator.get_dates(i)[0][-13:-5]
         yyyymmdd = datetime.strptime(yyyymmdd, '%Y%m%d')
         yyyymmdd = (yyyymmdd + timedelta(days = 2)).strftime('%Y%m%d')
         
@@ -81,7 +81,7 @@ def predict_validation_multi(validation_generator, model, PATH_OUTPUTS, weights)
         out = concentration_and_changes[...,0]
         local_changes = concentration_and_changes[...,1]
 
-        x_vals, y_vals = validation_generator.get_xy(i)
+        x_vals, y_vals = test_generator.get_xy(i)
 
         hdf_path = f"{PATH_OUTPUTS}Data/{weights}/{yyyymmdd[:4]}/{yyyymmdd[4:6]}/"
         if not os.path.exists(hdf_path):
@@ -108,37 +108,36 @@ def main():
     # PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/"
     # PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 
-    # Rewrite paths for singularity compatibility
-    PATH_OUTPUTS = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
-    PATH_DATA = "/mnt/PrepareDataset/Data/two_day_forecast/"
-
-    # gpu = tf.config.list_physical_devices('GPU')[0]
-    # tf.config.experimental.set_memory_growth(gpu, True)
-
     assert len(sys.argv) > 1, "Remember to provide weights"
     weights = sys.argv[1]
     
     # Read config csv
+    PATH_OUTPUTS = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
     config = read_config_from_csv(f"{PATH_OUTPUTS}configs/{weights}.csv")
+
+    # Rewrite paths for singularity compatibility
+    PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/osisaf_trend_{config['osisaf_trend']}/"
+
+    # gpu = tf.config.list_physical_devices('GPU')[0]
+    # tf.config.experimental.set_memory_growth(gpu, True)
 
     BATCH_SIZE = 1
 
-    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))
+    data_2022 = np.array(sorted(glob.glob(f"{PATH_DATA}2022/**/*.hdf5")))
 
-    validation_generator = MultiOutputHDF5Generator(data_2021, 
-        batch_size=BATCH_SIZE, 
-        constant_fields=config['constant_fields'], 
-        dated_fields=config['dated_fields'],
-        lower_boundary=config['lower_boundary'], 
+    test_generator = MultiOutputHDF5Generator(data_2022, 
+        batch_size=BATCH_SIZE,
+        fields=config['fields'],
+        lower_boundary=config['lower_boundary'],
         rightmost_boundary=config['rightmost_boundary'],
-        normalization_file=f"{PATH_DATA}{config['val_normalization']}.csv",
-        augment=config['val_augment'],
-        shuffle=config['val_shuffle']
+        normalization_file=f"{PATH_DATA}{config['test_normalization']}.csv",
+        augment=config['test_augment'],
+        shuffle=config['test_shuffle']
     )
 
     # model = create_UNET(input_shape = (1920, 1840, 9), channels = [64, 128, 256, 512])
     model = create_MultiOutputUNET(
-        input_shape = (config['height'], config['width'], len(config['constant_fields']) + 2*len(config['dated_fields'])), 
+        input_shape = (config['height'], config['width'], len(config['fields'])), 
         channels = config['channels'],
         pooling_factor= config['pooling_factor'],
         average_pool=config['AveragePool'],
@@ -147,7 +146,7 @@ def main():
 
     load_status = model.load_weights(f"{PATH_OUTPUTS}models/{weights}").expect_partial()
 
-    predict_validation_multi(validation_generator, model, PATH_OUTPUTS, weights)
+    predict_test_multi(test_generator, model, PATH_OUTPUTS, weights)
 
 
 

@@ -21,16 +21,17 @@ import warnings
 warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning) 
 
 def main():
-    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/2021/01/"
-    path_pred = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/"
-    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/figures/"
-
     assert len(sys.argv) > 1, "Remember to provide weights"
     weights = sys.argv[1]
 
     config = read_config_from_csv(f"{path_pred[:-5]}configs/{weights}.csv")
+
+    path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/osisaf_trend_{config['osisaf_trend']}/2022/01/"
+    path_pred = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/"
+    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/figures/"
+
     
-    data_2021 = np.array(sorted(glob.glob(f"{path_pred}{weights}/2021/**/*.hdf5", recursive=True)))
+    data_2022 = np.array(sorted(glob.glob(f"{path_pred}{weights}/2022/**/*.hdf5")))
 
     map_proj = ccrs.NorthPolarStereo()
     data_proj = ccrs.PlateCarree()
@@ -42,7 +43,7 @@ def main():
     lon = f['lon'][config['lower_boundary']:, :config['rightmost_boundary']]
     lsmask = f['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
 
-    for date in data_2021:
+    for date in data_2022:
         yyyymmdd = date[-17:-9]
         print(f"{yyyymmdd}")
         year = yyyymmdd[:4]
