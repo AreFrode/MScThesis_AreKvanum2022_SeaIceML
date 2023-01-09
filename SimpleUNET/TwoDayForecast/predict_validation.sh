@@ -18,4 +18,4 @@ module use /modules/MET/rhel8/user-modules
 module load go/1.19.1
 module load singularity/3.10.2
 
-singularity exec -B /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML:/mnt $HOME/TFcontainer/tensorflow_latest-gpu.sif python /mnt/SimpleUNET/TwoDayForecast/predict_validation.py weights_03011443
+singularity exec -B /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML:/mnt $HOME/TFcontainer/tensorflow_latest-gpu.sif python /mnt/SimpleUNET/TwoDayForecast/predict_validation.py weights_05012028

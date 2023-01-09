@@ -6,7 +6,7 @@ import numpy as np
 
 def find_ice_edge(sic, mask, threshold: int = 2):
     """Creates an Ice-Edge mask containing spatially aware ice-edge pixels,
-        code inspired by derivation performed in [Melsom, 2019]
+        code inspired by derivations performed in [Melsom, 2019]
 
     Args:
         sic (array): input sic field
@@ -122,6 +122,28 @@ def calculate_distance(current_ice_edge, other_ice_edge, x, y):
         d['distance'].append(distances.min())
 
     return d
+
+def IIEE_fast(sic_prediction, sic_target, mask, side_length: int = 1, threshold: int = 2):
+    """Computes the IIEE between two SIC fields, implemented according to [Goessling, 2016]
+
+    Args:
+        sic_prediction (array): SIC field serving as the forecast
+        sic_target (array): SIC field serving as the target
+        mask (lsmask): Arbitrary mask (usually land sea mask)
+        side_length (int, optional): Grid cell side length in km. Defaults to 1.
+        threshold (int, optional): SIC Class thresholding open water and sea ice. Defaults to 2.
+
+    Returns:
+        Masked array: Stack consisting of [a_plus, a_minus, ocean, ice], cell values in km
+    """
+
+    sic_target_masked = np.ma.masked_array(sic_target, mask=mask)
+    sic_prediction_masked = np.ma.masked_array(sic_prediction, mask=mask)
+
+    a_plus = np.logical_and(np.greater_equal(sic_prediction_masked, threshold), np.less(sic_target_masked, threshold)).astype(int)
+    a_minus = np.logical_and(np.greater_equal(sic_target_masked, threshold), np.less(sic_prediction_masked, threshold)).astype(int)
+
+    return np.ma.stack((a_plus*(side_length**2), a_minus*(side_length**2)))
 
 
 def IIEE(sic_prediction, sic_target, mask, a: int = 1, threshold: int = 2):

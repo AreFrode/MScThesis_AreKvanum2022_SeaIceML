@@ -44,7 +44,7 @@ def main():
         'test_normalization': 'normalization_constants_test',
         'test_shuffle': False,
         'learning_rate': 0.001,
-        'epochs': 40,
+        'epochs': 25,
         'pooling_factor': 4,
         'channels': [64, 128, 256, 512],
         'height': 1792,
@@ -56,6 +56,9 @@ def main():
         'AveragePool': False,
         'LeakyReLU': False,
         'ResidualUNET': True,
+        'lr_decay_steps': 72 * 15,
+        'lr_decay_rate': 0.8,
+        'lr_decay_staircase': True,
         'lead_time': 2,
         'osisaf_trend': 5
     }
@@ -107,9 +110,9 @@ def main():
     
     lr_schedule = keras.optimizers.schedules.ExponentialDecay(
         config['learning_rate'],
-        decay_steps = 500,
-        decay_rate = .96,
-        staircase=True
+        decay_steps = config['lr_decay_steps'],
+        decay_rate = config['lr_decay_rate'],
+        staircase= config['lr_decay_staircase']
     )
 
     # model = create_UNET(input_shape = (1920, 1840, 9), channels = [64, 128, 256, 512])
@@ -193,8 +196,8 @@ def main():
     """
     ######## END SETUP IIEECallback #################
 
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    # if not os.path.exists(log_dir):
+    #     os.makedirs(log_dir)
 
     t0 = time.time()
     model.fit(
@@ -203,7 +206,7 @@ def main():
         batch_size = config['BATCH_SIZE'],
         callbacks=[
             model_checkpoint_callback, 
-            tensorboard_callback,
+            # tensorboard_callback,
             memory_print_callback,
             # iiee_callback,   # REMOVE IF NOT COMPUTING IIEE every epoch
             csvlogger_callback

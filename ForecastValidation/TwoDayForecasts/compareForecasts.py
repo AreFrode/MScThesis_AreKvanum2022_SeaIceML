@@ -19,6 +19,9 @@ class IceEdgeStatisticsFigure:
         self.fname = fname
         self.ax.set_title(title)
         self.ax.set_ylabel(ylabel)
+
+    def setYLimit(self, upper):
+        self.ax.set_ylim(top = upper)
     
     def addPersistantce(self, df):
         df.plot(ax = self.ax, label = 'Persistence', ls='--', ms='5')
@@ -65,9 +68,14 @@ def main():
     sns.despine()
 
     # Define paths
-    PATH_FORECAST_STATISTICS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/"
+    # PATH_FORECAST_STATISTICS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/"
+    PATH_PERSISTENCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/persistance.csv"
+    PATH_FORECAST_STATISTICS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/lead_time_2/osisaf_trend_5/"
     PATH_CLIMATOLOGICAL_ICEEDGE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/Data/climatological_ice_edge.csv"
-    PATH_FIGURES = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/figures/"
+    PATH_FIGURES = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/{PATH_FORECAST_STATISTICS[-27:]}figures/"
+
+    if not os.path.exists(PATH_FIGURES):
+        os.makedirs(PATH_FIGURES)
 
     # Read Climatological iceedge
     climatological_ice_edge = pd.read_csv(PATH_CLIMATOLOGICAL_ICEEDGE, index_col = 0)
@@ -75,13 +83,14 @@ def main():
     # Comment this out if leap year
     climatological_ice_edge = climatological_ice_edge.drop('02-29')
 
-    climatological_ice_edge.index = '2021-' + climatological_ice_edge.index
+    # Update to 2022
+    # climatological_ice_edge.index = '2021-' + climatological_ice_edge.index
+    climatological_ice_edge.index = '2022-' + climatological_ice_edge.index
     climatological_ice_edge.set_index(pd.DatetimeIndex(pd.to_datetime(climatological_ice_edge.index)))
     
     # Convert length from [m] to [km]
     climatological_ice_edge['ice_edge_length'] = climatological_ice_edge['ice_edge_length'] / 1000.
-
-
+    
     # Read available statistics files
 
     fnames = ('weights_*', 'persistance')
@@ -96,18 +105,20 @@ def main():
     meteorological_seasons = [0,0,1,1,1,2,2,2,3,3,3,0] # D2021 substitutes D2020
     seasonal_names = ['DJF', 'MAM', 'JJA', 'SON']
 
-    months = pd.date_range('2021-01-01','2022-01-01', freq='MS').strftime("%Y-%m-%d").tolist()
+    # Update to 2022
+    # months = pd.date_range('2021-01-01','2022-01-01', freq='MS').strftime("%Y-%m-%d").tolist()
+    months = pd.date_range('2022-01-01','2023-01-01', freq='MS').strftime("%Y-%m-%d").tolist()
 
 
     # Create figure classes
 
     # ice_edge_length_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}ice_edge_length_seasons_box.png", "Ice Edge Length Comparison", "Ice Edge Length [km]")
-    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}IIEE_spread_seasons_2.png", "Normalized IIEE comparison", "IIEE [km]")
+    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}IIEE_spread_seasons.png", "Normalized IIEE comparison", "IIEE [km]")
 
 
     # Fill figures
 
-    target = pd.read_csv(files[0], index_col = 0, usecols=['date', 'forecast_length', 'target_length', 'IIEE'])
+    target = pd.read_csv(PATH_PERSISTENCE, index_col = 0, usecols=['date', 'forecast_length', 'target_length', 'IIEE'])
     target['Normalized_IIEE'] = target['IIEE'] / climatological_ice_edge['ice_edge_length']
     target['target_length'] = target['target_length'] / 1000.
     target['forecast_length'] = target['forecast_length'] / 1000.
@@ -115,7 +126,7 @@ def main():
     target_monthly_mean = target.groupby(pd.PeriodIndex(target.index, freq="M")).mean()
 
     for i, idx in zip(range(len(months) - 1), meteorological_seasons):
-        target.loc[(target.index > months[i]) & (target.index < months[i+1]), 'met_index'] = seasonal_names[idx]
+        target.loc[(target.index >= months[i]) & (target.index < months[i+1]), 'met_index'] = seasonal_names[idx]
 
     target_seasonal = target.groupby('met_index')
     
@@ -132,14 +143,14 @@ def main():
     seasonal_mean_lengths = []
     seasonal_mean_IIEE = []
 
-    b = [4, 5, -4, -2]
+    # b = [4, 5, -4, -2] Old forecast index
 
-    for forecast in [files[i] for i in b]:
+    for forecast in files:
         local_filename = filename_regex.findall(forecast)[0]
 
-        local_figure_path = f"{PATH_FIGURES}{local_filename}/"
-        if not os.path.exists(local_figure_path):
-            os.makedirs(local_figure_path)
+        # local_figure_path = f"{PATH_FIGURES}{local_filename}/"
+        # if not os.path.exists(local_figure_path):
+        #     os.makedirs(local_figure_path)
 
         df = pd.read_csv(forecast, index_col = 0)
         df['climatological_length'] = climatological_ice_edge['ice_edge_length']
@@ -152,7 +163,7 @@ def main():
         monthly_mean = df.groupby(pd.PeriodIndex(df.index, freq="M")).mean()
 
         for i, idx in zip(range(len(months) - 1), meteorological_seasons):
-            df.loc[(df.index > months[i]) & (df.index < months[i+1]), 'met_index'] = seasonal_names[idx]
+            df.loc[(df.index >= months[i]) & (df.index < months[i+1]), 'met_index'] = seasonal_names[idx]
 
         fetched_forecasts.append(df[['Normalized_IIEE', 'forecast_name', 'met_index']])
         met_seasons = df.groupby('met_index').mean()
@@ -194,6 +205,7 @@ def main():
     # ice_edge_length_figure.savefig()
 
     fetched_dataframe = pd.concat(fetched_forecasts)
+
 
     # IIEE_figure.addPersistantce(target_seasonal_mean['Normalized_IIEE'])
 

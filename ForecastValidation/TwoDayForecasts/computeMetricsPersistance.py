@@ -14,13 +14,13 @@ from tqdm import tqdm
 from datetime import datetime, timedelta
 
 def main():
-    PATH_PERSISTANCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
+    PATH_PERSISTENCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
     PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/"
 
     if not os.path.exists(PATH_OUTPUTS):
         os.makedirs(PATH_OUTPUTS)
 
-    icecharts = sorted(glob.glob(f"{PATH_PERSISTANCE}2022/**/*.hdf5"))
+    icecharts = sorted(glob.glob(f"{PATH_PERSISTENCE}2022/**/*.hdf5"))
 
     with h5py.File(icecharts[0], 'r') as constants:
         lsmask = constants['lsmask'][578:, :1792]

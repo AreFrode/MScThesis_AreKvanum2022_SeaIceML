@@ -601,3 +601,8 @@ PrepareDataset/logs/*
 PrepareDataset/Data/two_day_forecast_non_cum/normalization_constants_test.csv
 PrepareDataset/Data/two_day_forecast_non_cum/normalization_constants_train.csv
 PrepareDataset/Data/two_day_forecast_non_cum/normalization_constants_validation.csv
+ForecastValidation/lead_time_2/osisaf_trend_5/*.csv
+ForecastValidation/lead_time_2/osisaf_trend_5/figures/*
+PhysicalModels/Data/figures/*
+PhysicalModels/Data/lead_time_2/*.csv
+PhysicalModels/Data/lead_time_2/osisaf_trend_5/*.csv

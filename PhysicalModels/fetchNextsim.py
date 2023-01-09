@@ -2,47 +2,30 @@ import h5py
 import glob
 import os
 import sys
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels")
 
 import numpy as np
 
 from calendar import monthrange
 from netCDF4 import Dataset
 from pyproj import CRS, Transformer
-from scipy.interpolate import griddata
 from datetime import datetime, timedelta
-
-from matplotlib import pyplot as plt
+from common_functions import onehot_encode_sic
 
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx
 
+
 def main():
     # Define paths
     path_nextsim = "/lustre/storeB/users/maltem/nowwind/cmems_mod_arc_phy_anfc_nextsim_hm_202007/"
 
-    # Set the forecast lead time
-    lead_time = int(sys.argv[1])
-
-    path_output = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/lead_time_{lead_time:02d}/"
+    path_output = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/"
 
     # This will be used to define the xy-boundary
-    path_ml = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_13121158/2021/01/"
-
-    # PrepareData will be used to keep track of bulletindates
-    if lead_time == 1:
-        path_raw = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/one_day_forecast/"
-    
-    elif lead_time == 2:
-        path_raw = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
-
-    elif lead_time == 3:
-        path_raw = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/three_day_forecast/"
-
-    else:
-        print('No valid lead time supplied')
-        exit()
+    path_ml = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_05011118/2022/01/"
 
     # Define projection transformer
     proj4_nextsim = "+proj=stere +lat_0=90 +lat_ts=90 +lon_0=-45 +x_0=0 +y_0=0 +R=6378273 +ellps=sphere +units=m +no_defs"
@@ -79,10 +62,10 @@ def main():
         p = f"{path_nextsim}{year}/{month:02d}/"
         paths.append(p)
 
-    path_data_task = paths[int(sys.argv[2]) - 1]
+    path_data_task = paths[int(sys.argv[1]) - 1]
     print(f"{path_data_task=}")
     path_output_task = path_data_task.replace(path_nextsim, path_output)
-    print(f"{path_output_task=}")
+    print(f"path_output_task = {path_output_task}")
     year_task = path_data_task[len(path_nextsim):len(path_nextsim) + 4]
     print(f"{year_task=}")
     month_task = path_data_task[len(path_nextsim) + 5:len(path_nextsim) + 7]
@@ -93,40 +76,68 @@ def main():
     if not os.path.exists(path_output_task):
         os.makedirs(path_output_task)
 
+
     for dd in range(1, nb_days_task + 1):
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(yyyymmdd)
 
         yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
-        yyyymmdd_nextsim_bulletin = (yyyymmdd_datetime + timedelta(days = 1)).strftime('%Y%m%d')
-        yyyymmdd_nextsim_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
 
+        lead_time_list = []
+        
+
+        yyyymmdd_nextsim_valid = (yyyymmdd_datetime + timedelta(days = 0)).strftime('%Y%m%d')
         try:
-            raw_path = glob.glob(f"{path_raw}{year_task}/{month_task}/PreparedSample_{yyyymmdd}.hdf5")[0]
-            nextsim_path = glob.glob(f"{path_nextsim}{year_task}/{month_task}/{yyyymmdd_nextsim_valid}_hr-nersc-MODEL-nextsimf-ARC-b{yyyymmdd_nextsim_bulletin}-fv00.0.nc")[0]
+            nextsim_path = glob.glob(f"{path_nextsim}{year_task}/{month_task}/{yyyymmdd_nextsim_valid}_hr-nersc-MODEL-nextsimf-ARC-b{yyyymmdd}-fv00.0.nc")[0]
 
         except IndexError:
+            print(f'Missing file at {yyyymmdd_nextsim_valid}-b{yyyymmdd}')
             continue
-    
+
         with Dataset(nextsim_path, 'r') as nc:
             nextsim_x = nc.variables['x'][:]
             nextsim_y = nc.variables['y'][:]
+            nextsim_lat = nc.variables['latitude'][:]         
+            nextsim_lon = nc.variables['longitude'][:]
             nextsim_sic = nc.variables['siconc'][:]
+            fill_value = nc.variables['siconc']._FillValue
 
-            # The boundaries are defined as inclusive:exclusive
-            leftmost_boundary = find_nearest(nextsim_x, np.min(xxc_target_flat))
-            rightmost_boundary = find_nearest(nextsim_x, np.max(xxc_target_flat)) + 1
+        # The boundaries are defined as inclusive:exclusive
+        leftmost_boundary = find_nearest(nextsim_x, np.min(xxc_target_flat))
+        rightmost_boundary = find_nearest(nextsim_x, np.max(xxc_target_flat)) + 1
 
-            lower_boundary = find_nearest(nextsim_y, np.min(yyc_target_flat))
-            upper_boundary = find_nearest(nextsim_y, np.max(yyc_target_flat)) + 1
+        lower_boundary = find_nearest(nextsim_y, np.min(yyc_target_flat))
+        upper_boundary = find_nearest(nextsim_y, np.max(yyc_target_flat)) + 1
 
-        nextsim_sic_mean = np.mean(nextsim_sic[:, lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary], axis = 0)
+        nextsim_sic_current = np.ma.filled(nextsim_sic[:, lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary], fill_value = fill_value)
 
-        output_filename = f"nextsim_mean_{yyyymmdd_nextsim_valid}_b{yyyymmdd_nextsim_bulletin}.nc"
+        lead_time_list.append(np.mean(nextsim_sic_current, axis = 0))
+        
+        nextsim_lsmask = np.where(lead_time_list[0] == fill_value, 1, 0)
+
+        # yyyymmdd_nextsim_bulletin = (yyyymmdd_datetime + timedelta(days = 1)).strftime('%Y%m%d')
+        for i in range(1, 3):
+            yyyymmdd_nextsim_valid = (yyyymmdd_datetime + timedelta(days = i)).strftime('%Y%m%d')
+
+            try:
+                nextsim_path = glob.glob(f"{path_nextsim}{yyyymmdd_nextsim_valid[:4]}/{yyyymmdd_nextsim_valid[4:6]}/{yyyymmdd_nextsim_valid}_hr-nersc-MODEL-nextsimf-ARC-b{yyyymmdd}-fv00.0.nc")[0]
+
+            except IndexError:
+                print(f'Missing file at {yyyymmdd_nextsim_valid}-b{yyyymmdd}')
+                continue
+
+            with Dataset(nextsim_path, 'r') as nc:
+                nextsim_sic_current = nc.variables['siconc'][:, lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary]
+            
+            lead_time_list.append(np.mean(np.ma.filled(nextsim_sic_current, fill_value), axis = 0))
+
+        lead_time_array = np.array(lead_time_list)
+        output_filename = f"nextsim_mean_b{yyyymmdd}.nc"
 
         with Dataset(f"{path_output_task}{output_filename}", 'w', format = "NETCDF4") as nc_out:
             nc_out.createDimension('x', len(nextsim_x[leftmost_boundary:rightmost_boundary]))
             nc_out.createDimension('y', len(nextsim_y[lower_boundary:upper_boundary]))
+            nc_out.createDimension('t', 3)
 
             yc = nc_out.createVariable('y', 'd', ('y'))
             yc.units = 'km'
@@ -138,11 +149,25 @@ def main():
             xc.standard_name = 'x'
             xc[:] = nextsim_x[leftmost_boundary:rightmost_boundary]
 
-            sic_out = nc_out.createVariable('sic', 'd', ('y', 'x'))
+            latc = nc_out.createVariable('lat', 'd', ('y', 'x'))
+            latc.units = 'degrees North'
+            latc.standard_name = 'Latitude'
+            latc[:] = nextsim_lat[lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary]
+
+            lonc = nc_out.createVariable('lon', 'd', ('y', 'x'))
+            lonc.units = 'degrees East'
+            lonc.standard_name = 'Lonitude'
+            lonc[:] = nextsim_lon[lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary]
+
+            sic_out = nc_out.createVariable('sic', 'd', ('t', 'y', 'x'))
             sic_out.units = "1"
             sic_out.standard_name = "Sea Ice Concentration"
-            sic_out[:] = nextsim_sic_mean
+            sic_out[:] = onehot_encode_sic(lead_time_array)
 
+            lsmask_out = nc_out.createVariable('lsmask', 'd', ('y', 'x'))
+            lsmask_out.units = "1"
+            lsmask_out.standard_name = "Land Sea Mask"
+            lsmask_out[:] = nextsim_lsmask
 
 if __name__ == "__main__":
     main()

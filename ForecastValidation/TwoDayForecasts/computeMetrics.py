@@ -16,18 +16,21 @@ from helper_functions import read_config_from_csv
 
 def main():
     model_name = sys.argv[1]
-
-    PATH_PERSISTANCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
     PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/{model_name}/"
-    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/TwoDayForecasts/Data/"
 
     config = read_config_from_csv(f"{PATH_FORECAST[:-22]}configs/{model_name}.csv")
+
+    # PATH_PERSISTANCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
+    PATH_PERSISTENCE = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/osisaf_trend_{config['osisaf_trend']}/"
+
+
+    PATH_OUTPUTS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/lead_time_{config['lead_time']}/osisaf_trend_{config['osisaf_trend']}/"
 
     if not os.path.exists(PATH_OUTPUTS):
         os.makedirs(PATH_OUTPUTS)
 
-    icecharts = sorted(glob.glob(f"{PATH_PERSISTANCE}2021/**/*.hdf5"))
-    forecasts = sorted(glob.glob(f"{PATH_FORECAST}2021/**/*.hdf5"))
+    icecharts = sorted(glob.glob(f"{PATH_PERSISTENCE}2022/**/*.hdf5"))
+    forecasts = sorted(glob.glob(f"{PATH_FORECAST}2022/**/*.hdf5"))
 
     with h5py.File(icecharts[0], 'r') as constants:
         lsmask = constants['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
