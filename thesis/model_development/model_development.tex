@@ -1,11 +1,10 @@
 \documentclass[../main/thesis]{subfiles}
-
+\graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/}}
 \begin{document}
 
-\section{Model development log and notes}
+\section{Developing a U-Net}
+\label{sec:developing a unet}
 % The intention of this section is currently to log the notes made during model development. What is written may be discussion like, and can thus be used as a basis for the actual thesis. However, this section is to be included in the final thesis.tex after extensive rewriting. Remember that good thesis work is well documented thesis work!
-\subsection{Two day forecast}
-Data sources used are Sea Ice charts from Nick initiated at 15:00 as well as Arome Arctic initiated at 18:00 \cite{MOI2015,Mueller2017}. For a given date, the current Ice Chart is used as a predictor for the model, while the Ice Chart drawn two days later is supplied as the model target. Moreover, the Arome Arctic data is structured such that the period between lead time 0 - 18 and 18 - 42 is stored as mean products. Thus, the period covering lead hours 3 - 21 and 21 - 45 relative to the Ice Charts are covered (and meaned). The 4d variables used from AA (which feature a temporal dimension) are T2M, Xwind and Ywind, the 3d variable used is SST, which is available in the data, though the variable itself is only utilized to force the Data Assimilation system of AA and not a product of the prediction system. Finally, a land sea mask present on previously available ice charts on lustre is adopted to fit the current data, and is used both as a predictor as well as a mask when computing metrics and visualizing results.
 
 The model developed for the two day prediction is based on the SimpleUNET architecture, though with a different sized Input layer to accommodate for the changed dataloader. The dataloader has subsequently been changed to appropriately select the correct fields from the .hdf5 samples and appoint them as input or target variables. As a result of using three variables of two days mean AA forecast, as well as sst, land-sea-mask and current time-step ice chart, the total number of predictors fed into the model is 9. Moreover, the resolution of all fields are kept at 1km, though their spatial extent is limited to (1920 x 1840). This resolution and spatial size conserves (almost) the entirety of the west-east axis of the AA domain. However, the southern border is raised by 450km compared to the AA domain. There are two main motivations behind readjusting the spatial extent of the predictors and targets.
 
@@ -15,11 +14,11 @@ The model developed for the two day prediction is based on the SimpleUNET archit
 \end{itemize}
 
 \begin{figure}
-    \includegraphics[trim={0 10cm 11cm 9cm}, clip, width=\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/20190611.png}
+    \includegraphics[trim={0 10cm 11cm 9cm}, clip, width=\textwidth]{20190611.png}
     \caption{\label{fig:exampleAAsouthborder}Example sample displaying an Ice Chart on a 1km Arome Arctic projection. Note the horizontal and vertical dashed black line which indicate the domain subsection used by the UNET}
 \end{figure}
 
-\subsection{Model Architecture}
+\section{Model Architecture}
 The model architecture follows an encoder - decoder structure, commonly referred to as a U-NET \cite{Ronneberger2015} due to its shape funnelling the spatial data to coarser resolution, which resembles the letter "U". The current U-NET implementation follows that of Ronneberger et.al, though it has been modified with batch normalization after each convolution operation to ensure a more stable gradient flow. The weights of the model are Kaiming-He initialized \cite{He2015}, as the activation function used throughout the network is the ReLU function \cite{Nair2010}. The final output of the model is a (1920, 1840, 7) tensor containing softmaxed probabilities along its final axis.
 
 \subsection{CategoricalCrossEntropy-Loss}
@@ -36,16 +35,16 @@ Two variants of the previously described model have been trained with the Catego
 
 \begin{figure}
     \begin{subfigure}{0.49\textwidth}
-        \includegraphics[width=\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/20210611_512.png}
+        \includegraphics[width=\textwidth]{20210611_512.png}
         \caption{\label{fig:model51220210611}Forecast with two day lead time with model\_512 architecture}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.49\textwidth}
-        \includegraphics[width=\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/20210611_1024.png}
+        \includegraphics[width=\textwidth]{20210611_1024.png}
         \caption{\label{fig:model102420210611}Forecast with two day lead time with model\_1024 architecture}
     \end{subfigure}
     \begin{subfigure}{\textwidth}
-        \includegraphics[trim={0 10cm 11cm 9cm}, clip, width=\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/20210611_target.png}
+        \includegraphics[trim={0 10cm 11cm 9cm}, clip, width=\textwidth]{20210611_target.png}
         \caption{\label{fig:target20210611}Target for forecast with two day lead time}
     \end{subfigure}
        \caption{\label{fig:20210611}Example forecast attempt made by model\_512 and model\_1024 09-06-2021}
@@ -77,9 +76,22 @@ By inspecting Equation (\ref{eq:FL}), it can be seen that predictions that the m
 \subsubsection{Separate convolutionial layers as output}
 \todo{Data exists, start writing}
 
-\subsubsection{Single convolutional layer for multiple outputs}
-\todo{Not started on}
 
+
+\subsection{Model Selection}
+During the training of a deep learning system, there exists several different ways to save a state of the model during training. A naive approach would be to let the model train all predetermined epochs, and save the weights of the model at the end of the final epoch. However, this approach would be indifferent to whether the model has converged, generalized or overfitted and is thus an inadequate way to save the weights. The Tensorflow Keras API supplies functions which can be used customize the training loop in the form of \href{https://www.tensorflow.org/api_docs/python/tf/keras/callbacks}{callbacks}, with the EarlyStopping and ModelCheckpoint callbacks relevant for model selection \cite{tensorflow2015-whitepaper}. EarlyStopping is a technique which ends the training loop when it detects that a monitored values has stopped decreasing. On the other hand, ModelCheckpoint continuously saves the model if a certain condition is met, without terminating the training loop. Both callbacks support monitoring the validation loss as the metric in which to optimize the model. However, a custom metric such as yearly mean IIEE \cite{Goessling2016} could be monitored instead. 
+
+To aid in model selection, I developed a custom callback which computed the Normalized IIEE with respect to a climatological Ice Edge length derived from ten years of OsiSaf data \todo{Write about the climatological Ice Edge dataset, ref section from here}, following the observation in \ref{sec:Impact of increased resolution on the IIEE} that IIEE is correlated across spatial resolutions. The callback computes said metric for all samples and reduces them to a yearly mean of the validation set. Similar to the aforementioned callbacks, the developed callback is executed at the end of an epoch where it computes the mean Normalized IIEE for all predicted samples from the validation set, which it appends to the \textit{logs} dictionary used by Tensorflow to keep track of other computed metrics, such as loss and validation\_loss for the current case. Thus, the newly developed callback would allow for model selection based on Normalized IIEE, as well as the already computed validation loss.
+
+When comparing different models to asses their performance, this project will frequently compare their Normalized IIEE as the metric is Normalized by the ice edge, thus reducing the seasonal variability of the Metric \cite{Palerme2019} \todo{This citation is actually for $\text{SPS}_\text{length}$ but SPS is reduced to IIEE for a deterministic ice edge \cite{Goessling2018}}. As such, it would be beneficial to select a model based on its Normalized IIEE validation performance. With the above callback, such a selection is possible. However, including the IIEE verification metric as is done in the above callback increases training-time of ten epochs from $\approx$ two hours without the IIEE callback to $\approx$ 24 hours with the IIEE callback. As 20 epochs is currently an adequate number of epochs at the time of writing \todo{This may change}, it would be too computationally costly to select a model based in its validation Normalized IIEE performance. 
+
+\begin{figure}
+    \includegraphics{val_loss_IIEE.png}
+    \caption{\label{fig:val_loss_iiee_corr}validation loss and Normalized IIEE computed as mean of validation set for each epoch during training}
+\end{figure}\todo{tmp figure, redo with inspect data notebook in ForecastVerification}
+On the other hand, it can be seen by inspecting Figure (\ref{fig:val_loss_iiee_corr}) that the Normalized IIEE tend to evolve conjunctionally with the validation loss, in the current case defined as the mean cross entropy of all validation samples. Furthermore, the validation loss and Normalized IIEE in Figure (\ref{fig:val_loss_iiee_corr}) have a correlation of $0.82$ with regards to epoch. Note that this has been calculated only using the numbers present in Figure (\ref{fig:val_loss_iiee_corr}). As such, there is reason to believe that selecting a model based on its validation loss, which is quick to compute, would result in a generalized model which may also excel at lowering its Normalized IIEE.
+
+When selecting the best model, this project will apply the ModelCheckpoint callback with regards to validation loss as outlined above. ModelCheckpoint is preferred compared to EarlyStopping, as interrupting the training loop early may result in an "undercooked" model. E.g. the weights in earlier model layers are adjusting slower than later weights, giving the impression that the model training has reached a plateau which causes the model to stop. Whereas if the model where to continue training, the later adjustment of earlier weights would cause a later spur in increased model performance. ModelCheckpoint was chosen since behavior such as what was just exemplified is possible with the callback.
 
 \biblio
 \end{document}

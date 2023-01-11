@@ -1,22 +1,69 @@
-\documentclass{article}
+\documentclass[12pt]{article}
 
 \usepackage{subfiles}
 
 \usepackage{../main/crossref}
 \usepackage{../main/preamble}
+\addbibresource{\bib/master_thesis.bib}
 
+\title{Developing a Deep Learning forecasting system for short term and high resolution prediction of Sea Ice Concentration \\
+        \vspace{5pt} \large Masters' thesis in Computational Science: Geoscience, Spring 2023}
+
+\author[1,2]{Are Frode Kvanum}
+\affil[1]{Department of Geosciences, University of Oslo}
+\affil[2]{Development Centre for Weather Forecasting, Norwegian Meteorological Institute}
+\date{\today}
 
 \begin{document}
 \def\biblio{} % Reset command defined to apply bibliography in subfiles
 
-% Theory and data
-\subfile{../theory_and_data/datasets.tex}
-\subfile{../theory_and_data/workflow.tex}
+\maketitle
+\tableofcontents
+\newpage
+
+% Introduction
+\subfile{../introduction/introduction.tex}
+
+
+% Data
+% - Describe the datasets used for the thesis, this includes 
+% * AROME ARCTIC
+% * Ice Charts
+% * OsiSaf
+% * AMSR2
+%
+% - Describe their spatial information, how data is gathered, are there any errors in the data, missing dates?
+% - 
+\subfile{../data_and_pipeline/datasets.tex}
+
+
+% Theory and Methodology
+% - Describe the general methods used to develop a unet
+\subfile{../methodology/methodology.tex}
 \subfile{../verification_metrics/verification.tex}
+
+
+% Developing the unet
+\subfile{../data_and_pipeline/workflow.tex}
 \subfile{../model_development/model_development.tex}
 
-% Methodology
-\subfile{../methodology/methodology.tex}
+
+% Physical connections
+\subfile{../physical_connections/physical_connection.tex}
+
+
+% Performance assessment
+\subfile{../performance_assessment/performance_assessment.tex}
+
+
+
+% Results
+
+
+% Discussion
+
+
+% Conclusions
 
 
 % Bibliography

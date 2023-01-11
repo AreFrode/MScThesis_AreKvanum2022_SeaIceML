@@ -606,3 +606,10 @@ ForecastValidation/lead_time_2/osisaf_trend_5/figures/*
 PhysicalModels/Data/figures/*
 PhysicalModels/Data/lead_time_2/*.csv
 PhysicalModels/Data/lead_time_2/osisaf_trend_5/*.csv
+CreateFigures/tikz/figures/*
+CreateFigures/*.png
+CreateFigures/tikz/*
+thesis/data_and_pipeline/figures/*
+thesis/performance_assessment/figures/*
+thesis/verification_metrics/figures/*
+thesis/verification_metrics/figures/*

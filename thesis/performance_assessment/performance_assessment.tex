@@ -1,0 +1,19 @@
+\documentclass[../main/thesis.tex]{subfiles}
+\graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/performance_assessment/figures/}}
+\begin{document}
+
+\section{Comparing against physical models}
+The purpose of this section is twofold. Firstly, it aims at describing the process of preparing samples from the Barents-2.5 and NeXtSIM forecasting systems which are comparable to the Machine Learning forecasts at lead times of one, two and three days. Secondly, the performance of the forecasting systems will be assessed against the Sea Ice Charts, which are assumed to be the ground truth.
+
+\subsection{Preparing data}
+The logic behind sample creation is similar for both physical models. The idea is that the bulletin date of the physical forecasting system is +1 the bulletin date of the machine learning forecast. Furthermore, a daily mean is computed from the forecast based on the lead time of the forecast. I.e., a 1 day lead time for the machine learning forecast would constitute a daily mean of the first 24 hours forecasted by a physical forecasting system starting at 00 the following day of the machine learning bulletin date. 
+
+\begin{figure}
+    \includegraphics[width=0.93\textwidth]{forecast_sketch.jpg}
+    \caption{\label{fig:physical_pipeline}Sketch presenting how physical model forecasts are compared against machine learning forecasts. The axis represents time after 00:00 bulletin date of the machine learning forecast. The machine learning forecast is initiated 6 hours prior to the start of the physical model. The sketch exemplifies how the 2-day lead time machine learning forecast at 15:00 (reality 45 hours) is compared against an entire second day of a physical forecast (lead times 24 - 47).}
+\end{figure}
+\todo{Figure (\ref{fig:physical_pipeline}) to be made professional, using e.g. TiX}
+
+
+\biblio
+\end{document}

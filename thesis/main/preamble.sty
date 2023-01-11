@@ -70,10 +70,15 @@ pdftoolbar=true,
 %bookmarksdepth=3   % Uncomment (and tweak) for PDF bookmarks with more levels than the TOC
 }
 
-\usepackage{geometry}
+\usepackage[a4paper, left=2.5cm, right=2.5cm]{geometry}
 
+\usepackage[parfill]{parskip}
 
-\providecommand{\bib}{../bib}
+\usepackage{authblk}
+
+% \linespread{1.25}   % Linjeavstand 1.5
+
+\providecommand{\bib}{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/bib}
 \addbibresource{\bib/master_thesis.bib}
 \def\biblio{\printbibliography}
 

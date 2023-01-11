@@ -1,10 +1,28 @@
 \documentclass[../main/thesis.tex]{subfiles}
 
 \begin{document}
+\section{Theory}
+\subsection{Convolution}
+
+
+\subsection{Batch normalization}
+
+
+
 \section{Methodology}
 
-\subsection{unet}
-The U-Net architecture was originally proposed by \citeauthor{Ronneberger2015} in 2015 \cite{Ronneberger2015} dette er en endring her endrer jeg litt til enda en endring og enda en siste endring
+\todo{Wrigglesworth 2011 the persistence of sea ice anomalies are very high at weekly - sub monthly timescales, making it difficult to beat}
+
+\todo{Write about how deep neural networks fits a model to some output according to the input. This way, using data which is somewhat correlated to what is expected as output can help increase the model skill}
+
+\subsection{Pixel classification}
+
+
+
+\subsection{Image to image classification}
+Architectures such as \cite{Krizhevsky2012} could be used for semantic segmentation, given a sliding windows approach across the image to be classified. However, this approach would prove to time consuming, as each pixel would have to be classified independently, each pixel would only have a receptive field limited by the extent of the sliding window and the edges would be difficult to classify. Thus, network architectures such as \cite{Long2014} and \cite{Ronneberger2015} provide a translation invariant framework for image to image prediction. 
+
+The U-Net architecture was originally proposed by \cite{Ronneberger2015} in 2015. 
 
 \biblio
 

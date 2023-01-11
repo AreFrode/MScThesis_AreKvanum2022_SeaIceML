@@ -28,9 +28,12 @@ def main():
     
     print(coords.shape)
     print(t2m.shape)
-    V = skg.Variogram(coords, t2m[0].flatten(), maxlag='meadian', n_lags = 15, normalize = 15)
-    fig = V.plot(show = True)
+    V = skg.Variogram(coords, t2m[0].flatten(), maxlag='median', n_lags = 20, normalize = True)
+    fig = V.plot()
     fig.savefig('Variogram_t2m.png')
+
+    # fig2 = V.distance_difference_plot()
+    # fig2.savefig('Distance_t2m.png')
 
     print('Done')
 
