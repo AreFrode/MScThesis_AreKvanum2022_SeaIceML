@@ -613,3 +613,6 @@ thesis/data_and_pipeline/figures/*
 thesis/performance_assessment/figures/*
 thesis/verification_metrics/figures/*
 thesis/verification_metrics/figures/*
+thesis/figures/*
+timeline/.vscode/*
+thesis/.vscode/*
