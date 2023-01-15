@@ -1,6 +1,8 @@
 \documentclass[../main/thesis.tex]{subfiles}
-\graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/data_and_pipeline/figures/}}
+\graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/data_and_pipeline/figures/}{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/tikz/figures/}}
 \begin{document}
+
+\todo{Dette kan integreres med \textbf{model\_development}}
 
 \section{Data pipeline}
 The deep learning system can be disassembled into two parts working in tangent. The deep learning architecture which propagates fields containing information through its weights, and the dataloader which structures the dataset into trainable samples. This section will describe the process from raw data to ready sample, with the following Section (\ref{sec:developing a unet}) containing a rundown and results of the model architecture.
@@ -8,11 +10,68 @@ The deep learning system can be disassembled into two parts working in tangent. 
 The data pipeline is made such that it constitutes models of three different lead times (one, two and three day lead time). A quick overview of the pipeline is as such. The raw data used are Sea Ice Charts, OSI-SAF and AA. For the Sea Ice Charts, ice charts from the bulletin date and valid date are selected. From AA, relevant meteorological fields are selected and daily means are computed (more details in following sections). Finally, from OSI-SAF a sea ice trend is computed. For a given bulletin date, the data fetched above is stored in a .hdf5 file, such that each sample (bulletin date) is represented by its own .hdf5 file. Furthermore, a dataloader object is initialized with a list of .hdf5 files, with the list containing filenames of the samples constituting a data subset such as train, validation or test data. This processes is visualized in Figure (\ref{fig:pipeline_sketch}).
 
 \begin{figure}
-    \includegraphics[width=\textwidth]{datapipeline_sketch.jpg}
-    \caption{\label{fig:pipeline_sketch}Sketch showing an idealized data pipeline, where three sources are merged into one sample, kept track of by a dataloader which feeds the samples into the U-Net}
+    \centering
+    \includegraphics[width=\textwidth]{example-image-a}
+    \iffalse
+    \scalebox{0.825}{
+    \begin{tikzpicture}[font=\sffamily\small, scale=.9]
+        % \node [above] at (0,0) {a)};
+        \node[inner sep=0pt] at (0,0) (sic) {\includegraphics[width=.25\textwidth]{sic.png}};
+        \node [above = 0.15cm of sic] (sic_name) {\large Recent Ice Chart};
+        % \node [above] at (-6.5,.5) {b)};
+        \node[right = 0.25cm of sic_name, align=center] (osi_name) {\large OSI-SAF SIC trend from \\ \large 5 previous days};
+        \node (osi) at (sic -| osi_name) {\includegraphics[width=.25\textwidth]{sic_trend.png}};
+        % \node [above] at (-6.5,-1.4) {c)};
+        \node[right = 0.25cm of osi_name, align = center] (arome_name) {\large AROME Arctic \\ \large t2m and wind forecasts};
+        
+        \node (aa_forecasts) at (sic -| arome_name) {\includegraphics[width=.25\textwidth]{arome_forecasts.png}};
+      
+        \node[right = 0.25cm of arome_name, align = center] (mask_name) {\large Land-Sea Mask};
+        \node (aa_mask) at (sic -| mask_name) {\includegraphics[width=.25\textwidth]{lsmask.png}};
+        % \node[draw,single arrow, black,fill=black!30] at (-1.25,0.5,0) {INPUT};
+        
+        \coordinate[yshift=-5cm] (sample_stack) at ($(osi)!0.5!(aa_forecasts)$);
+        \draw [line width=0.8mm, -{Stealth[length=8mm, round]}, shorten >=1.75cm, shorten <=0.2cm]
+                (sic.south) -- (sample_stack);
+      
+        \draw [line width=0.8mm, -{Stealth[length=8mm, round]}, shorten >=1.8cm, shorten <= 0.1cm]
+                (osi.south) -- (sample_stack);
+      
+        \draw [line width=0.8mm, -{Stealth[length=8mm, round]}, shorten >=1.8cm, shorten <= 0.1cm]
+                (aa_forecasts.south) -- (sample_stack);
+        
+        \draw [line width=0.8mm, -{Stealth[length=8mm, round]}, shorten >=2cm, shorten <=0.2cm]
+                (aa_mask.south) -- (sample_stack);
+      
+        \node at (sample_stack) (stack1) {\includegraphics[width=.15\textwidth]{sic.png}};
+        \node[yshift = -0.1cm, xshift = 0.1cm] at (sample_stack) (stack2) {\includegraphics[width=.15\textwidth]{sic_trend.png}};
+        \node[yshift = -0.2cm, xshift = 0.2cm] at (sample_stack) (stack3) {\includegraphics[width=.15\textwidth]{lsmask.png}};
+        \node[yshift = -0.3cm, xshift = 0.3cm] at (sample_stack) (stack4) {\includegraphics[width=.15\textwidth]{xwind.png}};
+        \node[yshift = -0.4cm, xshift = 0.4cm] at (sample_stack) (stack5) {\includegraphics[width=.15\textwidth]{ywind.png}};
+        \node[yshift = -0.5cm, xshift = 0.5cm] at (sample_stack) (stack6) {\includegraphics[width=.15\textwidth]{t2m.png}};
+        
+        \node[left = 1.3cm of sample_stack] (stack_name) {\large Sample};
+      
+        \node[below = 4cm of sample_stack, rectangle, draw=orange!50, fill=orange!20, thick, minimum width = 2cm, minimum height = 2cm, align = center] (unet) {U-NET};
+       
+        
+        \draw [line width=0.8mm, -{Stealth[length=8mm, round]}, shorten >= 0.1cm, shorten <= 1.8cm] (sample_stack.south) -- (unet) node[midway, fill = white, anchor = center, text = black, yshift = -0.5cm] {\large Predictor variables};
+      
+        \node (sic_target) at (unet -| sic) {\includegraphics[width=.25\textwidth]{sic_target.png}};
+        \node [above = 0cm of sic_target] (sic_target_name) {\large Target Ice Chart};
+        \draw [line width=0.8mm, -{Stealth[length=8mm, round]}, shorten >= 0.1cm, shorten <= 0.1cm] (sic_target.east) -- node [midway, above = 0.2cm, xshift = -0.2cm] {\large Target variable} (unet.west);
+      
+        \node [inner ysep=3mm, below = 2cm of unet] (sic_pred) {\includegraphics[width=.25\textwidth]{20220105.png}};
+        \node [above = 0cm of sic_pred] (sic_pred_name) {\large Predicted Ice Chart};
+        \draw [line width=0.8mm, -{Stealth[length=8mm, round]}, shorten >= 0.1cm, shorten <= 0.1cm] (unet.south) -- (sic_pred_name.north);
+      
+          
+      \end{tikzpicture}
+    }
+    \fi
+    \caption{\label{fig:pipeline}*PLACEHOLDER* uncomment to render, Unfinished figure showing the data pipeline, where four sources are merged into one sample,fed into the U-Net, trained against Target Ice Charts and output a predicted Ice Chart}
 \end{figure}
 
-\todo{This should be represented by a figure where individual sources are merged into one stack which is then treated as an entry to a dataloader which is ultimately fed into the model}
 
 \subsection{Data sources}
 Data sources used are Sea Ice charts from Nick initiated at 15:00 as well as Arome Arctic initiated at 18:00 \cite{MOI2015,Mueller2017}. For a given date, the current Ice Chart is used as a predictor for the model, while the Ice Chart drawn two days later is supplied as the model target.
@@ -24,7 +83,10 @@ The Sea Ice Charts used are a derived dataset of the Sea Ice Charts presented in
 The Arome Arctic data is structured such that the period between forecast initialization and machine learning forecast lead time is stored as a mean product in the temporal dimension at intervals [0 - 18, 42, 66]. This ensures that temporal AA information is encoded into a single field up until 12:00 UTC of the publishing date of the target ice chart. The 4d variables used from AA are T2M, uwind and vwind. Finally, the land sea mask present in AA is fetched and used as a predictor, though this land sea mask is also used for validation purposes given the case where no other SIC-product is considered.
 
 \subsection{OSI-SAF}
+\todo{Mention how when using Osi Saf trend as predictor, the trend up to but not including the forecast start date is used. This is to make the model ready for operational use, as the Osi Saf daily product is not ready on lustre when the Ice Charts are poublished at UTC 15:00}
 A linear SIC trend of variable temporal length is computed from 12.5km OSI-SAF data \todo{Cite OSISAF}. In the case of OSI-SAF, the product is scheduled to be published daily at 15:00 UTC \todo{double check}. However, given operational concerns of the developed forecasting system, where the availability of data is essential for the model to run, the previous day OSI-SAF trend is utilized. \todo{Det er ikke sikkert det er nødvendig, hvis AA 18:00 publiseres ~19 - 20 burde OSI-SAF være publisert}.
+
+OSI-SAF SSMIS is a continously developed operational product, where changes are not required to act retroactively on the data. As such, the Sea Ice Concentration used for few samples with t2m runs and many data samples no t2m differ due to the introduction of a filtered ice concentration variable 10/05-2017 \cite{Tonboe2017}. Thus, the filtered ice concentration will be used when the training data spans 2019-2020, and the unfiltered ice concentration will be used when the training data spans 2011 - 2018 to assert that there is no sudden shift in the ice concentration trend which can negatively impact the training period.
 
 
 
