@@ -4,7 +4,6 @@
 
 \usepackage{../main/crossref}
 \usepackage{../main/preamble}
-\addbibresource{\bib/master_thesis.bib}
 
 \title{Developing a Deep Learning forecasting system for short term and high resolution prediction of Sea Ice Concentration \\
         \vspace{5pt} \large Masters' thesis in Computational Science: Geoscience, Spring 2023}
@@ -44,7 +43,7 @@
 
 
 % Developing the unet
-\subfile{../data_and_pipeline/workflow.tex}
+% \subfile{../data_and_pipeline/workflow.tex}
 \subfile{../model_development/model_development.tex}
 
 
@@ -64,12 +63,14 @@
 
 
 % Conclusions
+\subfile{../conclusions_and_perspectives/conclusions_and_perspectives.tex}
 
 
 % Bibliography
 % \bibliographystyle{unsrt}
-% \bibliography{\bib/master_thesis}
-\printbibliography
+\bibliography{\bib/master_thesis}
+
+\subfile{../appendix/appendix.tex}
 
 
 \end{document}

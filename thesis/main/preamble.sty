@@ -3,8 +3,9 @@
 %--------------- begin preamble ---------------
 
 \usepackage[table]{xcolor}
-\usepackage{unicode-math}
 \usepackage{amsmath}
+\usepackage{unicode-math}
+
 \usepackage{polyglossia}
 \setdefaultlanguage{english}
 \usepackage{microtype}
@@ -14,9 +15,8 @@
 
 % \usepackage{subfiles}
 
-% Setup Biblatex
+% Setup natbib
 \usepackage{csquotes}
-\usepackage[language = english, sortlocale=nb_NO, backend=biber]{biblatex}
 
 \usepackage{listings}
 \lstset{
@@ -86,8 +86,10 @@ pdftoolbar=true,
 
 % \linespread{1.25}   % Linjeavstand 1.5
 
-\providecommand{\bib}{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/bib}
-\addbibresource{\bib/master_thesis.bib}
-\def\biblio{\printbibliography}
+\providecommand{\bib}{../bib}
+\usepackage{natbib}
+\setlength{\bibsep}{0pt plus 0.3ex}
+\bibliographystyle{\bib/copernicus}
+\def\biblio{\bibliography{\bib/master_thesis}}
 
 %---------------- end preamble ----------------

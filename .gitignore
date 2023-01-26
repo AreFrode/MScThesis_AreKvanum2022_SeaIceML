@@ -617,3 +617,5 @@ thesis/figures/*
 timeline/.vscode/*
 thesis/.vscode/*
 thesis/datasets/figures/*
+thesis/appendix/figures/*
+thesis/bib/copernicus.bst
