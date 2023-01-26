@@ -2,7 +2,6 @@ import glob
 import os
 import sys
 sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels")
-sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid")
 
 import numpy as np
 
@@ -10,20 +9,27 @@ from calendar import monthrange
 from netCDF4 import Dataset
 from pyproj import CRS, Transformer
 from datetime import datetime, timedelta
-from common_functions import onehot_encode_sic, get_target_domain
-from interpolate import nearest_neighbor_interp
+from common_functions import onehot_encode_sic, find_nearest, get_ml_domain_borders
 
 
 def main():
     # Define paths
     path_nextsim = "/lustre/storeB/users/maltem/nowwind/cmems_mod_arc_phy_anfc_nextsim_hm_202007/"
 
+    path_output = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/"
+
+    # This will be used to define the xy-boundary
+    path_ml = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_05011118/2022/01/"
+
+    # Define projection transformer
     proj4_nextsim = "+proj=stere +lat_0=90 +lat_ts=90 +lon_0=-45 +x_0=0 +y_0=0 +R=6378273 +ellps=sphere +units=m +no_defs"
+    proj4_arome = "+proj=lcc +lat_0=77.5 +lon_0=-25 +lat_1=77.5 +lat_2=77.5 +no_defs +R=6.371e+06"
 
-    path_output, transform_function, target_x, target_y, target_lat, target_lon = get_target_domain('amsr2', proj4_nextsim, 'nextsim')
+    crs_NEXTSIM = CRS.from_proj4(proj4_nextsim)
+    crs_AROME = CRS.from_proj4(proj4_arome)
+    transform_function = Transformer.from_crs(crs_AROME, crs_NEXTSIM, always_xy = True)
 
-    nx = len(target_x)
-    ny = len(target_y)
+    xxc_target_flat, yyc_target_flat = get_ml_domain_borders(path_ml, transform_function)
     
     # Define months for parallel execution
     paths = []
@@ -66,13 +72,19 @@ def main():
         with Dataset(nextsim_path, 'r') as nc:
             nextsim_x = nc.variables['x'][:]
             nextsim_y = nc.variables['y'][:]
+            nextsim_lat = nc.variables['latitude'][:]         
+            nextsim_lon = nc.variables['longitude'][:]
             nextsim_sic = nc.variables['siconc'][:]
             fill_value = nc.variables['siconc']._FillValue
 
-        xxc, yyc = np.meshgrid(nextsim_x, nextsim_y)
-        xxc_target, yyc_target = transform_function.transform(xxc, yyc)
+        # The boundaries are defined as inclusive:exclusive
+        leftmost_boundary = find_nearest(nextsim_x, np.min(xxc_target_flat))
+        rightmost_boundary = find_nearest(nextsim_x, np.max(xxc_target_flat)) + 1
 
-        nextsim_sic_current = np.ma.filled(nextsim_sic[:], fill_value = fill_value)
+        lower_boundary = find_nearest(nextsim_y, np.min(yyc_target_flat))
+        upper_boundary = find_nearest(nextsim_y, np.max(yyc_target_flat)) + 1
+
+        nextsim_sic_current = np.ma.filled(nextsim_sic[:, lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary], fill_value = fill_value)
 
         lead_time_list.append(np.mean(nextsim_sic_current, axis = 0))
         
@@ -90,53 +102,47 @@ def main():
                 continue
 
             with Dataset(nextsim_path, 'r') as nc:
-                nextsim_sic_current = nc.variables['siconc'][:]
+                nextsim_sic_current = nc.variables['siconc'][:, lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary]
             
             lead_time_list.append(np.mean(np.ma.filled(nextsim_sic_current, fill_value), axis = 0))
 
         lead_time_array = np.array(lead_time_list)
-
-        interp_array = np.concatenate((np.expand_dims(nextsim_lsmask, axis = 0), lead_time_array), axis = 0)
-        
-        interpolated = nearest_neighbor_interp(xxc_target, yyc_target, target_x, target_y, interp_array)
-
-
         output_filename = f"nextsim_mean_b{yyyymmdd}.nc"
 
         with Dataset(f"{path_output_task}{output_filename}", 'w', format = "NETCDF4") as nc_out:
-            nc_out.createDimension('x', nx)
-            nc_out.createDimension('y', ny)
+            nc_out.createDimension('x', len(nextsim_x[leftmost_boundary:rightmost_boundary]))
+            nc_out.createDimension('y', len(nextsim_y[lower_boundary:upper_boundary]))
             nc_out.createDimension('t', 3)
 
             yc = nc_out.createVariable('y', 'd', ('y'))
             yc.units = 'km'
             yc.standard_name = 'y'
-            yc[:] = target_y
+            yc[:] = nextsim_y[lower_boundary:upper_boundary]
             
             xc = nc_out.createVariable('x', 'd', ('x'))
             xc.units = 'km'
             xc.standard_name = 'x'
-            xc[:] = target_x
+            xc[:] = nextsim_x[leftmost_boundary:rightmost_boundary]
 
             latc = nc_out.createVariable('lat', 'd', ('y', 'x'))
             latc.units = 'degrees North'
             latc.standard_name = 'Latitude'
-            latc[:] = target_lat
+            latc[:] = nextsim_lat[lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary]
 
             lonc = nc_out.createVariable('lon', 'd', ('y', 'x'))
             lonc.units = 'degrees East'
             lonc.standard_name = 'Lonitude'
-            lonc[:] = target_lon
+            lonc[:] = nextsim_lon[lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary]
 
             sic_out = nc_out.createVariable('sic', 'd', ('t', 'y', 'x'))
             sic_out.units = "1"
             sic_out.standard_name = "Sea Ice Concentration"
-            sic_out[:] = onehot_encode_sic(interpolated[1:])
+            sic_out[:] = onehot_encode_sic(lead_time_array)
 
             lsmask_out = nc_out.createVariable('lsmask', 'd', ('y', 'x'))
             lsmask_out.units = "1"
             lsmask_out.standard_name = "Land Sea Mask"
-            lsmask_out[:] = interpolated[0]
+            lsmask_out[:] = nextsim_lsmask
 
 if __name__ == "__main__":
     main()

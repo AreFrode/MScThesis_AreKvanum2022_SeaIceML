@@ -16,11 +16,10 @@ from helper_functions import read_config_from_csv
 from datetime import datetime, timedelta
 from netCDF4 import Dataset
 
-def load_barents(yyyymmdd, lead_time):
+def load_barents(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
     # Currently only returns arome member
-    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/barents/"
-    PATH_TARGET = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/targets/"
-
+    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/barents/"
+    
     yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
     yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time - 1)).strftime('%Y%m%d')
     yyyymmdd_ml = (yyyymmdd_datetime - timedelta(days = 1)).strftime('%Y%m%d')
@@ -38,14 +37,13 @@ def load_barents(yyyymmdd, lead_time):
     return barents_sic, target_sic, yyyymmdd_ml
 
 
-def load_ml(yyyymmdd, lead_time):
-    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/ml/lead_time_2/osisaf_trend_5/weights_05011118/"
-    PATH_TARGET = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/targets/"
+def load_ml(yyyymmdd, lead_time, grid, PATH_TARGET, weights):
+    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/ml/"
 
     yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
     yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
 
-    ml_path = glob.glob(f"{PATH_FORECAST}{yyyymmdd[:4]}/{yyyymmdd[4:6]}/{yyyymmdd_valid}_b{yyyymmdd}.nc")[0]
+    ml_path = glob.glob(f"{PATH_FORECAST}{yyyymmdd[:4]}/{yyyymmdd[4:6]}/{weights}_{yyyymmdd_valid}_b{yyyymmdd}.nc")[0]
 
     target_path = glob.glob(f"{PATH_TARGET}{yyyymmdd_valid[:4]}/{yyyymmdd_valid[4:6]}/target_v{yyyymmdd_valid}.nc")[0]
 
@@ -57,10 +55,9 @@ def load_ml(yyyymmdd, lead_time):
 
     return ml_sic, target_sic, yyyymmdd
 
-def load_nextsim(yyyymmdd, lead_time):
+def load_nextsim(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
     # Currently only returns arome member
-    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/"
-    PATH_TARGET = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/targets/"
+    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/nextsim/"
 
     yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
     yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time - 1)).strftime('%Y%m%d')
@@ -120,6 +117,25 @@ def load_persistence(yyyymmdd, lead_time):
 def main():
     product = sys.argv[1]
     lead_time = int(sys.argv[2])
+    grid = sys.argv[3]
+
+    try:
+        weights = sys.argv[4]
+
+    except IndexError:
+        weights = None
+    
+
+    if grid == 'nextsim':
+        PATH_TARGET = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/targets/"
+        side_length = 3
+
+    elif grid == 'amsr2':
+        PATH_TARGET = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/amsr2/"
+        side_length = 6.25
+
+    else:
+        exit('No valid target grid supplied')
 
     load_func = None
     
@@ -130,7 +146,7 @@ def main():
 
     elif product == 'ml':
         load_func = load_ml
-        osisaf_trend = 5
+        product = weights
         # assert len(sys.argv) > 3, "To compute ml stats, supply valid model string"
         # path_config = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/"
         # weights = "weights_05011118"
@@ -143,7 +159,6 @@ def main():
 
     elif product == 'osisaf':
         # assert len(sys.argv) > 3, "To compute osisaf stats, supply osisaf trend length"
-        osisaf_trend = 5
         # PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/osisaf/osisaf_trend_{osisaf_trend}/"
         load_func = load_osisaf
 
@@ -155,12 +170,12 @@ def main():
         exit()
 
 
-    PATH_OUTPUTS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/lead_time_{lead_time}/"
+    PATH_OUTPUTS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/"
 
-    PATH_COMMONS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/commons.nc"
+    PATH_COMMONS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_commons.nc"
 
-    if product == 'ml' or product == 'osisaf':
-        PATH_OUTPUTS += f"osisaf_trend_{osisaf_trend}/"
+    # if product == 'ml' or product == 'osisaf':
+    #     PATH_OUTPUTS += f"osisaf_trend_{osisaf_trend}/"
 
     if not os.path.exists(PATH_OUTPUTS):
         os.makedirs(PATH_OUTPUTS)
@@ -188,19 +203,20 @@ def main():
             print(yyyymmdd)
 
             try:
-                sic_forecast, sic_target, yyyymmdd_ml = load_func(yyyymmdd, lead_time)
+                sic_forecast, sic_target, yyyymmdd_ml = load_func(yyyymmdd, lead_time, grid, PATH_TARGET, weights)
 
             except IndexError:
                 continue
 
             # ice_edge_target = find_ice_edge(sic_target, lsmask)
-            # target_length = ice_edge_length(ice_edge_target, s = 3)
+            # target_length = ice_edge_length(ice_edge_target, s = side_length)
 
             # ice_edge_forecast = find_ice_edge(sic_forecast, lsmask)
-            # forecast_length = ice_edge_length(ice_edge_forecast, s = 3)
+            # forecast_length = ice_edge_length(ice_edge_forecast, s = side_length)
+
             IIEE = []
             for i in range(1, 7):
-                iiee = IIEE_fast(sic_forecast, sic_target, lsmask, side_length = 3, threshold = i)
+                iiee = IIEE_fast(sic_forecast, sic_target, lsmask, side_length = side_length, threshold = i)
                 IIEE.append(iiee[0].sum() + iiee[1].sum())
 
             # area_dist_target = contourAreaDistribution(sic_target, lsmask, side_length = 3)

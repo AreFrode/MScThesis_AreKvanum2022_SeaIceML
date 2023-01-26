@@ -616,6 +616,14 @@ thesis/verification_metrics/figures/*
 thesis/figures/*
 timeline/.vscode/*
 thesis/.vscode/*
+CreateFigures/*
+PhysicalModels/*.png
+PhysicalModels/LongitudeLatitudeGrid-n6250-Arctic.hdf
+PhysicalModels/LongitudeLatitudeGrid-n6250-Arctic180.hdf
+PrepareDataset/Data/lead_time_*/*.csv
+PhysicalModels/Data/amsr2_grid/lead_time_*/*.csv
+PhysicalModels/Data/nextsim_grid/lead_time_*/*.csv
+PhysicalModels/Data/nextsim_grid/lead_time_*/osisaf_trend_*/*.csv
 thesis/datasets/figures/*
 thesis/appendix/figures/*
 thesis/bib/copernicus.bst
