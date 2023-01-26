@@ -624,3 +624,4 @@ PrepareDataset/Data/lead_time_*/*.csv
 PhysicalModels/Data/amsr2_grid/lead_time_*/*.csv
 PhysicalModels/Data/nextsim_grid/lead_time_*/*.csv
 PhysicalModels/Data/nextsim_grid/lead_time_*/osisaf_trend_*/*.csv
+thesis/datasets/figures/*
