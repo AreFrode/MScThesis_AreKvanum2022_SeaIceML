@@ -19,11 +19,14 @@ def main():
     sns.set_theme()
     sns.despine()
 
+    lead_time = sys.argv[1]
+    grid = sys.argv[2]
+
     # Define paths
-    PATH_NEXTSIM = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/lead_time_2/nextsim.csv"
+    PATH_NEXTSIM = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/nextsim.csv"
     PATH_OSISAF = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/lead_time_2/osisaf_trend_5/osisaf.csv"
-    PATH_ML = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/lead_time_2/osisaf_trend_5/ml.csv"
-    PATH_BARENTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/lead_time_2/barents.csv"
+    PATH_ML = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/weights_05011118.csv"
+    PATH_BARENTS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/barents.csv"
     PATH_PERSISTENCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/lead_time_2/persistence.csv"
     PATH_CLIMATOLOGICAL_ICEEDGE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/Data/climatological_ice_edge.csv"
     PATH_FIGURES = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/figures/"
@@ -48,10 +51,12 @@ def main():
     # Read available statistics files
 
     # files = (PATH_NEXTSIM, PATH_OSISAF, PATH_ML, PATH_BARENTS, PATH_PERSISTENCE)
-    files = (PATH_NEXTSIM, PATH_PERSISTENCE, PATH_ML, PATH_BARENTS)
+    # files = (PATH_NEXTSIM, PATH_PERSISTENCE, PATH_ML, PATH_BARENTS)
+    files = [PATH_NEXTSIM, PATH_ML, PATH_BARENTS]
 
-    # set common dates from lowest denominator
-    dates = pd.read_csv(PATH_ML)['date'].array
+    # set common dates
+
+    dates = pd.concat([pd.read_csv(file, index_col = 0) for file in files], axis=1, join = 'inner').index.array
 
 
     # Define met seasons
@@ -64,7 +69,7 @@ def main():
 
     # Create figure classes
 
-    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}Custom_noOSi.png", "Normalized IIEE comparison (IceEdge >= 10%)", "IIEE [km]")
+    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}BARENTS_ML_NEXTSIM_NEXTSIM_TEST.png", "Normalized IIEE comparison (IceEdge >= 10%)", "IIEE [km]")
 
 
     # Define list where forecasts are appended
@@ -86,8 +91,8 @@ def main():
         for i, idx in zip(range(len(months) - 1), meteorological_seasons):
             df.loc[(df.index >= months[i]) & (df.index < months[i+1]), 'met_index'] = seasonal_names[idx]
 
-        if local_filename == 'barents':
-            df = df[(df.met_index != 'DJF') & (df.met_index != 'MAM')]
+        # if local_filename == 'barents':
+        #     df = df[(df.met_index != 'DJF') & (df.met_index != 'MAM')]
 
         fetched_forecasts.append(df[['Normalized_IIEE', 'forecast_name', 'met_index']])
     

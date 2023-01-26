@@ -8,10 +8,9 @@ import numpy as np
 
 from calendar import monthrange
 from netCDF4 import Dataset
-from pyproj import CRS, Transformer
 
 from interpolate import nearest_neighbor_interp
-from common_functions import onehot_encode_sic
+from common_functions import onehot_encode_sic, get_target_domain
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -21,31 +20,15 @@ def find_nearest(array, value):
 def main():
     # Define paths
     path_barents = "/lustre/storeB/project/fou/hi/oper/barents_eps/archive/eps/"
-
-    # Use processed nextsim for regrid domain
-    path_target_nextsim = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/2022/01/nextsim_mean_b20220101.nc"
-
-    # Set boundaries from ml domain
-
-    path_output = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/barents/"
-
-    # Define projection transformer
-    proj4_nextsim = "+proj=stere +lat_0=90 +lat_ts=90 +lon_0=-45 +x_0=0 +y_0=0 +R=6378273 +ellps=sphere +units=m +no_defs"
     proj4_arome = "+proj=lcc +lat_0=77.5 +lon_0=-25 +lat_1=77.5 +lat_2=77.5 +no_defs +R=6.371e+06"
 
-    crs_NEXTSIM = CRS.from_proj4(proj4_nextsim)
-    crs_AROME = CRS.from_proj4(proj4_arome)
-    transform_function = Transformer.from_crs(crs_AROME, crs_NEXTSIM, always_xy = True)
+    # Use processed largest grid for regrid domain
+    common_grid = sys.argv[2]
 
-    # Define target grid
-    with Dataset(path_target_nextsim, 'r') as nc_ns:
-        nextsim_x = nc_ns['x'][:]
-        nextsim_y = nc_ns['y'][:]
-        nextsim_lat = nc_ns['lat'][:]
-        nextsim_lon = nc_ns['lon'][:]
+    path_output, transform_function, target_x, target_y, target_lat, target_lon = get_target_domain(common_grid, proj4_arome, 'barents')
 
-    nx = len(nextsim_x)
-    ny = len(nextsim_y)
+    nx = len(target_x)
+    ny = len(target_y)
 
     # Define months for parallel execution
     year = 2022
@@ -94,6 +77,12 @@ def main():
         xc = np.pad(barents_x, (1,1), 'constant', constant_values = (barents_x[0] - x_diff, barents_x[-1] + x_diff))
         yc = np.pad(barents_y, (1,1), 'constant', constant_values = (barents_y[0] - y_diff, barents_y[-1] + y_diff))
 
+        # Define baltic + norway mask
+        baltic_mask = np.zeros((len(barents_y), len(barents_x)))
+        baltic_mask[:520, 430:] = 1
+
+        barents_sic = np.where(baltic_mask == 1, 0, barents_sic)
+        
         barents_sic_padded = np.pad(barents_sic, ((0,0), (0,0), (1,1), (1,1)), 'constant', constant_values = np.nan)
         barents_lsmask_padded = np.pad(barents_lsmask, ((1,1), (1,1)), 'constant', constant_values = 1)
 
@@ -112,42 +101,54 @@ def main():
                 interp_list.append(barents_sic)
 
         interp_array = np.array(interp_list)
-        interpolated = nearest_neighbor_interp(xxc_target, yyc_target, nextsim_x, nextsim_y, interp_array)
+
+        mean_1 = np.mean(interp_array[1:7], axis=0, keepdims=True)
+        mean_2 = np.mean(interp_array[7:13], axis=0, keepdims=True)
+        mean_3 = np.mean(interp_array[13:19], axis=0, keepdims=True)
+
+        interp_array = np.concatenate((interp_array, mean_1, mean_2, mean_3))
+
+        interpolated = nearest_neighbor_interp(xxc_target, yyc_target, target_x, target_y, interp_array)
         
-        sic_target_interp = interpolated[1:].reshape((len(lead_times) - 1, n_members, ny, nx))
+        sic_target_interp = interpolated[1:19].reshape((len(lead_times) - 1, n_members, ny, nx))
 
         output_filename = f"barents_mean_b{yyyymmdd}.nc"
 
         with Dataset(f"{path_output_task}{output_filename}", 'w', format = "NETCDF4") as nc_out:
-            nc_out.createDimension('x', len(nextsim_x))
-            nc_out.createDimension('y', len(nextsim_y))
+            nc_out.createDimension('x', len(target_x))
+            nc_out.createDimension('y', len(target_y))
             nc_out.createDimension('t', 3)
             nc_out.createDimension('member', 6)
 
             yc = nc_out.createVariable('y', 'd', ('y'))
             yc.units = 'km'
             yc.standard_name = 'y'
-            yc[:] = nextsim_y
+            yc[:] = target_y
             
             xc = nc_out.createVariable('x', 'd', ('x'))
             xc.units = 'km'
             xc.standard_name = 'x'
-            xc[:] = nextsim_x
+            xc[:] = target_x
 
             latc = nc_out.createVariable('lat', 'd', ('y', 'x'))
             latc.units = 'degrees North'
             latc.standard_name = 'Latitude'
-            latc[:] = nextsim_lat
+            latc[:] = target_lat
 
             lonc = nc_out.createVariable('lon', 'd', ('y', 'x'))
             lonc.units = 'degrees East'
             lonc.standard_name = 'Lonitude'
-            lonc[:] = nextsim_lon
+            lonc[:] = target_lon
 
             sic_out = nc_out.createVariable('sic', 'd', ('t', 'member', 'y', 'x'))
             sic_out.units = "1"
             sic_out.standard_name = "Sea Ice Concentration"
             sic_out[:] = onehot_encode_sic(sic_target_interp)
+
+            mean_sic_out = nc_out.createVariable('mean_sic', 'd', ('t', 'y', 'x'))
+            mean_sic_out.units = "1"
+            mean_sic_out.standard_name = "Ensemble Mean Sea Ice Concentration"
+            mean_sic_out[:] = onehot_encode_sic(interpolated[19:])
 
             lsmask_out = nc_out.createVariable('lsmask', 'd', ('y', 'x'))
             lsmask_out.units = "1"

@@ -14,4 +14,11 @@ module load Python-devel/3.8.7
 python3 --version
 
 # python createHDF.py lead_time osisaf_trend member
-python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/createHDF.py 2 5 $SGE_TASK_ID
+python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/createHDF.py $SGE_TASK_ID
+
+if [ $SGE_TASK_ID -eq 26 ]
+then
+    rm /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_1/2021/02/PreparedSample_v20210224_b20210223.hdf5
+    rm /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_2/2021/02/PreparedSample_v20210225_b20210223.hdf5
+    rm /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_3/2021/02/PreparedSample_v20210226_b20210223.hdf5
+fi

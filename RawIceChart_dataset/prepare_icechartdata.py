@@ -1,11 +1,10 @@
 # The intentions of this script is to seperate the single iecharts.nc provided by Nick into an orderly file structure comprising of folders, subfolders and dates. The file structure will follow the structure of all previous data, as of this point
 
-import glob
 import os
+import sys
 
 import numpy as np
 
-from calendar import monthrange
 from netCDF4 import Dataset
 from datetime import datetime, timedelta
 from tqdm import tqdm
@@ -14,11 +13,29 @@ from tqdm import tqdm
 def main():
     # Define paths
     icechart_path = "/lustre/storeB/users/nicholsh/icecharts_2011-2022.nc"
-    previous_icecharts = "/lustre/storeB/project/copernicus/sea_ice/SIW-METNO-ARC-SEAICE_HR-OBS/" # match dates
+    icechart_path_2022 = "/lustre/storeB/users/nicholsh/icecharts_2022.nc"
     path_output = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/'
 
+    # define months for parallel execution
+    years = []
+    for year in range(2011, 2023):
+        years.append(year)
 
-    icecharts = Dataset(icechart_path, 'r')
+    months = []
+    for month in range(1, 13):
+        months.append(month)
+
+    n_months = len(months)
+
+    thread = int(sys.argv[1])
+    year_task = years[int(np.floor((thread - 1) / n_months))]
+    month_task = months[(thread - 1) % n_months]
+
+    if year_task < 2022:
+        icecharts = Dataset(icechart_path, 'r')
+    else:
+        icecharts = Dataset(icechart_path_2022, 'r')
+        
     icechart_x = icecharts.variables['x'][:]
     icechart_y = icecharts.variables['y'][:]
     icechart_lat = icecharts.variables['lat'][:]
@@ -28,13 +45,14 @@ def main():
     # Define datetime
     t0 = datetime(1981, 1, 1)
         
-    for i in tqdm(range(len(icechart_time))):
+    for i in range(len(icechart_time)):
         time = t0 + timedelta(seconds=int(icechart_time[i]))
-        year_task = time.year
-        month_task = time.month
-        day_task = time.day
+        current_day = time.day
 
-        yyyymmdd = f"{year_task}{month_task:02d}{day_task:02}"
+        if year_task != time.year or month_task != time.month:
+            continue
+
+        yyyymmdd = f"{year_task}{month_task:02d}{current_day:02}"
         # print(f"{i}: {yyyymmdd}")
 
         

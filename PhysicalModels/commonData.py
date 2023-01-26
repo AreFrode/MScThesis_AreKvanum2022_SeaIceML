@@ -1,5 +1,6 @@
 import glob
 import os
+import sys
 
 import numpy as np
 
@@ -7,45 +8,64 @@ from netCDF4 import Dataset
 
 
 def main():
+
+    target_grid = sys.argv[1]
+
+    if target_grid == 'nextsim':
+        file = 'nextsim_mean_b20220101.nc'
+
+    elif target_grid == 'amsr2':
+        file = 'target_v20220101.nc'
+
+    else:
+        exit('No valid target grid')
     
     # Define paths
-    barents_path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/barents/2022/01/barents_mean_b20220102.nc"
-    ml_path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/ml/lead_time_2/osisaf_trend_5/weights_05011118/2022/01/20220105_b20220103.nc"
-    nextsim_path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/2022/01/nextsim_mean_b20220101.nc"
-    osisaf_path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/osisaf/osisaf_trend_5/2022/01/osisaf_mean_b20220101.nc"
+    barents_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}_grid/barents/2022/01/barents_mean_b20220102.nc"
+    
+    ml_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}_grid/ml/2022/01/weights_05011118_20220105_b20220103.nc"
 
-    path_target_nextsim = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/2022/01/nextsim_mean_b20220101.nc"
+    # This should append nextsim lsmask twice, not a bug just lazy
+    nextsim_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}_grid/nextsim/2022/01/nextsim_mean_b20220101.nc"
+    # osisaf_path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/osisaf/osisaf_trend_5/2022/01/osisaf_mean_b20220101.nc"
 
-    with Dataset(path_target_nextsim, 'r') as nc_ns:
-        nextsim_x = nc_ns['x'][:]
-        nextsim_y = nc_ns['y'][:]
 
-    nx = len(nextsim_x)
-    ny = len(nextsim_y)
+
+    path_target = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}/2022/01/{file}"
+
+    lsmasks = []
+
+    with Dataset(path_target, 'r') as nc_t:
+        target_x = nc_t['x'][:]
+        target_y = nc_t['y'][:]
+        target_lat = nc_t['lat'][:]
+        target_lon = nc_t['lon'][:]
+        lsmasks.append(nc_t['lsmask'][:])
+
+    nx = len(target_x)
+    ny = len(target_y)
 
     with Dataset(barents_path, 'r') as nc:
-        lsmask_barents = nc.variables['lsmask'][:]
+        lsmasks.append(nc.variables['lsmask'][:])
 
     with Dataset(ml_path, 'r') as nc:
-        lsmask_ml = nc.variables['lsmask'][:]
+        lsmasks.append(nc.variables['lsmask'][:])
 
     with Dataset(nextsim_path, 'r') as nc:
-        lsmask_nextsim = nc.variables['lsmask'][:]
-        nextsim_lat = nc.variables['lat'][:]
-        nextsim_lon = nc.variables['lon'][:]
+        lsmasks.append(nc.variables['lsmask'][:])
         
-    with Dataset(osisaf_path, 'r') as nc:
-        lsmask_osisaf = nc.variables['lsmask'][:]
+    # with Dataset(osisaf_path, 'r') as nc:
+        # lsmask_osisaf = nc.variables['lsmask'][:]
 
-    # lsmask_merged = lsmask_barents + lsmask_ml + lsmask_nextsim + lsmask_osisaf
-    lsmask_merged = lsmask_barents + lsmask_ml + lsmask_nextsim
+    lsmasks = np.array(lsmasks)
+    lsmask_merged = np.sum(lsmasks, axis = 0)
 
     lsmask_merged[lsmask_merged > 1] = 1
 
     output_path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/"
 
 
-    with Dataset(f"{output_path}commons.nc", 'w', format = "NETCDF4") as nc_out:
+    with Dataset(f"{output_path}{target_grid}_commons.nc", 'w', format = "NETCDF4") as nc_out:
         nc_out.createDimension('x', nx)
         nc_out.createDimension('y', ny)
 
@@ -57,12 +77,12 @@ def main():
         latc = nc_out.createVariable('lat', 'd', ('y', 'x'))
         latc.units = 'degrees North'
         latc.standard_name = 'Latitude'
-        latc[:] = nextsim_lat
+        latc[:] = target_lat
 
         lonc = nc_out.createVariable('lon', 'd', ('y', 'x'))
         lonc.units = 'degrees East'
         lonc.standard_name = 'Lonitude'
-        lonc[:] = nextsim_lon
+        lonc[:] = target_lon
 
 
 

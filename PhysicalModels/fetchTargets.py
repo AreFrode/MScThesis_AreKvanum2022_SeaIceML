@@ -22,7 +22,7 @@ def find_nearest(array, value):
 
 def main():
 
-    path_targets = f"/lustre/storeB/users/nicholsh/icecharts_2011-2022.nc"
+    path_targets = f"/lustre/storeB/users/nicholsh/icecharts_2022.nc"
 
     # Use processed nextsim for regrid domain
     path_target_nextsim = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/2022/01/nextsim_mean_b20220101.nc"
