@@ -609,10 +609,6 @@ PhysicalModels/Data/lead_time_2/osisaf_trend_5/*.csv
 CreateFigures/tikz/figures/*
 CreateFigures/*.png
 CreateFigures/tikz/*
-thesis/data_and_pipeline/figures/*
-thesis/performance_assessment/figures/*
-thesis/verification_metrics/figures/*
-thesis/verification_metrics/figures/*
 thesis/figures/*
 timeline/.vscode/*
 thesis/.vscode/*
@@ -623,6 +619,4 @@ PrepareDataset/Data/lead_time_*/*.csv
 PhysicalModels/Data/amsr2_grid/lead_time_*/*.csv
 PhysicalModels/Data/nextsim_grid/lead_time_*/*.csv
 PhysicalModels/Data/nextsim_grid/lead_time_*/osisaf_trend_*/*.csv
-thesis/datasets/figures/*
-thesis/appendix/figures/*
 thesis/bib/
