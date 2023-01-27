@@ -4,25 +4,35 @@ import pandas as pd
 import numpy as np
 
 from netCDF4 import Dataset
-from scipy.signal import correlate
-from scipy.fft import fft2, ifft2, fftshift
+from matplotlib import pyplot as plt
 
 def autocorrelate(Data):
+    """
+    Modified from
+    https://stackoverflow.com/questions/4503325/autocorrelation-of-a-multidimensional-array-in-numpy
+    and
+    https://en.wikipedia.org/wiki/Autocorrelation
+    """
     Data = np.array(Data)
-    n = len(Data)
-    Data_f = fft2(Data, s=((n*2) - 1, (n*2) - 1))
-
-    for count in range(1, 10):
+    A = Data.mean(axis=0)                        # Average 2D array
+    New_Data = (Data - np.mean(A)) # Sample mean
+    std = np.std(A)                # sample std -> Biased estimator
+    n = len(New_Data)
+    for count in range(0, 31):
         i = np.arange(n - count)
-        yield fftshift(np.multiply(Data_f[i], np.conjugate(Data_f[i+count]))).sum(axis=0).mean()
+        yield np.divide(np.multiply(New_Data[i], New_Data[i+count]).sum(axis=0),(n - count)*std).mean()
 
 
-icecharts = sorted(glob.glob("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/2022/01/*.nc"))
+
+icecharts = sorted(glob.glob("/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/local_data/2022/**/*.nc"))
 
 Data = []
 for icechart in icecharts:
     with Dataset(icechart, 'r') as nc:
-        Data.append(nc.variables['sic'][::5,::5])
+        Data.append(nc.variables['sic'][:])
 
-solution = list(autocorrelate(Data))
-print(solution)
+solution = np.array(list(autocorrelate(Data)))
+solution /= solution[0]
+
+with open ('solution.npy', 'wb') as f:
+    np.save(f, solution)
