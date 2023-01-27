@@ -3,7 +3,6 @@
 #$ -l h=gpu-05.ppi.met.no
 #$ -l h_rt=24:00:00
 #$ -l h_rss=16G
-#$ -l mem_free=4G
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/logs/qsub_model_run_logs
 
 #Old centos7 definitions
