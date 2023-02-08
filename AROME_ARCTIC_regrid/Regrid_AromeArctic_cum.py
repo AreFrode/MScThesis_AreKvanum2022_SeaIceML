@@ -44,7 +44,7 @@ def main():
     # Dataset
     ################################################
     paths = []
-    for year in range(2019, 2023):
+    for year in range(2016, 2023):
         for month in range(1, 13):
             p = f"{path_data}{year}/{month:02d}/"
             paths.append(p)
@@ -65,6 +65,9 @@ def main():
     if not os.path.exists(path_output_task):
         os.makedirs(path_output_task)
 
+    with Dataset("/lustre/storeB/immutable/archive/projects/metproduction/DNMI_AROME_ARCTIC/2019/01/01/arome_arctic_full_2_5km_20190101T18Z.nc", "r") as constants:
+        lsmask_arome = constants.variables["land_area_fraction"][:]
+
     ################################################
     # Data processing
     ################################################
@@ -74,20 +77,27 @@ def main():
 
         path_day = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T18Z.nc")
         path_day_det = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_det_2_5km_{yyyymmdd}T18Z.nc")
+        path_day_extracted = glob.glob(f"{path_data_task}{dd:02}/arome_arctic_extracted_2_5km_{yyyymmdd}T18Z.nc")
 
         try:
             dataset = path_day[0]
 
         except IndexError:
             try:
-                dataset = path_day_det[0]
-            
+                print(f"{path_data_task}{dd:02}/arome_arctic_extracted_2_5km_{yyyymmdd}T18.nc")
+                print(path_day_extracted)
+                dataset = path_day_extracted[0]
+
             except IndexError:
-                continue
+
+                try:
+                    dataset = path_day_det[0]
+            
+                except IndexError:
+                    continue
 
         # Fetch variables from Arome Arctic
         with Dataset(dataset, 'r') as nc:
-
             x_input = nc.variables['x'][:]
             y_input = nc.variables['y'][:]
         
@@ -96,7 +106,7 @@ def main():
             t2m_arome = nc.variables['air_temperature_2m'][:]
             uwind_arome = nc.variables['x_wind_10m'][:]
             vwind_arome = nc.variables['y_wind_10m'][:]
-            lsmask_arome = nc.variables['land_area_fraction'][:]
+            # lsmask_arome = nc.variables['land_area_fraction'][:]
 
         nx_input = len(x_input)
         ny_input = len(y_input)
@@ -149,63 +159,60 @@ def main():
         # Output netcdf file
         ################################################
         output_filename = f"AROME_1kmgrid_{yyyymmdd}T18Z.nc"
-        output_netcdf = Dataset(f"{path_output_task}{output_filename}", 'w', format = 'NETCDF4')
+        with Dataset(f"{path_output_task}{output_filename}", 'w', format = 'NETCDF4') as output_netcdf:
 
-        output_netcdf.createDimension('y', len(y_target))
-        output_netcdf.createDimension('x', len(x_target))
-        output_netcdf.createDimension('t', 3)
+            output_netcdf.createDimension('y', len(y_target))
+            output_netcdf.createDimension('x', len(x_target))
+            output_netcdf.createDimension('t', 3)
 
-        yc = output_netcdf.createVariable('y', 'd', ('y'))
-        yc.units = 'm'
-        yc.standard_name = 'y'
+            yc = output_netcdf.createVariable('y', 'd', ('y'))
+            yc.units = 'm'
+            yc.standard_name = 'y'
 
-        xc = output_netcdf.createVariable('x', 'd', ('x'))
-        xc.units = 'm'
-        xc.standard_name = 'x'
+            xc = output_netcdf.createVariable('x', 'd', ('x'))
+            xc.units = 'm'
+            xc.standard_name = 'x'
 
-        tc = output_netcdf.createVariable('t', 'd', ('t'))
-        tc.units = 'days since forecast inception'
-        tc.standard_name = 'time'
+            tc = output_netcdf.createVariable('t', 'd', ('t'))
+            tc.units = 'days since forecast inception'
+            tc.standard_name = 'time'
 
-        latc = output_netcdf.createVariable('lat', 'd', ('y', 'x'))
-        latc.units = 'degrees_north'
-        latc.standard_name = 'Latitude'
+            latc = output_netcdf.createVariable('lat', 'd', ('y', 'x'))
+            latc.units = 'degrees_north'
+            latc.standard_name = 'Latitude'
 
-        lonc = output_netcdf.createVariable('lon', 'd', ('y', 'x'))
-        lonc.units = 'degrees_east'
-        lonc.standard_name = 'Longitude'
+            lonc = output_netcdf.createVariable('lon', 'd', ('y', 'x'))
+            lonc.units = 'degrees_east'
+            lonc.standard_name = 'Longitude'
 
-        t2m_out = output_netcdf.createVariable('t2m', 'd', ('t', 'y', 'x'))
-        t2m_out.units = 'K'
-        t2m_out.standard_name = 'Air temperature at 2 metre height'
+            t2m_out = output_netcdf.createVariable('t2m', 'd', ('t', 'y', 'x'))
+            t2m_out.units = 'K'
+            t2m_out.standard_name = 'Air temperature at 2 metre height'
 
-        xwind_out = output_netcdf.createVariable('xwind', 'd', ('t', 'y', 'x'))
-        xwind_out.units = 'm/s'
-        xwind_out.standard_name = 'x 10 metre wind (X10M)'
+            xwind_out = output_netcdf.createVariable('xwind', 'd', ('t', 'y', 'x'))
+            xwind_out.units = 'm/s'
+            xwind_out.standard_name = 'x 10 metre wind (X10M)'
 
-        ywind_out = output_netcdf.createVariable('ywind', 'd', ('t', 'y', 'x'))
-        ywind_out.units = 'm/s'
-        ywind_out.standard_name = 'y 10 metre wind (Y10M)'
+            ywind_out = output_netcdf.createVariable('ywind', 'd', ('t', 'y', 'x'))
+            ywind_out.units = 'm/s'
+            ywind_out.standard_name = 'y 10 metre wind (Y10M)'
 
-        lsmask_out = output_netcdf.createVariable('lsmask', 'l', ('y', 'x'))
-        lsmask_out.units = '1'
-        lsmask_out .standard_name = 'Land Area Fraction'
+            lsmask_out = output_netcdf.createVariable('lsmask', 'l', ('y', 'x'))
+            lsmask_out.units = '1'
+            lsmask_out .standard_name = 'Land Area Fraction'
 
-        yc[:] = y_target
-        xc[:] = x_target
-        tc[:] = np.linspace(0,2,3)
-        latc[:] = lat_target
-        lonc[:] = lon_target
-        lsmask_out[:] = lsmask_target
-        t2m_out[:] = t2m_target
-        xwind_out[:] = xwind_target
-        ywind_out[:] = ywind_target
+            yc[:] = y_target
+            xc[:] = x_target
+            tc[:] = np.linspace(0,2,3)
+            latc[:] = lat_target
+            lonc[:] = lon_target
+            lsmask_out[:] = lsmask_target
+            t2m_out[:] = t2m_target
+            xwind_out[:] = xwind_target
+            ywind_out[:] = ywind_target
 
-        ##
-        output_netcdf.description = proj4_arome
-
-        output_netcdf.close()
-
+            ##
+            output_netcdf.description = proj4_arome
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ import tensorflow as tf
 import numpy as np
 
 from tensorflow import keras
-from TwoDayForecast.predict_validation import numpy_where_wrapper
+from RunModel.predict_validation import numpy_where_wrapper
 from verification_metrics import IIEE
 from datetime import datetime, timedelta
 

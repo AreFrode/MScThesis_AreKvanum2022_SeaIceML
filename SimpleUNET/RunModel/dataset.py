@@ -21,7 +21,7 @@ class HDF5Generator(keras.utils.Sequence):
                  target = 'sic_target', 
                  num_target_classes = 7, 
                  lower_boundary = 450, 
-                 rightmost_boundary = 1840, 
+                 rightmost_boundary = 1840,
                  normalization_file = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/normalization_constants.csv', 
                  seed=0, 
                  shuffle = True, 
@@ -43,6 +43,8 @@ class HDF5Generator(keras.utils.Sequence):
 
         self.means = {}
         self.stds = {}
+        self.mins = {}
+        self.maxs = {}
 
         with open(normalization_file, 'r') as f:
             f.readline()
@@ -51,6 +53,8 @@ class HDF5Generator(keras.utils.Sequence):
             for row in csv_reader:
                 self.means[row[0]] = float(row[1])
                 self.stds[row[0]] = float(row[2])
+                self.mins[row[0]] = float(row[3])
+                self.maxs[row[0]] = float(row[4])
 
         self.augment = augment
         self.shuffle = shuffle
@@ -124,6 +128,7 @@ class MultiOutputHDF5Generator(HDF5Generator):
                  shuffle = True, 
                  augment = False
         ):
+
         HDF5Generator.__init__(self, data, batch_size, fields, target, num_target_classes, lower_boundary, rightmost_boundary, normalization_file, seed, shuffle, augment)
 
     def __getitem__(self, index):
@@ -145,14 +150,20 @@ class MultiOutputHDF5Generator(HDF5Generator):
 
         for idx, sample in enumerate(samples):
             with h5py.File(sample, 'r') as hf:
+
+                # Normalization of SIC worse performance than normalization, kept as comment for transparency
+                # X[idx, ..., 0] = ((hf["sic"][:] - self.mins["sic"]) / (self.maxs["sic"] - self.mins["sic"]))
                 for i, field in enumerate(self.fields):
-                    X[idx, ..., i] = (hf[f"{field}"][:] - self.means[field]) / self.stds[field]
+                    # X[idx, ..., i] = (hf[f"{field}"][:] - self.means[field]) / self.stds[field]
+                    X[idx, ..., i] = (hf[f"{field}"][:] - self.mins[field]) / (self.maxs[field] - self.mins[field])
 
                 # for j, field in zip(range(len(self.constant_fields), len(self.constant_fields) + 2*len(self.dated_fields), 2), self.dated_fields):
                 #     X[idx, ..., j] = (hf[f"ts0"][f"{field}"][:] - self.means[f"ts0/{field}"]) / self.stds[f"ts0/{field}"]
                 #     X[idx, ..., j+1] = (hf[f"ts1"][f"{field}"][:] - self.means[f"ts1/{field}"]) / self.stds[f"ts1/{field}"]
 
                 onehot = hf[f'{self.target}'][:]
+
+                # compute binary concentration contours
                 for k in range(self.num_target_classes):
                     y[idx, ..., k] = np.where(onehot >= k, 1, 0)
 

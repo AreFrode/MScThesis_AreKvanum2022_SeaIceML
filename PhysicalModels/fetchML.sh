@@ -6,10 +6,14 @@
 #$ -t 1-12
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/logs/
 
+weights="weights_05011118"
+
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
 
 module use /modules/MET/centos7/GeneralModules
 
 module load Python-devel/3.8.7
 
-python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchML.py weights_05011118 $SGE_TASK_ID amsr2
+python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchML.py $weights $SGE_TASK_ID nextsim
+
+python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchML.py $weights $SGE_TASK_ID amsr2

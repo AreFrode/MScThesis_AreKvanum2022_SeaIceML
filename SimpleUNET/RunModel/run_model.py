@@ -32,8 +32,9 @@ def main():
 
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
+        'lead_time': 2,
         'BATCH_SIZE': 4,
-        'fields': ['sic', 'sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
+        'fields': ['sic', 't2m', 'osisaf_trend_7/sic_trend', 'lsmask', 'xwind', 'ywind'],
         'train_augment': False,
         'train_normalization': 'normalization_constants_train',
         'train_shuffle': True,
@@ -46,6 +47,7 @@ def main():
         'learning_rate': 0.001,
         'epochs': 25,
         'pooling_factor': 4,
+        'num_outputs': 5,
         'channels': [64, 128, 256, 512],
         'height': 1792,
         'width': 1792,
@@ -55,41 +57,57 @@ def main():
         'GroupNorm': True,
         'AveragePool': False,
         'LeakyReLU': False,
-        'ResidualUNET': True,
+        'ResidualUNET': False,
         'lr_decay_steps': 72 * 15,
         'lr_decay_rate': 0.8,
         'lr_decay_staircase': True,
-        'lead_time': 2,
-        'osisaf_trend': 5
+        'open_ocean_mask': False,
+        'reduced_classes': True,
+        'train_start': 2016,
+        'train_end': 2020,
+        'validation': 2021
     }
 
     # Comment above and uncomment below if running tensorflow2.11-singularity container
-    PATH_OUTPUT = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
-    PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/osisaf_trend_{config['osisaf_trend']}/"
+    PATH_OUTPUT = "/mnt/SimpleUNET/RunModel/outputs/"
+
+    if config['open_ocean_mask']:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/open_ocean/lead_time_{config['lead_time']}/"
+
+    elif config['reduced_classes']:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/reduced_classes/lead_time_{config['lead_time']}/"
+
+    else:
+         PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/"
 
     # PATH_CLIMATOLOGICAL_ICEEDGE = "/mnt/verification_metrics/Data/climatological_ice_edge.csv"
-    log_dir = f"/mnt/SimpleUNET/TwoDayForecast/logs/fit/{datetime.now().strftime('%d%m%H%M')}"
+    log_dir = f"/mnt/SimpleUNET/RunModel/logs/fit/{datetime.now().strftime('%d%m%H%M')}"
 
     gpu = tf.config.list_physical_devices('GPU')[0]
     tf.config.experimental.set_memory_growth(gpu, True)
-    
-    data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))
-    data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))
-    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))
+
+    data = {}
+    for i in range(config['train_start'], config['validation']+1):
+        data[f"{i}"] = np.array(sorted(glob.glob(f"{PATH_DATA}{i}/**/*.hdf5")))
+
+    # data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))
+    # data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))
+    # data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))
 
     if not os.path.exists(PATH_OUTPUT):
         os.makedirs(PATH_OUTPUT)
 
     if not os.path.exists(f"{PATH_OUTPUT}models"):
         os.makedirs(f"{PATH_OUTPUT}models")
-
+        
     if not os.path.exists(f"{PATH_OUTPUT}configs"):
         os.makedirs(f"{PATH_OUTPUT}configs")
 
     train_generator = MultiOutputHDF5Generator(
-        np.concatenate((data_2019, data_2020)), 
+        np.concatenate([data[f"{i}"] for i in range(config['train_start'], config['train_end'] + 1)]), 
         batch_size=config['BATCH_SIZE'], 
-        fields=config['fields'], 
+        fields=config['fields'],
+        num_target_classes=config['num_outputs'],
         lower_boundary=config['lower_boundary'], 
         rightmost_boundary=config['rightmost_boundary'],
         normalization_file=f"{PATH_DATA}{config['train_normalization']}.csv",
@@ -98,9 +116,10 @@ def main():
     )
 
     val_generator = MultiOutputHDF5Generator(
-        data_2021, 
+        data[f"{config['validation']}"], 
         batch_size=config['BATCH_SIZE'], 
         fields=config['fields'],
+        num_target_classes=config['num_outputs'],
         lower_boundary=config['lower_boundary'], 
         rightmost_boundary=config['rightmost_boundary'],
         normalization_file=f"{PATH_DATA}{config['val_normalization']}.csv",
@@ -120,6 +139,7 @@ def main():
         input_shape = (config['height'], config['width'], len(config['fields'])), 
         channels = config['channels'],
         pooling_factor= config['pooling_factor'],
+        num_outputs= config['num_outputs'],
         average_pool=config['AveragePool'],
         leaky_relu = config['LeakyReLU']
     )

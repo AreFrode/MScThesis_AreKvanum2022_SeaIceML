@@ -13,9 +13,13 @@ def main():
 
     if target_grid == 'nextsim':
         file = 'nextsim_mean_b20220101.nc'
+        # This should append nextsim lsmask twice, not a bug just lazy
+        nextsim_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/2022/01/nextsim_mean_b20220101.nc"
+        
 
     elif target_grid == 'amsr2':
         file = 'target_v20220101.nc'
+        nextsim_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}_grid/nextsim/2022/01/nextsim_mean_b20220101.nc"
 
     else:
         exit('No valid target grid')
@@ -23,13 +27,10 @@ def main():
     # Define paths
     barents_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}_grid/barents/2022/01/barents_mean_b20220102.nc"
     
-    ml_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}_grid/ml/2022/01/weights_05011118_20220105_b20220103.nc"
+    ml_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}_grid/ml/2022/01/weights_30010909_20220104_b20220103.nc"
 
-    # This should append nextsim lsmask twice, not a bug just lazy
-    nextsim_path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}_grid/nextsim/2022/01/nextsim_mean_b20220101.nc"
+    
     # osisaf_path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/osisaf/osisaf_trend_5/2022/01/osisaf_mean_b20220101.nc"
-
-
 
     path_target = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{target_grid}/2022/01/{file}"
 

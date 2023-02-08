@@ -1,6 +1,6 @@
 import sys
 sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
-sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel")
 
 import h5py
 import glob
@@ -27,11 +27,11 @@ def main():
     assert len(sys.argv) > 1, "Remember to provide weights"
     weights = sys.argv[1]
 
-    path_pred = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/"
+    path_pred = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/Data/"
     config = read_config_from_csv(f"{path_pred[:-5]}configs/{weights}.csv")
 
-    path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/osisaf_trend_{config['osisaf_trend']}/2022/01/"
-    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/figures/"
+    path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/2022/01/"
+    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/figures/"
 
     
     data_2022 = np.array(sorted(glob.glob(f"{path_pred}{weights}/2022/**/*.hdf5")))
@@ -66,19 +66,18 @@ def main():
     ice_ticks = ['0', '0 - 10', '10 - 40', '40 - 70', '70 - 90', '90 - 100', '100']
 
     for date in data_2022:
-        yyyymmdd = date[-17:-9]
-        print(f"{yyyymmdd}")
-        year = yyyymmdd[:4]
-        month = yyyymmdd[4:6]
+        # New definition after name change
+        yyyymmdd_b = date[-17:-9]
+        yyyymmdd_v = date[-27:-19]
 
-        init_date = datetime.strptime(yyyymmdd, '%Y%m%d')
-        init_date = (init_date - timedelta(days = 2)).strftime('%Y%m%d')
+        year = yyyymmdd_b[:4]
+        month = yyyymmdd_b[4:6]
 
         save_location = f"{path_figures}{weights}/{year}/{month}/"
         if not os.path.exists(save_location):
             os.makedirs(save_location)
 
-        f_model = h5py.File(f"{path_pred}{weights}/{year}/{month}/SIC_SimpleUNET_two_day_forecast_{yyyymmdd}T15Z.hdf5", 'r')
+        f_model = h5py.File(f"{path_pred}{weights}/{year}/{month}/SIC_UNET_v{yyyymmdd_v}_b{yyyymmdd_b}T15Z.hdf5", 'r')
 
         y_pred = f_model['y_pred'][0]
 
@@ -89,7 +88,7 @@ def main():
         fig = plt.figure(figsize=(20,20))
         # fig.subplots_adjust(bottom = 0.2)
         ax = plt.axes(projection=map_proj)
-        ax.set_title(f"Forecast for two day forecast initiated {init_date}", fontsize = 30)
+        ax.set_title(f"Forecast for {yyyymmdd_v} initiated {yyyymmdd_b}", fontsize = 30)
     
         ax.pcolormesh(lon, lat, y_pred, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1)
         ax.pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap='autumn')
@@ -122,12 +121,11 @@ def main():
         LambertLabels.lambert_yticks(ax, yticks)
 
 
-        plt.savefig(f"{save_location}{yyyymmdd}.png")
+        plt.savefig(f"{save_location}v{yyyymmdd_v}_b{yyyymmdd_b}.png")
 
         f_model.close()
         ax.cla()
         plt.close(fig)
-        
 
 
 if __name__ == "__main__":

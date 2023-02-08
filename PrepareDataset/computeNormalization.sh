@@ -1,7 +1,7 @@
 #$ -S /bin/bash
 #$ -l h_rt=02:00:00
 #$ -q bigmem-r8.q
-#$ -l h_rss=200G
+#$ -l h_rss=300G
 #$ -t 1-3
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/logs
 

@@ -123,6 +123,16 @@ def calculate_distance(current_ice_edge, other_ice_edge, x, y):
 
     return d
 
+def IIEE_alt(sic_prediction, sic_target, mask, side_length: int = 1, threshold: int = 2):
+    
+    valid_coords = np.where(mask != 1)
+ 
+    a_plus = np.logical_and(np.greater_equal(sic_prediction[valid_coords], threshold), np.less(sic_target[valid_coords], threshold)).astype(int)
+    a_minus = np.logical_and(np.greater_equal(sic_target[valid_coords], threshold), np.less(sic_prediction[valid_coords], threshold)).astype(int)
+    
+    return np.stack((a_plus*(side_length**2), a_minus*(side_length**2)))
+    
+
 def IIEE_fast(sic_prediction, sic_target, mask, side_length: int = 1, threshold: int = 2):
     """Computes the IIEE between two SIC fields, implemented according to [Goessling, 2016]
 

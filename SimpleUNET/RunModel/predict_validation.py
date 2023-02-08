@@ -59,7 +59,7 @@ def predict_validation_single(validation_generator, model, PATH_OUTPUTS, weights
 
         output_file.close()
 
-def predict_test_multi(test_generator, model, PATH_OUTPUTS, weights):
+def predict_test_multi(test_generator, model, PATH_OUTPUTS, weights, lead_time):
     samples = len(test_generator)
     total_changes = 0
 
@@ -70,8 +70,8 @@ def predict_test_multi(test_generator, model, PATH_OUTPUTS, weights):
         y_pred = tf.concat(y_pred, axis=-1)
         
         yyyymmdd = test_generator.get_dates(i)[0][-13:-5]
-        yyyymmdd = datetime.strptime(yyyymmdd, '%Y%m%d')
-        yyyymmdd = (yyyymmdd + timedelta(days = 2)).strftime('%Y%m%d')
+        yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
+        yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
         
         # out = tf.math.reduce_sum(tf.round(tf.nn.sigmoid(y_pred[0])), -1)
         out = tf.round(tf.nn.sigmoid(y_pred[0]))
@@ -87,7 +87,7 @@ def predict_test_multi(test_generator, model, PATH_OUTPUTS, weights):
         if not os.path.exists(hdf_path):
             os.makedirs(hdf_path)
 
-        with h5py.File(f"{hdf_path}SIC_SimpleUNET_two_day_forecast_{yyyymmdd}T15Z.hdf5", "w") as output_file:
+        with h5py.File(f"{hdf_path}SIC_UNET_v{yyyymmdd_valid}_b{yyyymmdd}T15Z.hdf5", "w") as output_file:
             output_file['xc'] = x_vals
             output_file['yc'] = y_vals
             output_file["y"] = y
@@ -112,11 +112,15 @@ def main():
     weights = sys.argv[1]
     
     # Read config csv
-    PATH_OUTPUTS = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
+    PATH_OUTPUTS = "/mnt/SimpleUNET/RunModel/outputs/"
     config = read_config_from_csv(f"{PATH_OUTPUTS}configs/{weights}.csv")
 
     # Rewrite paths for singularity compatibility
-    PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/osisaf_trend_{config['osisaf_trend']}/"
+
+    if config['open_ocean_mask']:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/open_ocean/lead_time_{config['lead_time']}/"
+    else:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/"
 
     # gpu = tf.config.list_physical_devices('GPU')[0]
     # tf.config.experimental.set_memory_growth(gpu, True)
@@ -146,7 +150,7 @@ def main():
 
     load_status = model.load_weights(f"{PATH_OUTPUTS}models/{weights}").expect_partial()
 
-    predict_test_multi(test_generator, model, PATH_OUTPUTS, weights)
+    predict_test_multi(test_generator, model, PATH_OUTPUTS, weights, config['lead_time'])
 
 
 

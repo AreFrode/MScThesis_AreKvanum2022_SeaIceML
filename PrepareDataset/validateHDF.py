@@ -1,6 +1,7 @@
 import h5py
 import glob
 import os
+import sys
 
 import numpy as np
 
@@ -14,12 +15,12 @@ import warnings
 warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning) 
 
 def main():
-    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/testing_data/"
-    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/testing_data/"
+    path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/reduced_classes/lead_time_1/"
+    path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/reduced_classes/lead_time_1/"
 
-    data_2019 = np.array(sorted(glob.glob(f"{path}2019/**/*.hdf5", recursive = True)))
-    data_2020 = np.array(sorted(glob.glob(f"{path}2020/**/*.hdf5", recursive = True)))
-    data_2021 = np.array(sorted(glob.glob(f"{path}2021/**/*.hdf5", recursive = True)))
+    data_2019 = np.array(sorted(glob.glob(f"{path}2019/**/*.hdf5")))
+    data_2020 = np.array(sorted(glob.glob(f"{path}2020/**/*.hdf5")))
+    data_2021 = np.array(sorted(glob.glob(f"{path}2021/**/*.hdf5")))
 
     data = [data_2019, data_2020, data_2021]
     
@@ -28,7 +29,7 @@ def main():
 
     h5file_constants = data[0][0]
     
-    f = h5py.File(h5file_constants  , 'r')
+    f = h5py.File(h5file_constants, 'r')
 
     lat = f['lat'][:]
     lon = f['lon'][:]
@@ -50,7 +51,7 @@ def main():
     bottom_lon_t, bottom_lat_t = map_proj.transform_point(bottom_lon, bottom_lat, data_proj)
     top_lon_t, top_lat_t = map_proj.transform_point(top_lon, top_lat, data_proj)
 
-    for date in data[0]:
+    for date in data[int(sys.argv[1]) - 1]:
         yyyymmdd = date[-13:-5]
         print(f"{yyyymmdd}", end='\r')
         year = yyyymmdd[:4]

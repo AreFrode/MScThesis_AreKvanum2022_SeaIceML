@@ -123,12 +123,13 @@ class ResidualDecoder(keras.layers.Layer):
 
 
 class UNET(keras.Model):
-    def __init__(self, channels, num_classes = 7, pooling_factor = 2, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name='unet'):
+    def __init__(self, channels, num_classes = 7, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name='unet'):
         super(UNET, self).__init__(name=name)
         # self.normalizer = keras.layers.Normalization(axis=-1)
         self.encoder = Encoder(channels = channels, pooling_factor=pooling_factor, average_pool=average_pool, kernel_initializer=kernel_initializer, leaky_relu=leaky_relu)
         self.decoder = Decoder(channels = channels[:-1][::-1], pooling_factor = pooling_factor, kernel_initializer=kernel_initializer, leaky_relu=leaky_relu)
         self.output_layer = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32)
+        self.num_outputs = num_outputs
 
     @tf.autograph.experimental.do_not_convert
     def call(self, x, training = False):
@@ -146,31 +147,18 @@ class MultiOutputUNET(UNET):
     # Currently contain 7 separate output layers, each with own weights and biases,
     # could be possible to output each class with same output layer, not sure if smart
 
-    def __init__(self, channels, num_classes = 1, pooling_factor = 2, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name = 'unet'):
-        UNET.__init__(self, channels, num_classes, pooling_factor, average_pool, kernel_initializer, leaky_relu, name)
-        self.output_layer0 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out0')
-        self.output_layer1 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out1')
-        self.output_layer2 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out2')
-        self.output_layer3 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out3')
-        self.output_layer4 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out4')
-        self.output_layer5 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out5')
-        self.output_layer6 = keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = 'out6')
+    def __init__(self, channels, num_classes = 1, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name = 'unet'):
+        UNET.__init__(self, channels, num_classes, pooling_factor, num_outputs, average_pool, kernel_initializer, leaky_relu, name)
+        self.output_layers = [keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = f'out{i}') for i in range(self.num_outputs)]
+        
 
     @tf.autograph.experimental.do_not_convert
     def call(self, x, training = False):
         encoder_feature_maps = self.encoder(x)
         x = encoder_feature_maps[0]
         x = self.decoder(x, encoder_feature_maps[1:])
-        
-        out0 = self.output_layer0(x)
-        out1 = self.output_layer1(x)
-        out2 = self.output_layer2(x)
-        out3 = self.output_layer3(x)
-        out4 = self.output_layer4(x)
-        out5 = self.output_layer5(x)
-        out6 = self.output_layer6(x)
 
-        return [out0, out1, out2, out3, out4, out5, out6]
+        return [self.output_layers[i](x) for i in range(self.num_outputs)]
 
 
 
@@ -183,9 +171,9 @@ def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = 
 
     return model
 
-def create_MultiOutputUNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 1, pooling_factor = 2, average_pool = False, kernel_initializer: str = 'HeNormal', leaky_relu = False):
+def create_MultiOutputUNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 1, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer: str = 'HeNormal', leaky_relu = False):
     input = keras.Input(shape=input_shape)
-    outputs = MultiOutputUNET(channels = channels, num_classes = num_classes, pooling_factor=pooling_factor, average_pool=average_pool, kernel_initializer = kernel_initializer, leaky_relu = leaky_relu)(input)
+    outputs = MultiOutputUNET(channels = channels, num_classes = num_classes, pooling_factor=pooling_factor, num_outputs=num_outputs, average_pool=average_pool, kernel_initializer = kernel_initializer, leaky_relu = leaky_relu)(input)
 
     model = keras.models.Model(inputs=input, outputs=outputs)
 

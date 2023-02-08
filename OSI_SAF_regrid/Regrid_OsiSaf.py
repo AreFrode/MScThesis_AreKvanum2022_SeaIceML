@@ -14,8 +14,6 @@ from scipy.interpolate import NearestNDInterpolator
 from numpy.polynomial import Polynomial
 from interpolate import nearest_neighbor_interp
 
-from matplotlib import pyplot as plt
-
 def compute_trend_1d(arr):
     sic_vals = arr[::-1]
     idx = np.isfinite(sic_vals)  # Skip missing entries
@@ -51,7 +49,8 @@ def main():
     crs_OSISAF = CRS.from_proj4(proj4_osisaf)
     transform_function = Transformer.from_crs(crs_OSISAF, crs_AROME, always_xy = True)
 
-    num_days = [3, 5, 7]
+    # How does "real-time" conditions compare against "climatological" conditions?
+    num_days = [3, 5, 7, 9, 11, 31]
     n_trends = len(num_days)
 
     # AROME grid
@@ -71,7 +70,7 @@ def main():
 
     # Dataset
     paths = []
-    for year in range(2019, 2023):
+    for year in range(2016, 2023):
         for month in range(1, 13):
             p = f"{PATH_OSISAF}{year}/{month:02d}/"
             paths.append(p)
@@ -117,7 +116,7 @@ def main():
         with Dataset(dataset, 'r') as nc:
             x_input = nc.variables['xc'][:] * 1000
             y_input = nc.variables['yc'][:] * 1000
-
+            lsmask = np.where(nc.variables['status_flag'][:] == 100, 1, 0)
 
             xx, yy = np.meshgrid(x_input, y_input)
 
@@ -162,7 +161,7 @@ def main():
             else:
                 trend_array[i] = -999
 
-        target_array = np.concatenate((lat_input, lon_input, trend_array), axis = 0)
+        target_array = np.concatenate((lat_input, lon_input, lsmask, trend_array), axis = 0)
 
         interp_array = nearest_neighbor_interp(xx_regrid, yy_regrid, x_target, y_target, target_array)
         
@@ -194,10 +193,15 @@ def main():
             lonc.standard_name = 'Longitude'
             lonc[:] = interp_array[1]
 
+            lsmaskc = nc_out.createVariable('lsmask', 'd', ('y', 'x'))
+            lsmaskc.units = 'binary'
+            lsmaskc.standard_name = 'Land Sea mask'
+            lsmaskc[:] = interp_array[2]
+
             ice_conc_trend_out = nc_out.createVariable('ice_conc_trend', 'd', ('trend', 'y', 'x'))
             ice_conc_trend_out.units = '%'
             ice_conc_trend_out.standard_name = 'Sea Ice Concentration Trend'
-            ice_conc_trend_out[:] = interp_array[2:]
+            ice_conc_trend_out[:] = interp_array[3:]
 
 if __name__ == "__main__":
     main()

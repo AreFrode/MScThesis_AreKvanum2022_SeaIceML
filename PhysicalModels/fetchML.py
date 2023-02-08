@@ -30,7 +30,7 @@ def main():
     weights = sys.argv[1]
 
     # Read config csv
-    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/"
+    PATH_OUTPUTS = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/"
     config = read_config_from_csv(f"{PATH_OUTPUTS}configs/{weights}.csv")
 
     # Set the forecast lead time and osi trend
@@ -38,7 +38,7 @@ def main():
 
     common_grid = sys.argv[3]
 
-    path_ml = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/{weights}/"
+    path_ml = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/Data/{weights}/"
     proj4_arome = "+proj=lcc +lat_0=77.5 +lon_0=-25 +lat_1=77.5 +lat_2=77.5 +no_defs +R=6.371e+06"
 
     path_output, transform_function, target_x, target_y, target_lat, target_lon = get_target_domain(common_grid, proj4_arome, 'ml')
@@ -74,12 +74,9 @@ def main():
     files = sorted(glob.glob(f"{path_ml}{year}/{month_task:02d}/*.hdf5"))
 
     for file in files:
-        yyyymmdd = file[-17:-9]
+        yyyymmdd_b = file[-17:-9]
+        yyyymmdd_v = file[-27:-19]
         
-        print(yyyymmdd)
-        yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
-        yyyymmdd_bulletin = (yyyymmdd_datetime - timedelta(days = lead_time)).strftime('%Y%m%d')
-
         with h5py.File(file, 'r') as infile:
             ml_x = infile['xc'][:]
             ml_y = infile['yc'][:]
@@ -102,7 +99,7 @@ def main():
 
         interp_target = nearest_neighbor_interp(xxc_target, yyc_target, target_x, target_y, interp_array)
 
-        output_filename = f"{weights}_{yyyymmdd}_b{yyyymmdd_bulletin}.nc"
+        output_filename = f"{weights}_{yyyymmdd_v}_b{yyyymmdd_b}.nc"
 
 
         with Dataset(f"{path_output_task}{output_filename}", 'w', format = "NETCDF4") as nc_out:

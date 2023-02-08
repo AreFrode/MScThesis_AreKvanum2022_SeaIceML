@@ -38,14 +38,18 @@ def compute_and_save_normalization(data, fields, outpath, fname, lower_boundary 
 def main():
      
 
-    path_prepareddata = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{sys.argv[1]}/"
+    path_prepareddata = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/reduced_classes/lead_time_{sys.argv[1]}/"
 
-    data2019 = np.array(sorted(glob.glob(f"{path_prepareddata}2019/**/*.hdf5")))
-    data2020 = np.array(sorted(glob.glob(f"{path_prepareddata}2020/**/*.hdf5")))
-    data2021 = np.array(sorted(glob.glob(f"{path_prepareddata}2021/**/*.hdf5")))
-    data2022 = np.array(sorted(glob.glob(f"{path_prepareddata}2022/**/*.hdf5")))
+    data = {}
+    for i in range(2016, 2023):
+        data[f"{i}"] = (np.array(sorted(glob.glob(f"{path_prepareddata}{i}/**/*.hdf5"))))
 
-    data_train = np.concatenate((data2019, data2020))
+    # data2020 = np.array(sorted(glob.glob(f"{path_prepareddata}2020/**/*.hdf5")))
+    # data2021 = np.array(sorted(glob.glob(f"{path_prepareddata}2021/**/*.hdf5")))
+    # data2022 = np.array(sorted(glob.glob(f"{path_prepareddata}2022/**/*.hdf5")))
+
+    # data_train_big = np.concatenate([data[f"{i}"] for i in range(2016, 2021)])
+    data_train = np.concatenate((data['2019'], data['2020']))
 
     fields = ['sic', 
                't2m',
@@ -53,12 +57,16 @@ def main():
                'ywind',
                'osisaf_trend_3/sic_trend',
                'osisaf_trend_5/sic_trend',
-               'osisaf_trend_7/sic_trend'
+               'osisaf_trend_7/sic_trend',
+               'osisaf_trend_9/sic_trend',
+               'osisaf_trend_11/sic_trend',
+               'osisaf_trend_31/sic_trend'
                ]
-
+    
+    # compute_and_save_normalization(data_train_big, fields, path_prepareddata, "normalization_constants_train_big.csv")
     compute_and_save_normalization(data_train, fields, path_prepareddata, "normalization_constants_train.csv")
-    compute_and_save_normalization(data2021, fields, path_prepareddata, "normalization_constants_validation.csv")
-    compute_and_save_normalization(data2022, fields, path_prepareddata, "normalization_constants_test.csv")
+    compute_and_save_normalization(data['2021'], fields, path_prepareddata, "normalization_constants_validation.csv")
+    compute_and_save_normalization(data['2022'], fields, path_prepareddata, "normalization_constants_test.csv")
 
 if __name__ == "__main__":
     main()

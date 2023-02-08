@@ -12,4 +12,5 @@ module use /modules/MET/centos7/GeneralModules
 
 module load Python-devel/3.8.7
 
-python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchTargets.py $SGE_TASK_ID
+python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchPersistence.py $SGE_TASK_ID nextsim
+python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchPersistence.py $SGE_TASK_ID amsr2

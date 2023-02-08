@@ -620,3 +620,15 @@ PhysicalModels/Data/amsr2_grid/lead_time_*/*.csv
 PhysicalModels/Data/nextsim_grid/lead_time_*/*.csv
 PhysicalModels/Data/nextsim_grid/lead_time_*/osisaf_trend_*/*.csv
 thesis/bib/
+CreateFigures/autocorrelation/solution.npy
+ForecastValidation/Forecasts/Data/*.csv
+ForecastValidation/Forecasts/figures/*.png
+ForecastValidation/Forecasts/figures/*
+ForecastValidation/Forecasts/logs/*
+ForecastValidation/lead_time_1/*.csv
+ForecastValidation/lead_time_2/*.csv
+ForecastValidation/lead_time_3/*.csv
+PhysicalModels/Data/test/*.csv
+PrepareDataset/Data/open_ocean/lead_time_*/*.csv
+PrepareDataset/Data/reduced_classes/lead_time_*/*.csv
+ForecastValidation/lead_time_2/figures/*.png

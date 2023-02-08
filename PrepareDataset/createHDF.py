@@ -11,8 +11,6 @@ from netCDF4 import Dataset
 from datetime import datetime, timedelta
 from scipy.interpolate import NearestNDInterpolator
 
-from matplotlib import pyplot as plt
-
 
 def onehot_encode_sic(sic):
     fast_ice = np.where(np.equal(sic, 100.), 6, 0)
@@ -24,6 +22,13 @@ def onehot_encode_sic(sic):
 
     return fast_ice + vcd_ice + cd_ice + od_ice + vod_ice + open_water
 
+def remove_open_water_and_fast_ice(sic):
+    sic = np.where(sic == 1, 0, sic)
+    sic = np.where(sic == 6, 5, sic)
+    sic = np.where(sic > 0, sic - 1, sic)
+
+    return sic
+
 
 def main():
     # setup data-paths
@@ -33,9 +38,16 @@ def main():
 
     # Define lead time in days (1 - 3) and osisaf trend
     lead_times = [1, 2, 3]
-    osisaf_trends = [3, 5, 7]
+    osisaf_trends = [3, 5, 7, 9, 11, 31]
 
-    path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{i}/" for i in lead_times]
+    # NN land mask path
+    # path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{i}/" for i in lead_times]
+
+    # open ocean mask path
+    # path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/open_ocean/lead_time_{i}/" for i in lead_times]
+
+    # Reduced class output
+    path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/reduced_classes/lead_time_{i}/" for i in lead_times]
 
     paths = []
     for year in range(2019, 2023):
@@ -57,8 +69,12 @@ def main():
             os.makedirs(f"{path_output}{year_task}/{month_task}")
 
 
-    with Dataset(f"{paths[0]}AROME_1kmgrid_20190101T18Z.nc") as constants:
+    with Dataset(f"{path_arome}2019/01/AROME_1kmgrid_20190101T18Z.nc") as constants:
         lsmask = constants['lsmask'][:,:-1]
+
+    # Open OSI SAF lsmask for open ocean land mask
+    with Dataset(f"{path_osisaf}2019/01/OSISAF_trend_1kmgrid_20190101.nc", 'r') as osi_commons:
+        osi_lsmask = osi_commons['lsmask'][:,:-1]
 
     baltic_mask = np.zeros_like(lsmask)
     mask = np.zeros_like(lsmask)
@@ -94,13 +110,19 @@ def main():
             x = nc_ic.variables['x'][:-1]
             y = nc_ic.variables['y'][:]
 
-        #Apply Wang et.al NearestNeighbor mask to sic
+        # Apply Wang et.al NearestNeighbor mask to sic
         sic_interpolator = NearestNDInterpolator(mask_T, sic[mask])
         sic = sic_interpolator(*np.indices(sic.shape))
+
+        # Apply open ocean mask
+        # sic = np.where(lsmask == 1, 0, sic)
 
         # Open OsiSaf trend
         with Dataset(osisaf_path, 'r') as nc_osi:
             conc_trend = nc_osi.variables['ice_conc_trend'][:,:,:-1]
+
+        # Apply open ocean lsmask to osi
+        # conc_trend = np.where(osi_lsmask == 1, 0, conc_trend)
 
         for i in range(len(lead_times)):
             try:
@@ -118,9 +140,13 @@ def main():
             # Open target IceChart
             with Dataset(target_icechart_path, 'r') as nc_ic_target:
                 sic_target = nc_ic_target.variables['sic'][:, :-1]
-
+            
+            # Apply Wang et.al NN mask to sic target
             sic_target_interpolator = NearestNDInterpolator(mask_T, sic_target[mask])
             sic_target = sic_target_interpolator(*np.indices(sic_target.shape))
+
+            # Apply open ocean mask to sic target
+            # sic_target = np.where(lsmask == 1, 0, sic_target)
 
             # Open Arome Arctic
             with Dataset(arome_path, 'r') as nc_a:
@@ -128,10 +154,17 @@ def main():
                 xwind = nc_a.variables['xwind'][lead_times[i] - 1,:,:-1]
                 ywind = nc_a.variables['ywind'][lead_times[i] - 1,:,:-1]
 
+            output_sic = onehot_encode_sic(sic)
+            output_sic_target = onehot_encode_sic(sic_target)
+
+            # remove class 1 and 6
+            output_sic = remove_open_water_and_fast_ice(output_sic)
+            output_sic_target = remove_open_water_and_fast_ice(output_sic_target)
+
             # Write to hdf5
             with h5py.File(hdf5_path, 'w') as outfile:
-                outfile['sic'] = onehot_encode_sic(sic)
-                outfile['sic_target'] = onehot_encode_sic(sic_target)
+                outfile['sic'] = output_sic
+                outfile['sic_target'] = output_sic_target
                 outfile['lon'] = lon
                 outfile['lat'] = lat
                 outfile['x'] = x

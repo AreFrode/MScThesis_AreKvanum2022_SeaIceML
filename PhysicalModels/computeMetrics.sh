@@ -5,10 +5,17 @@
 #$ -l mem_free=8G
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/logs/
 
+# 'barents' / 'ml' / 'nextsim' / 'osisaf' / 'persistence'
 forecast="ml"
-lead_time="2"
-target_grid="amsr2"
-weights="weights_05011118"
+
+# 1 / 2 / 3
+lead_time="1"
+
+# 'nextsim' / 'amsr2'
+target_grid="nextsim"
+
+# If not forecast='ml', nothing happens
+weights="weights_30010909"
 
 
 module use /modules/MET/centos7/GeneralModules

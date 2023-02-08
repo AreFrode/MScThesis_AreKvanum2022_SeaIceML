@@ -52,8 +52,13 @@ def main():
         if year_task != time.year or month_task != time.month:
             continue
 
+        # Remove spurious icecharts during weekends
+        if time.weekday() >= 5:
+            continue
+
         yyyymmdd = f"{year_task}{month_task:02d}{current_day:02}"
         # print(f"{i}: {yyyymmdd}")
+
 
         
         path_output_task = f"{path_output}{year_task}/{month_task:02d}/"

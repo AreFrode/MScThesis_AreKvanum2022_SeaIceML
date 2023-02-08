@@ -10,11 +10,13 @@ import h5py
 import numpy as np
 
 from calendar import monthrange
-from verification_metrics import IIEE_fast, find_ice_edge, ice_edge_length, contourAreaDistribution, minimumDistanceToIceEdge
+from verification_metrics import IIEE_alt, IIEE_fast, find_ice_edge, ice_edge_length, contourAreaDistribution, minimumDistanceToIceEdge
 from tqdm import tqdm
 from helper_functions import read_config_from_csv
 from datetime import datetime, timedelta
 from netCDF4 import Dataset
+
+from matplotlib import pyplot as plt
 
 def load_barents(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
     # Currently only returns arome member
@@ -57,7 +59,11 @@ def load_ml(yyyymmdd, lead_time, grid, PATH_TARGET, weights):
 
 def load_nextsim(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
     # Currently only returns arome member
-    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/nextsim/"
+    if grid == 'amsr2':
+        PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/nextsim/"
+    
+    else:
+        PATH_FORECAST = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/"
 
     yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
     yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time - 1)).strftime('%Y%m%d')
@@ -75,9 +81,9 @@ def load_nextsim(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
 
     return nextsim_sic, target_sic, yyyymmdd_ml
 
-def load_osisaf(yyyymmdd, lead_time):
-    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/osisaf/osisaf_trend_5/"
-    PATH_TARGET = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/targets/"
+def load_osisaf(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
+    # Use weights parameter to get osisaf trend
+    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/osisaf/"
 
     yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
     yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
@@ -87,16 +93,15 @@ def load_osisaf(yyyymmdd, lead_time):
     target_path = glob.glob(f"{PATH_TARGET}{yyyymmdd_valid[:4]}/{yyyymmdd_valid[4:6]}/target_v{yyyymmdd_valid}.nc")[0]
 
     with Dataset(osisaf_path, 'r') as nc:
-        osisaf_sic = nc.variables['sic'][lead_time - 1, :,:]
+        osisaf_sic = nc.variables['sic'][weights, lead_time - 1, :,:]
 
     with Dataset(target_path, 'r') as nc:
         target_sic = nc.variables['sic'][:,:]
 
     return osisaf_sic, target_sic, yyyymmdd
 
-def load_persistence(yyyymmdd, lead_time):
-    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/targets/"
-    PATH_TARGET = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/targets/"
+def load_persistence(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
+    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/persistence/"
 
     yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
     yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
@@ -138,8 +143,6 @@ def main():
         exit('No valid target grid supplied')
 
     load_func = None
-    
-    osisaf_trend = None
 
     if product == 'barents':
         load_func = load_barents
@@ -162,6 +165,9 @@ def main():
         # PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/osisaf/osisaf_trend_{osisaf_trend}/"
         load_func = load_osisaf
 
+        # OsiSaf 5-day trend
+        weights = 1
+
     elif product == 'persistence':
         load_func = load_persistence
 
@@ -171,7 +177,7 @@ def main():
 
 
     PATH_OUTPUTS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/"
-
+    
     PATH_COMMONS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_commons.nc"
 
     # if product == 'ml' or product == 'osisaf':
@@ -216,21 +222,21 @@ def main():
 
             IIEE = []
             for i in range(1, 7):
-                iiee = IIEE_fast(sic_forecast, sic_target, lsmask, side_length = side_length, threshold = i)
+                iiee = IIEE_alt(sic_forecast, sic_target, lsmask, side_length = side_length, threshold = i)
                 IIEE.append(iiee[0].sum() + iiee[1].sum())
 
-            # area_dist_target = contourAreaDistribution(sic_target, lsmask, side_length = 3)
-            # area_dist_forecast = contourAreaDistribution(sic_forecast, lsmask, side_length = 3)
+            area_dist_target = contourAreaDistribution(sic_target, lsmask, side_length = side_length)
+            area_dist_forecast = contourAreaDistribution(sic_forecast, lsmask, side_length = side_length)
 
             # a_plus_minimum_distance = minimumDistanceToIceEdge(a_plus, ice_edge_target, lat, lon)
             # a_minus_minimum_distance = minimumDistanceToIceEdge(a_minus, ice_edge_target, lat, lon)
 
             # output_list.append([pd.to_datetime(yyyymmdd_ml, format="%Y%m%d"), target_length, forecast_length, np.mean([target_length, forecast_length]), a_plus.sum() + a_minus.sum(), a_plus.sum(), a_minus.sum(), a_plus_minimum_distance.mean(), a_minus_minimum_distance.mean()] + area_dist_target.tolist() + area_dist_forecast.tolist())
-            output_list.append([pd.to_datetime(yyyymmdd_ml, format="%Y%m%d"), *IIEE])
+            output_list.append([pd.to_datetime(yyyymmdd_ml, format="%Y%m%d"), *IIEE, *area_dist_forecast.tolist(), *area_dist_target.tolist()])
 
 
     # output_df = pd.DataFrame(output_list, columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus', 'mean_minimum_distance_to_ice_edge_a_plus', 'mean_minimum_distance_to_ice_edge_a_minus', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6'])
-    output_df = pd.DataFrame(output_list, columns = ['date', 'IIEE_1', 'IIEE_2', 'IIEE_3', 'IIEE_4', 'IIEE_5', 'IIEE_6'])
+    output_df = pd.DataFrame(output_list, columns = ['date', 'IIEE_1', 'IIEE_2', 'IIEE_3', 'IIEE_4', 'IIEE_5', 'IIEE_6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6'])
 
     output_df = output_df.set_index('date')
     output_df.to_csv(f"{PATH_OUTPUTS}{product}.csv")

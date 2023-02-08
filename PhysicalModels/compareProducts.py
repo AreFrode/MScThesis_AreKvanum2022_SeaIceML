@@ -21,15 +21,17 @@ def main():
 
     lead_time = sys.argv[1]
     grid = sys.argv[2]
+    weights = sys.argv[3]
+    contour = sys.argv[4]
 
     # Define paths
     PATH_NEXTSIM = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/nextsim.csv"
-    PATH_OSISAF = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/lead_time_2/osisaf_trend_5/osisaf.csv"
-    PATH_ML = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/weights_05011118.csv"
+    PATH_OSISAF = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/osisaf.csv"
+    PATH_ML = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/{weights}.csv"
     PATH_BARENTS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/barents.csv"
-    PATH_PERSISTENCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/lead_time_2/persistence.csv"
+    PATH_PERSISTENCE = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/persistence.csv"
     PATH_CLIMATOLOGICAL_ICEEDGE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics/Data/climatological_ice_edge.csv"
-    PATH_FIGURES = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/figures/"
+    PATH_FIGURES = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/figures/lead_time_{lead_time}/contour_{contour}/"
 
     if not os.path.exists(PATH_FIGURES):
         os.makedirs(PATH_FIGURES)
@@ -52,7 +54,8 @@ def main():
 
     # files = (PATH_NEXTSIM, PATH_OSISAF, PATH_ML, PATH_BARENTS, PATH_PERSISTENCE)
     # files = (PATH_NEXTSIM, PATH_PERSISTENCE, PATH_ML, PATH_BARENTS)
-    files = [PATH_NEXTSIM, PATH_ML, PATH_BARENTS]
+    # files = [PATH_NEXTSIM, PATH_ML, PATH_BARENTS]
+    files = [PATH_NEXTSIM, PATH_PERSISTENCE, PATH_ML, PATH_BARENTS, PATH_OSISAF]
 
     # set common dates
 
@@ -68,8 +71,18 @@ def main():
 
 
     # Create figure classes
+    if grid == 'nextsim':
+        figname = f"{PATH_FIGURES}NS_P_ML_B_OSI_against_persistence.png"
 
-    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}BARENTS_ML_NEXTSIM_NEXTSIM_TEST.png", "Normalized IIEE comparison (IceEdge >= 10%)", "IIEE [km]")
+    elif grid == 'amsr2':
+        figname = f"{PATH_FIGURES}NS_P_ML_B_OSI_against_amsr2.png"
+
+    else:
+        exit('No valid grid supplied')
+
+    percentages = ['>=0', '>=10', '>=40', '>=70', '>=90', '=100']
+
+    IIEE_figure = IceEdgeStatisticsFigure(figname, f"Normalized IIEE comparison (IceEdge {percentages[int(contour)-1]}%)", "IIEE [km]")
 
 
     # Define list where forecasts are appended
@@ -84,7 +97,7 @@ def main():
         df = df[df.index.isin(dates)]
 
         df['climatological_length'] = climatological_ice_edge['ice_edge_length']
-        df['Normalized_IIEE'] = df['IIEE_2'] / df['climatological_length']
+        df['Normalized_IIEE'] = df[f'IIEE_{int(contour)}'] / df['climatological_length']
 
         df['forecast_name'] = local_filename
 

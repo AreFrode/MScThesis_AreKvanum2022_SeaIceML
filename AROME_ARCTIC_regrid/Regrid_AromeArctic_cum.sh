@@ -3,7 +3,7 @@
 #$ -q research-r8.q
 #$ -l h_rss=8G
 #$ -l mem_free=8G
-#$ -t 1-48
+#$ -t 1-84
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/data_processing_files/OUT/
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."

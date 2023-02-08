@@ -3,7 +3,7 @@
 #$ -q research-r8.q
 #$ -l h_rss=40G
 #$ -l mem_free=40G
-#$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/logs/predictions
+#$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/logs/predictions
 
 #Old centos7 definitions
 
@@ -13,9 +13,11 @@
 
 #New Singularity definitions on rhel8
 
+weights="weights_06021246"
+
 module use /modules/MET/rhel8/user-modules
 
 module load go/1.19.1
 module load singularity/3.10.2
 
-singularity exec -B /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML:/mnt $HOME/TFcontainer/tensorflow_latest-gpu.sif python /mnt/SimpleUNET/TwoDayForecast/predict_validation.py weights_05012028
+singularity exec -B /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML:/mnt $HOME/TFcontainer/tensorflow_latest-gpu.sif python /mnt/SimpleUNET/RunModel/predict_validation.py $weights
