@@ -4,6 +4,7 @@
 
 \usepackage[table]{xcolor}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{unicode-math}
 
 \usepackage{polyglossia}
@@ -84,9 +85,15 @@ pdftoolbar=true,
 
 \usepackage{authblk}
 
+\usepackage[mode=buildnew]{standalone}
+
 % \linespread{1.25}   % Linjeavstand 1.5
 
-\providecommand{\bib}{thesis/bib}
+% Local compile
+\providecommand{\bib}{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/bib}
+
+% Overleaf compile
+% \providecommand{\bib}{thesis/bib}
 \usepackage{natbib}
 \setlength{\bibsep}{0pt plus 0.3ex}
 \bibliographystyle{\bib/copernicus}
