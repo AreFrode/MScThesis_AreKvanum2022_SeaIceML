@@ -2,10 +2,55 @@
 \graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/}}
 \begin{document}
 
-\todo{Nevne størrelsen på grid, hva som blir sett på og hvorfor dette ble valgt som study area (operational coverage, U-Net downsample concerns)}
-
-\section{Developing a U-Net}
+\section{Model development}
 \label{sec:developing a unet}
+This section will cover the implementation of the U-Net architecture, as well as related processes such as data preparation and a custom dataloader. Furthermore, this section will present intermediate results obtained during development to highlight technical decisions made as well as their consequence for model performance. Decisions made will be highlighted from both a MachineLearning paradigm point of view, although when relevant they will also be explored in a context of the underlying physics.
+
+
+\subsection{Data preparations}
+The deep learning system can be disassembled into two parts working in tangent. The deep learning architecture which propagates fields containing information through its weights, and the dataloader which structures the dataset into trainable samples. This subsection will describe the process from raw data to ready sample.
+
+The data pipeline is made such that it constitutes models of three different lead times (one, two and three day lead time). A quick overview of the pipeline is as such. The raw data used are Sea Ice Charts, OSI-SAF and AA. For the Sea Ice Charts, ice charts from the bulletin date and valid date are selected. From AA, relevant meteorological fields are selected and daily means are computed (more details in following sections). Finally, from OSI-SAF a sea ice trend is computed. For a given bulletin date, the data fetched above is stored in a .hdf5 file, such that each sample (bulletin date) is represented by its own .hdf5 file. Furthermore, a dataloader object is initialized with a list of .hdf5 files, with the list containing filenames of the samples constituting a data subset such as train, validation or test data. This processes is visualized in Figure (\ref{fig:pipeline_sketch}).
+
+\begin{figure}
+    \centering
+    \includestandalone[width=.865\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/pipeline}
+    \caption{\label{fig:data_pipeline} Workflow figure providing a overview of the data pipeline. Data is sampled from four sources (Recent Sea Ice Chart, OSI SAF, AROME Arctic and a Land Sea Mask), preprocessed and merged into a single sample. The sample is fed into the network  together with an associated ground truth target sea ice chart. The predicted sea ice chart is compared against the ground truth sea ice chart, and their binary cross entropy error is propagated backwards throughout the network, which constitutes a step in the training loop.}
+\end{figure}
+% \begin{figure}
+    % \centering
+    % \includegraphics[width=\textwidth]{example-image-a}
+    % \iffalse
+    % \scalebox{0.825}{
+    
+    % }
+    % \fi
+    % \caption{\label{fig:pipeline_sketch}*PLACEHOLDER* uncomment to render, Unfinished figure showing the data pipeline, where four sources are merged into one sample,fed into the U-Net, trained against Target Ice Charts and output a predicted Ice Chart}
+% \end{figure}
+
+
+\subsection{Data sources}
+Data sources used are Sea Ice charts from Nick initiated at 15:00 as well as Arome Arctic initiated at 18:00 \cite{Dinessen2020,Mueller2017}. For a given date, the current Ice Chart is used as a predictor for the model, while the Ice Chart drawn two days later is supplied as the model target.
+
+\subsubsection{Sea Ice Charts}
+The Sea Ice Charts used are a derived dataset of the Sea Ice Charts presented in a previous section \todo{label sections}. The present Ice Chart dataset has been postprocessed by Nick Hughes of the National Ice Service \todo{Say thanks in acknowledgements}, such that they are presented on a 1km Arome Arctic grid. Furthermore, the Ice Charts does not feature a land-mask, which has been replaced with interpolated values resulting in a spatially consistent dataset where all values present are according to the WMO Sea Ice Concentration intervals \cite{JETSI2014}. 
+
+\subsection{AROME-Arctic}
+The Arome Arctic data is structured such that the period between forecast initialization and machine learning forecast lead time is stored as a mean product in the temporal dimension at intervals [0 - 18, 42, 66]. This ensures that temporal AA information is encoded into a single field up until 12:00 UTC of the publishing date of the target ice chart. The 4d variables used from AA are T2M, uwind and vwind. Finally, the land sea mask present in AA is fetched and used as a predictor, though this land sea mask is also used for validation purposes given the case where no other SIC-product is considered.
+
+\subsection{OSI-SAF}
+\todo{Mention how when using Osi Saf trend as predictor, the trend up to but not including the forecast start date is used. This is to make the model ready for operational use, as the Osi Saf daily product is not ready on lustre when the Ice Charts are poublished at UTC 15:00}
+A linear SIC trend of variable temporal length is computed from 12.5km OSI-SAF data \todo{Cite OSISAF}. In the case of OSI-SAF, the product is scheduled to be published daily at 15:00 UTC \todo{double check}. However, given operational concerns of the developed forecasting system, where the availability of data is essential for the model to run, the previous day OSI-SAF trend is utilized. \todo{Det er ikke sikkert det er nødvendig, hvis AA 18:00 publiseres ~19 - 20 burde OSI-SAF være publisert}.
+
+OSI-SAF SSMIS is a continously developed operational product, where changes are not required to act retroactively on the data. As such, the Sea Ice Concentration used for few samples with t2m runs and many data samples no t2m differ due to the introduction of a filtered ice concentration variable 10/05-2017 \cite{Tonboe2017}. Thus, the filtered ice concentration will be used when the training data spans 2019-2020, and the unfiltered ice concentration will be used when the training data spans 2011 - 2018 to assert that there is no sudden shift in the ice concentration trend which can negatively impact the training period.
+
+
+\subsection{Deviations from the U-Net}
+% Although the U-Net formulation in Figure (\ref{fig:unet-overview}) applies a Stride $S = 1$, the current implementation also applies a zero padding $P = 1$ to the input which ensures that the shape of the output is equal to the input according to Equation (\ref{eq:outputdim}).
+
+% Each activation is also proceeded by a normalization layer \citep{Ioffe2015,Wu2018} which has been customary in the field after their introduction in \citet{Ioffe2015} as they make the network converge towards a solution faster. 
+
+
 % The intention of this section is currently to log the notes made during model development. What is written may be discussion like, and can thus be used as a basis for the actual thesis. However, this section is to be included in the final thesis.tex after extensive rewriting. Remember that good thesis work is well documented thesis work!
 
 The model developed for the two day prediction is based on the SimpleUNET architecture, though with a different sized Input layer to accommodate for the changed dataloader. The dataloader has subsequently been changed to appropriately select the correct fields from the .hdf5 samples and appoint them as input or target variables. As a result of using three variables of two days mean AA forecast, as well as sst, land-sea-mask and current time-step ice chart, the total number of predictors fed into the model is 9. Moreover, the resolution of all fields are kept at 1km, though their spatial extent is limited to (1920 x 1840). This resolution and spatial size conserves (almost) the entirety of the west-east axis of the AA domain. However, the southern border is raised by 450km compared to the AA domain. There are two main motivations behind readjusting the spatial extent of the predictors and targets.
@@ -94,6 +139,19 @@ When comparing different models to asses their performance, this project will fr
 On the other hand, it can be seen by inspecting Figure (\ref{fig:val_loss_iiee_corr}) that the Normalized IIEE tend to evolve conjunctionally with the validation loss, in the current case defined as the mean cross entropy of all validation samples. Furthermore, the validation loss and Normalized IIEE in Figure (\ref{fig:val_loss_iiee_corr}) have a correlation of $0.82$ with regards to epoch. Note that this has been calculated only using the numbers present in Figure (\ref{fig:val_loss_iiee_corr}). As such, there is reason to believe that selecting a model based on its validation loss, which is quick to compute, would result in a generalized model which may also excel at lowering its Normalized IIEE.
 
 When selecting the best model, this project will apply the ModelCheckpoint callback with regards to validation loss as outlined above. ModelCheckpoint is preferred compared to EarlyStopping, as interrupting the training loop early may result in an "undercooked" model. E.g. the weights in earlier model layers are adjusting slower than later weights, giving the impression that the model training has reached a plateau which causes the model to stop. Whereas if the model where to continue training, the later adjustment of earlier weights would cause a later spur in increased model performance. ModelCheckpoint was chosen since behavior such as what was just exemplified is possible with the callback.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{grid_search}
+    \caption{\label{fig:gs}Grid search performed over variations of the learning rate as well as an increasing U-Net depth (represented by the number of feature maps at the at the final convolutional block). Each cell contain the minimum obtained validation loss of its respective combination which is associated with the best validation performance during training.}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{loss_best_model_gridsearch}
+    \caption{\label{fig:loss_curve_from_gs}Training and validation loss from the model attaining lowest validation loss in Figure (\ref{fig:gs}). The current minimum validation loss is also displayed.}
+\end{figure}
 
 \biblio
 \end{document}
