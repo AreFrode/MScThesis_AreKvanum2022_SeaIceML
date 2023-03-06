@@ -8,13 +8,14 @@ filename_regex = re.compile(FILENAME_PATTERN)
 import pandas as pd
 
 from matplotlib import pyplot as plt
+from matplotlib import ticker as mticker
 import datetime
 
 import seaborn as sns
 
 class IceEdgeStatisticsFigure:
-    def __init__(self, fname, title, ylabel, figsize):
-        self.figure = plt.figure(figsize=figsize)
+    def __init__(self, fname, title, ylabel):
+        self.figure = plt.figure()
         self.ax = self.figure.add_subplot(111)
         self.fname = fname
         self.ax.set_title(title)
@@ -44,9 +45,6 @@ class IceEdgeStatisticsFigure:
 
     def addNewErrorPlot(self, df, label):
         self.ax.errorbar(x= df.index, y = df['mean'], yerr = (df['min'], df['max']), label = label)
-
-    def moveLegend(self, pos):
-        sns.move_legend(self.ax, pos, bbox_to_anchor=(1,1))
 
     def savefig(self, xlabel, ylabel):
         # self.ax.set_xlim([datetime.date(2020, 12, 30), datetime.date(2022, 1, 2)])
@@ -79,7 +77,7 @@ def main():
 
     if not os.path.exists(PATH_FIGURES):
         os.makedirs(PATH_FIGURES)
-    
+
     # Read available statistics files
 
     fnames = ('weights_*', 'persistence')
@@ -103,42 +101,20 @@ def main():
     # set common dates
     # dates = pd.concat(files, axis = 1, join = 'inner').index.array
 
-    # Create figure classes
 
-    # ice_edge_length_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}ice_edge_length_seasons_box.png", "Ice Edge Length Comparison", "Ice Edge Length [km]")
-    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}IIEE_spread_model.png", "Normalized IIEE comparison", "IIEE [km]")
-
-
-    # Fill figures
-
-    target = pd.read_csv(files[0], index_col = 0, usecols=['date', 'forecast_length', 'target_length', 'NIIEE_2'])
+    target = pd.read_csv(files[0], index_col = 0, usecols=['date', 'forecast_length', 'target_length', 'rmse'])
     target.index = pd.to_datetime(target.index, format = "%Y-%m-%d")
 
-
-    # target['target_length'] = target['target_length'] / 1000.
-    # target['forecast_length'] = target['forecast_length'] / 1000.
-
-    target_monthly_mean = target.groupby(pd.PeriodIndex(target.index, freq="M")).mean()
 
     for i, idx in zip(range(len(months) - 1), meteorological_seasons):
         target.loc[(target.index >= months[i]) & (target.index < months[i+1]), 'met_index'] = seasonal_names[idx]
 
-    target_seasonal = target.groupby('met_index')
     
     # ice_edge_length_figure.addBoxPlot(target, 'met_index', 'target_length', 'target')
     # ice_edge_length_figure.addBoxPlot(target, 'met_index', 'forecast_length', 'persistance')
     
     target['forecast_name'] = 'persistence'
 
-    # monthly_mean_lengths = []
-    # monthly_mean_IIEE = []
-
-    fetched_forecasts = [target[['NIIEE_2', 'forecast_name', 'met_index']]] 
-
-    seasonal_mean_lengths = []
-    seasonal_mean_IIEE = []
-
-    # b = [4, 5, -4, -2] Old forecast index
 
     for forecast in files[1:]:
         local_filename = filename_regex.findall(forecast)[0]
@@ -150,25 +126,13 @@ def main():
         df = pd.read_csv(forecast, index_col = 0)
         df.index = pd.to_datetime(df.index, format = "%Y-%m-%d")
 
-        # df['forecast_length'] = df['forecast_length'] / 1000.
 
         df['forecast_name'] = local_filename
-
-
-        monthly_mean = df.groupby(pd.PeriodIndex(df.index, freq="M")).mean()
 
         for i, idx in zip(range(len(months) - 1), meteorological_seasons):
             df.loc[(df.index >= months[i]) & (df.index < months[i+1]), 'met_index'] = seasonal_names[idx]
 
-        
-        
-        met_seasons = df.groupby('met_index').mean()
-
-        # plot_area(monthly_mean, local_figure_path)
-        # seasonal_mean_lengths.append((met_seasons['forecast_length']).to_frame().rename(columns={'forecast_length': local_filename}))
-        seasonal_mean_IIEE.append((met_seasons['NIIEE_2']).to_frame())
-
-        # df['days_beat_persistance'] = df['Normalized_IIEE'] < target['Normalized_IIEE']
+        df['rmse_improvement'] = (100 * (target['rmse'] - df['rmse']) / target['rmse'])
 
         
         # days_beat_persistance_months = days_beat_persistance.groupby(pd.PeriodIndex(days_beat_persistance.index, freq="M")).sum()
@@ -182,43 +146,32 @@ def main():
         # ice_edge_length_figure.addNewPlot(met_seasons['forecast_length'], local_filename)
         # IIEE_figure.addNewPlot(met_seasons['Normalized_IIEE'], local_filename)
         
-        # print(f"model: {local_filename}, beat IIEE from persistance {days_beat_persistance.sum()}/{days_beat_persistance.size} days")
+
+        # df_group = df.groupby(['met_index'])['days_beat_persistence'].sum()
+        df_group = df.groupby(pd.Grouper(freq='M'))['rmse_improvement'].sum()
+        # df_size = df.groupby(['met_index']).size()
+        df_size = df.groupby(pd.Grouper(freq='M')).size()
+
+        df_rmse = df_group / df_size
+        
+        print(df_rmse)
+
+        plt.figure()
+
+        ax = df_rmse.plot(marker = 'o', linestyle = '--')
+        ax.set_ylim(bottom=0)
+        
+        ax.set_ylabel('Percentage rmse improvement over Persistence')
+
+        plt.savefig(f"{PATH_FIGURES}{local_filename}_rmse_beat_persistence.png")
 
         # for i, beat, total in zip(range(1,13), days_beat_persistance_months, samples_each_month):
             # pass
             # print(f"month {i}: {beat}/{total}")
 
-        fetched_forecasts.append(df[['NIIEE_2', 'forecast_name', 'met_index']])
+
 
     
-    # seasonal_mean_lengths_df = pd.concat(seasonal_mean_lengths, axis = 1)
-
-    # seasonal_mean_lengths_df['mean'] = seasonal_mean_lengths_df.mean(axis = 1)
-    # monthly_mean_lengths_df['std'] = monthly_mean_lengths_df.std(axis=1)
-
-    # seasonal_mean_lengths_df['min'] = seasonal_mean_lengths_df.min(axis = 1)
-    # seasonal_mean_lengths_df['max'] = seasonal_mean_lengths_df.max(axis = 1)
-
-    # ice_edge_length_figure.addNewErrorPlot(seasonal_mean_lengths_df, 'forecasts')
-
-    # ice_edge_length_figure.savefig()
-
-    fetched_dataframe = pd.concat(fetched_forecasts)
-
-    # IIEE_figure.addPersistantce(target_seasonal_mean['Normalized_IIEE'])
-
-    # seasonal_mean_IIEE_df = pd.concat(seasonal_mean_IIEE, axis = 1)
-
-    # seasonal_mean_IIEE_df['mean'] = seasonal_mean_IIEE_df.mean(axis = 1)
-    # monthly_mean_IIEE_df['std'] = monthly_mean_IIEE_df.std(axis=1)
-
-    # seasonal_mean_IIEE_df['min'] = seasonal_mean_IIEE_df.min(axis = 1)
-    # seasonal_mean_IIEE_df['max'] = seasonal_mean_IIEE_df.max(axis = 1)
-    # IIEE_figure.addNewErrorPlot(monthly_mean_IIEE_df, 'forecasts')
-    IIEE_figure.addBoxPlot(df = fetched_dataframe, x_label = 'met_index', y_label = 'NIIEE_2', hue_label = 'forecast_name')
-    IIEE_figure.savefig('Months', 'Normalized_IIEE [km]')
-    
-
 
 if __name__ == "__main__":
     main()

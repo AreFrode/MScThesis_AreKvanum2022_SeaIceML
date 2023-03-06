@@ -6,16 +6,16 @@
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/logs/
 
 # 'barents' / 'ml' / 'nextsim' / 'osisaf' / 'persistence'
-forecast="ml"
+forecast="osisaf"
 
 # 1 / 2 / 3
-lead_time="1"
+lead_time="2"
 
 # 'nextsim' / 'amsr2'
 target_grid="nextsim"
 
 # If not forecast='ml', nothing happens
-weights="weights_30010909"
+weights="weights_21021550"
 
 
 module use /modules/MET/centos7/GeneralModules

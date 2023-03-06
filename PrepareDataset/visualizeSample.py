@@ -2,9 +2,12 @@ import h5py
 import glob
 import os
 import sys
-sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures")
 
 import LambertLabels
+import cmocean
+import WMOcolors
 
 import numpy as np
 import matplotlib.colors as colors
@@ -62,10 +65,13 @@ def main():
     xticks = [-20,-10, 0, 10,20,30,40,50,60,70,80,90,100,110,120]
     yticks = [60,65,70, 75, 80, 85,90]
 
-    cividis = mpl.colormaps['cividis']
-    newcolors = cividis(np.linspace(0, 1, 7))
-    newcolors = add_water(newcolors)
-    ice_cmap = colors.ListedColormap(newcolors)
+    # cividis = mpl.colormaps['cividis']
+    # ice_colors = cmocean.cm.ice
+    # newcolors = ice_colors(np.linspace(0, 1, 7))
+    # print(newcolors)
+
+    # newcolors = add_water(newcolors)
+    ice_cmap = WMOcolors.cm.sea_ice_chart()
 
     ice_levels = np.linspace(0, 7, 8, dtype = 'int')
     ice_norm = colors.BoundaryNorm(ice_levels, ice_cmap.N)
@@ -76,11 +82,11 @@ def main():
     lsmask_cmap = colors.ListedColormap(newcolors)
 
 
-    RYG = mpl.colormaps['RdYlGn']
+    OSI = mpl.colormaps['RdYlBu']
     coolwarm = mpl.colormaps['coolwarm']
     winter = mpl.colormaps['winter']
 
-    cmaps = [ice_cmap, ice_cmap, lsmask_cmap, RYG, coolwarm, winter, winter]
+    cmaps = [ice_cmap, ice_cmap, lsmask_cmap, OSI, coolwarm, winter, winter]
     norms = [ice_norm, ice_norm, None, None, None, None, None]
     
 
@@ -90,22 +96,22 @@ def main():
         # fig.subplots_adjust(bottom = 0.2)
         ax = plt.axes(projection=map_proj)
     
-        ax.pcolormesh(lon, lat, data, transform=data_proj, norm = norm, cmap = cmap, zorder=1)
+        ax.pcolormesh(lon, lat, data, transform=data_proj, norm = norm, cmap = cmap, zorder=1, rasterized = True)
 
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
 
-        fig.canvas.draw()
-        ax.gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
-        ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
-        ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
-        LambertLabels.lambert_xticks(ax, xticks)
-        LambertLabels.lambert_yticks(ax, yticks)
+        # fig.canvas.draw()
+        # ax.gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
+        # ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
+        # ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
+        # LambertLabels.lambert_xticks(ax, xticks)
+        # LambertLabels.lambert_yticks(ax, yticks)
         ax.add_feature(cfeature.COASTLINE, lw=2)
 
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
-        plt.savefig(f"{path_figures}{name}.png", bbox_inches = 'tight', pad_inches = 0)
+        plt.savefig(f"{path_figures}{name}.pdf", bbox_inches = 'tight', pad_inches = 0)
 
         ax.cla()
         plt.close(fig)

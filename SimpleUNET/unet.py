@@ -3,19 +3,30 @@ from tensorflow import keras
 
 from typing import List
 
-# The initial version is attempting to recreate the architecture of (RONNEBERGER,2015), obviously with the spatial dimensionality of the icechart data.
+def weight_standardization(kernel):
+    # See paper on microbatch training https://arxiv.org/abs/1903.10520
+    kernel_mean = tf.math.reduce_mean(kernel, axis = [0, 1, 2], keepdims = True, name = 'kernel_mean')
+    kernel = kernel - kernel_mean
+    kernel_std = keras.backend.std(kernel, axis = [0, 1, 2], keepdims = True)
+    kernel = kernel / (kernel_std + 1e-5)
+
 
 class convolutional_block(keras.layers.Layer):
     def __init__(self, out_channel, kernel_initializer, leaky_relu, name='unet_conv_block'):
         super(convolutional_block, self).__init__(name=name)
 
-        self.conv1 = keras.layers.Conv2D(filters = out_channel, kernel_size = 3, padding='same', kernel_initializer=kernel_initializer)
+        self.conv1 = keras.layers.Conv2D(filters = out_channel, kernel_size = 3, padding='same', kernel_initializer=kernel_initializer,)
         # self.bn1 = keras.layers.BatchNormalization()
-        self.gn1 = keras.layers.GroupNormalization()
-
+        
         self.conv2 = keras.layers.Conv2D(filters = out_channel, kernel_size = 3, padding='same', kernel_initializer = kernel_initializer)
         # self.bn2 = keras.layers.BatchNormalization()
-        self.gn2 = keras.layers.GroupNormalization()
+        if out_channel < 32:
+            self.gn1 = keras.layers.GroupNormalization(groups = int(0.5*out_channel))
+            self.gn2 = keras.layers.GroupNormalization(groups = int(0.5*out_channel))
+        
+        else:
+            self.gn1 = keras.layers.GroupNormalization()
+            self.gn2 = keras.layers.GroupNormalization()
 
         if leaky_relu:
             self.activation_function = keras.layers.LeakyReLU(alpha = 0.01)
@@ -144,9 +155,6 @@ class UNET(keras.Model):
         return x
 
 class MultiOutputUNET(UNET):
-    # Currently contain 7 separate output layers, each with own weights and biases,
-    # could be possible to output each class with same output layer, not sure if smart
-
     def __init__(self, channels, num_classes = 1, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name = 'unet'):
         UNET.__init__(self, channels, num_classes, pooling_factor, num_outputs, average_pool, kernel_initializer, leaky_relu, name)
         self.output_layers = [keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = f'out{i}') for i in range(self.num_outputs)]

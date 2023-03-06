@@ -56,12 +56,16 @@ def main():
     yticks = [60,65,70, 75, 80, 85,90]
 
     cividis = mpl.colormaps['cividis']
-    newcolors = cividis(np.linspace(0, 1, config['num_outputs']))
+
+    preferred_cmap = cividis(np.linspace(0, 1, config['num_outputs']))
+
+    newcolors = cividis(np.linspace(0, 1, 6))
     newcolors[0, :-1] = np.array([34., 193., 224.]) / 255.
     newcolors[0, -1] = 0.3
+    newcolors[1:] = preferred_cmap[2:]
     ice_cmap = colors.ListedColormap(newcolors)
 
-    ice_levels = np.linspace(0, config['num_outputs'], config['num_outputs'] + 1, dtype = 'int')
+    ice_levels = np.linspace(0, config['num_outputs'] - 1, config['num_outputs'], dtype = 'int')
     ice_norm = colors.BoundaryNorm(ice_levels, ice_cmap.N)
 
     if config['reduced_classes']:
@@ -69,6 +73,8 @@ def main():
 
     else:
         ice_ticks = ['0', '0 - 10', '10 - 40', '40 - 70', '70 - 90', '90 - 100', '100']
+
+    ice_ticks = ['0', '10 - 40', '40 - 70', '70 - 90', '90 - 100', '100']
 
     for date in data_2022:
         # New definition after name change
@@ -85,6 +91,9 @@ def main():
         f_model = h5py.File(f"{path_pred}{weights}/{year}/{month}/SIC_UNET_v{yyyymmdd_v}_b{yyyymmdd_b}T15Z.hdf5", 'r')
 
         y_pred = f_model['y_pred'][0]
+
+        y_pred = np.where(y_pred == 1, 0, y_pred)
+        y_pred = np.where(y_pred > 0, y_pred - 1, y_pred)
 
         # Plotting
 
@@ -126,7 +135,7 @@ def main():
         LambertLabels.lambert_yticks(ax, yticks)
 
 
-        plt.savefig(f"{save_location}v{yyyymmdd_v}_b{yyyymmdd_b}.png")
+        plt.savefig(f"{save_location}alt_v{yyyymmdd_v}_b{yyyymmdd_b}.png")
 
         f_model.close()
         ax.cla()

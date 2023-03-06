@@ -18,17 +18,12 @@ def main():
     path = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/reduced_classes/lead_time_1/"
     path_figures = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/figures/reduced_classes/lead_time_1/"
 
-    # data_2019 = np.array(sorted(glob.glob(f"{path}2019/**/*.hdf5")))
-    # data_2020 = np.array(sorted(glob.glob(f"{path}2020/**/*.hdf5")))
-    # data_2021 = np.array(sorted(glob.glob(f"{path}2021/**/*.hdf5")))
+    data_2019 = np.array(sorted(glob.glob(f"{path}2019/**/*.hdf5")))
+    data_2020 = np.array(sorted(glob.glob(f"{path}2020/**/*.hdf5")))
+    data_2021 = np.array(sorted(glob.glob(f"{path}2021/**/*.hdf5")))
+    data_2022 = 
 
-    start_date = 2019
-    end_date = 2022
-
-    data = [sorted(glob.glob(f"{path}{i}/**/*.hdf5")) for i in range(start_date, end_date + 1)]
-
-    print(data)
-    exit()
+    data = [data_2019, data_2020, data_2021, data_2022]
     
     map_proj = ccrs.NorthPolarStereo()
     data_proj = ccrs.PlateCarree()

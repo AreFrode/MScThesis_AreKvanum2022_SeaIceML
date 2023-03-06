@@ -30,7 +30,7 @@ def numpy_where_wrapper(arr):
         
     # [1. 1. 1. 1. 1. 1. 1.] triggers index error (no change), appropriate class is 6
     # [0. 0. 0. 0. 0. 0. 0.] does as well, should not happen and I assume it does not
-    sea_ice_class = sea_ice_changes[0] if changes != 0 else 6
+    sea_ice_class = sea_ice_changes[0] if changes != 0 else (len(arr) - 1)
     changes -= 1 if changes != 0 else 0
 
     return sea_ice_class, changes
@@ -119,6 +119,10 @@ def main():
 
     if config['open_ocean_mask']:
         PATH_DATA = f"/mnt/PrepareDataset/Data/open_ocean/lead_time_{config['lead_time']}/"
+
+    elif config['reduced_classes']:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/reduced_classes/lead_time_{config['lead_time']}/"
+
     else:
         PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/"
 
@@ -132,6 +136,7 @@ def main():
     test_generator = MultiOutputHDF5Generator(data_2022, 
         batch_size=BATCH_SIZE,
         fields=config['fields'],
+        num_target_classes=config['num_outputs'],
         lower_boundary=config['lower_boundary'],
         rightmost_boundary=config['rightmost_boundary'],
         normalization_file=f"{PATH_DATA}{config['test_normalization']}.csv",
@@ -143,8 +148,9 @@ def main():
     model = create_MultiOutputUNET(
         input_shape = (config['height'], config['width'], len(config['fields'])), 
         channels = config['channels'],
-        pooling_factor= config['pooling_factor'],
-        average_pool=config['AveragePool'],
+        pooling_factor = config['pooling_factor'],
+        num_outputs = config['num_outputs'],
+        average_pool = config['AveragePool'],
         leaky_relu = config['LeakyReLU']
     )
 
