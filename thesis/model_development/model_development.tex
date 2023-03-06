@@ -6,28 +6,31 @@
 \label{sec:developing a unet}
 This section will cover the implementation of the U-Net architecture, as well as related processes such as data preparation and a custom dataloader. Furthermore, this section will present intermediate results obtained during development to highlight technical decisions made as well as their consequence for model performance. Decisions made will be highlighted from both a MachineLearning paradigm point of view, although when relevant they will also be explored in a context of the underlying physics.
 
-
 \subsection{Data preparations}
-The deep learning system can be disassembled into two parts working in tangent. The deep learning architecture which propagates fields containing information through its weights, and the dataloader which structures the dataset into trainable samples. This subsection will describe the process from raw data to ready sample.
+The deep learning system can be disassembled into two parts working in tangent. The deep learning architecture which is fed samples which it trains on, and a dataloader which structures the dataset into trainable samples. This subsection will describe the process from raw data to ready sample.
 
-The data pipeline is made such that it constitutes models of three different lead times (one, two and three day lead time). A quick overview of the pipeline is as such. The raw data used are Sea Ice Charts, OSI-SAF and AA. For the Sea Ice Charts, ice charts from the bulletin date and valid date are selected. From AA, relevant meteorological fields are selected and daily means are computed (more details in following sections). Finally, from OSI-SAF a sea ice trend is computed. For a given bulletin date, the data fetched above is stored in a .hdf5 file, such that each sample (bulletin date) is represented by its own .hdf5 file. Furthermore, a dataloader object is initialized with a list of .hdf5 files, with the list containing filenames of the samples constituting a data subset such as train, validation or test data. This processes is visualized in Figure (\ref{fig:pipeline_sketch}).
+An overview of the data pipeline and workflow is described in figure (\ref{fig:data_pipeline}). The raw data is sampled from the sea ice charts, OSI SAF and AROME Arctic. As can be seen from figure (\ref{fig:data_pipeline}), a sample is constructed from a recent sea ice chart, the computed sea ice concentration trend over a set amount of previous days from OSI SAF, recent AROME Arctic 2 meter temperature and wind forecasts as well as a land sea mask, which is the same land sea mask used in AROME Arctic.
+
+\subsubsection{Sea Ice Charts}
+The sea ice charts used for this thesis has been made available by Nick Hughes of the National Ice Service. Hughes work ha involved readying the sea ice charts by gridding the dataset from the GIS production environment \citep{Dinessen2020} where concentration contours are drawn onto a 1km spatial resolution grid with the AROME Arctic projection \citep{Mueller2017}. Nearest neighbor interpolation used when projecting the polygons onto the AROME Arctic grid (Nick Hughes, 2022, pers. commun.). Moreover, the drawn vector polygons run under land, such that all the sea ice charts are fully consistent fields with no missing values. However, there is no systematicity to how the land pixels have been treated, and it has been advised by Hughes to mask out the land by the use of the landmask from AROME Arctic (Nick Hughes, 2022, pers. commun.).
+
+Since the U-Net architecture imposes the restriction that all input data need valid data for entries, two different methods filling the masked land pixels have been attempted. The first method involves setting all land pixels to 0, as in labelling the land pixels to ice free open water. However, it is noted that this approach may further skew the sea ice concentration distribution towards a certain category. The second approach is inspired by the work of \citet{Wang2017}, which replaced land pixels by their mirrored counterpart. However, instead of mirroring, a nearest neighbor interpolation of the surrounding pixels was used to fill the land pixels. Since the convolutional kernel only inspects a local neighborhood of pixel values \citep{Yamashita2018}, it is assumed that the nearest neighbor approach diminishes the amount of abrupt change in category within a filter (e.g. filling land pixels with open water could create strong gradient close to fast ice, which the filter could detect as a notable feature).
+
+Finally, as can be seen from the sea ice chart sample in figure (\ref{fig:data_pipeline}), sea ice in the baltic as well as any polygon drawn under land of the Norwegian and Russian mainland is filtered out. This is deliberate, since the task for the developed model is to predict Arctic sea ice only. However, filtering out Baltic sea ice is also important from a validational point of view, since if left unattended would increase the compute IIEE as well as the length of the computed ice edge. 
+
+
+
+
+
+
+
+For the Sea Ice Charts, ice charts from the bulletin date and valid date are selected. From AA, relevant meteorological fields are selected and daily means are computed (more details in following sections). Finally, from OSI-SAF a sea ice trend is computed. For a given bulletin date, the data fetched above is stored in a .hdf5 file, such that each sample (bulletin date) is represented by its own .hdf5 file. Furthermore, a dataloader object is initialized with a list of .hdf5 files, with the list containing filenames of the samples constituting a data subset such as train, validation or test data. This processes is visualized in Figure (\ref{fig:pipeline_sketch}).
 
 \begin{figure}
     \centering
     \includestandalone[width=.865\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/pipeline}
     \caption{\label{fig:data_pipeline} Workflow figure providing a overview of the data pipeline. Data is sampled from four sources (Recent Sea Ice Chart, OSI SAF, AROME Arctic and a Land Sea Mask), preprocessed and merged into a single sample. The sample is fed into the network  together with an associated ground truth target sea ice chart. The predicted sea ice chart is compared against the ground truth sea ice chart, and their binary cross entropy error is propagated backwards throughout the network, which constitutes a step in the training loop.}
 \end{figure}
-% \begin{figure}
-    % \centering
-    % \includegraphics[width=\textwidth]{example-image-a}
-    % \iffalse
-    % \scalebox{0.825}{
-    
-    % }
-    % \fi
-    % \caption{\label{fig:pipeline_sketch}*PLACEHOLDER* uncomment to render, Unfinished figure showing the data pipeline, where four sources are merged into one sample,fed into the U-Net, trained against Target Ice Charts and output a predicted Ice Chart}
-% \end{figure}
-
 
 \subsection{Data sources}
 Data sources used are Sea Ice charts from Nick initiated at 15:00 as well as Arome Arctic initiated at 18:00 \cite{Dinessen2020,Mueller2017}. For a given date, the current Ice Chart is used as a predictor for the model, while the Ice Chart drawn two days later is supplied as the model target.
