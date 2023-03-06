@@ -34,9 +34,12 @@ def main():
     config = {
         'lead_time': 2,
         'BATCH_SIZE': 4,
-        'fields': ['sic', 't2m', 'osisaf_trend_7/sic_trend', 'lsmask', 'xwind', 'ywind'],
+        # 'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 'xwind', 'ywind'],
+        # 'fields': ['sic', 'osisaf_trend_7/sic_trend', 'lsmask', 'xwind', 'ywind'],
+        # 'fields': ['sic', 'osisaf_trend_3/sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
+        'fields': ['sic', 'osisaf_trend_3/sic_trend', 'lsmask', 't2m', 'ywind'],
         'train_augment': False,
-        'train_normalization': 'normalization_constants_train',
+        'train_normalization': 'normalization_constants_train_start_2019',
         'train_shuffle': True,
         'val_augment': False,
         'val_normalization': 'normalization_constants_validation',
@@ -47,23 +50,24 @@ def main():
         'learning_rate': 0.001,
         'epochs': 25,
         'pooling_factor': 4,
-        'num_outputs': 5,
-        'channels': [64, 128, 256, 512],
+        'num_outputs': 7,
+        'channels': [64, 128, 256],
         'height': 1792,
         'width': 1792,
         'lower_boundary': 578,
         'rightmost_boundary': 1792,
         'model_name': f'weights_{current_time}',
         'GroupNorm': True,
-        'AveragePool': False,
+        'AveragePool': True,
         'LeakyReLU': False,
         'ResidualUNET': False,
-        'lr_decay_steps': 72 * 15,
-        'lr_decay_rate': 0.8,
+        'lr_scheduler': True,
+        'lr_decay_steps': 72 * 10,
+        'lr_decay_rate': 0.5,
         'lr_decay_staircase': True,
         'open_ocean_mask': False,
-        'reduced_classes': True,
-        'train_start': 2016,
+        'reduced_classes': False,
+        'train_start': 2019,
         'train_end': 2020,
         'validation': 2021
     }
@@ -126,13 +130,17 @@ def main():
         shuffle=config['val_shuffle'],
         augment=config['val_augment']
     )
-    
-    lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+
+    if config['lr_scheduler']:
+        lr = keras.optimizers.schedules.ExponentialDecay(
         config['learning_rate'],
         decay_steps = config['lr_decay_steps'],
         decay_rate = config['lr_decay_rate'],
         staircase= config['lr_decay_staircase']
-    )
+        )
+
+    else:
+        lr = config['learning_rate'] 
 
     # model = create_UNET(input_shape = (1920, 1840, 9), channels = [64, 128, 256, 512])
     model = create_MultiOutputUNET(
@@ -144,7 +152,7 @@ def main():
         leaky_relu = config['LeakyReLU']
     )
 
-    optimizer = keras.optimizers.Adam(learning_rate = lr_schedule)
+    optimizer = keras.optimizers.Adam(learning_rate = lr)
 
     loss_function = keras.losses.CategoricalCrossentropy()
     loss_function_multi = keras.losses.BinaryCrossentropy(from_logits = True)
@@ -192,7 +200,6 @@ def main():
     # The following code is only necesarry if computing IIEE each epoch
     with h5py.File(data_2019[0], 'r') as infile:
         lsmask = infile['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
-
     iiee_val_generator = MultiOutputHDF5Generator(
         data_2021, 
         batch_size=1, 
@@ -204,9 +211,7 @@ def main():
         shuffle=config['val_shuffle'],
         augment=config['val_augment']
     )
-
     climatoloigcal_ice_edge = read_ice_edge_from_csv(PATH_CLIMATOLOGICAL_ICEEDGE)
-
     iiee_callback = IIEECallback(
         validation_data = iiee_val_generator,
         lsmask = lsmask,

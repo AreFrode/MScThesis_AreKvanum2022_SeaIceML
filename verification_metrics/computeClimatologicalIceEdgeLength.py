@@ -10,6 +10,7 @@ from scipy.interpolate import griddata
 from matplotlib import pyplot as plt
 from verification_metrics import find_ice_edge_from_fraction, ice_edge_length
 from datetime import datetime
+from tqdm import tqdm
 
 from matplotlib import pyplot as plt
 
@@ -58,23 +59,26 @@ def main():
     baltic_mask[0:52, 50:len(x_target)] = 1
 
     with Dataset(OSISAF_climatology_2011_2020, 'r') as f:
-        for day in f.variables['time']:
+        for day in tqdm(f.variables['time']):
             sic = f.variables['SIC'][int(day) - 1,:,:]
             sic_flat = sic.flatten()    
             sic_arome = griddata((xx_arome_flat, yy_arome_flat), sic_flat, (x_target[None, :], y_target[:, None]), method = 'nearest')
             sic_output = np.where(np.logical_and(baltic_mask == 1, ~np.isnan(sic_arome)) , 0, sic_arome)
 
             lsmask = np.where(np.isnan(sic_output), 1, 0)
-            ice_edge = find_ice_edge_from_fraction(sic_output, lsmask)
-
+            ice_edge = [find_ice_edge_from_fraction(sic_output, lsmask, threshold = i) for i in [5, 15, 25, 55, 80, 95]]
+ 
             sics.append(sic_output)
             edges.append(ice_edge)
-            outputs.append(ice_edge_length(ice_edge, s = 25))
+            outputs.append([ice_edge_length(i, s = 25) for i in ice_edge])
+
             dates.append(datetime.strptime(f"2020{int(day):03d}", '%Y%j').strftime("%m-%d"))
+
 
     with Dataset(f"{PATH_OUTPUT}test.nc", 'w') as out:
         out.createDimension('x', len(x_target))
         out.createDimension('y', len(y_target))
+        out.createDimension('contour', 6)
         out.createDimension('t', 366)
 
         """
@@ -96,9 +100,11 @@ def main():
         # bmask = out.createVariable('BalticMask', 'd', ('y', 'x'))
         # bmask[:] = baltic_mask
 
-        iedge = out.createVariable('IceEdge', 'd', ('t', 'y', 'x'))
+        iedge = out.createVariable('IceEdge', 'd', ('t', 'contour', 'y', 'x'))
         iedge[:] = edges
-    df_out = pd.DataFrame({'ice_edge_length': outputs}, index=dates)
+
+    df_out = pd.DataFrame(columns = ['5%', '15%', '25%', '55%', '80%', '95%'], data=outputs, index=dates)
+    df_out.index.name = 'date'
     if not os.path.exists(PATH_OUTPUT):
         os.makedirs(PATH_OUTPUT)
 

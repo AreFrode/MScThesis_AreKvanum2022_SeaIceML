@@ -151,15 +151,12 @@ class MultiOutputHDF5Generator(HDF5Generator):
         for idx, sample in enumerate(samples):
             with h5py.File(sample, 'r') as hf:
 
-                # Normalization of SIC worse performance than normalization, kept as comment for transparency
-                # X[idx, ..., 0] = ((hf["sic"][:] - self.mins["sic"]) / (self.maxs["sic"] - self.mins["sic"]))
                 for i, field in enumerate(self.fields):
+                    # Sample standardization
                     # X[idx, ..., i] = (hf[f"{field}"][:] - self.means[field]) / self.stds[field]
-                    X[idx, ..., i] = (hf[f"{field}"][:] - self.mins[field]) / (self.maxs[field] - self.mins[field])
 
-                # for j, field in zip(range(len(self.constant_fields), len(self.constant_fields) + 2*len(self.dated_fields), 2), self.dated_fields):
-                #     X[idx, ..., j] = (hf[f"ts0"][f"{field}"][:] - self.means[f"ts0/{field}"]) / self.stds[f"ts0/{field}"]
-                #     X[idx, ..., j+1] = (hf[f"ts1"][f"{field}"][:] - self.means[f"ts1/{field}"]) / self.stds[f"ts1/{field}"]
+                    # Sample normalization
+                    X[idx, ..., i] = (hf[f"{field}"][:] - self.mins[field]) / (self.maxs[field] - self.mins[field])
 
                 onehot = hf[f'{self.target}'][:]
 
@@ -173,8 +170,6 @@ class MultiOutputHDF5Generator(HDF5Generator):
         concat = tf.concat((X, y), axis = -1)
         concat_aug = self.data_augmentation(concat)
         return concat_aug[..., :self.n_fields], concat_aug[..., self.n_fields:]
-
-    
 
     
 if __name__ == "__main__":

@@ -190,32 +190,36 @@ def ice_edge_length(ice_edge, s = 1) -> float:
         s (int, optional): Grid cell side length in km. Defaults to 1.
 
     Returns:
-        float: ice edge length in meter
+        float: ice edge length in km
     """
 
     ice_edge = np.pad(ice_edge, 1, 'constant')
     I, J = np.where(ice_edge == 1)
     length = 0.
     sqrt_two = np.sqrt(2)
-    
-    for i,j in np.nditer((I,J)):
-        top = ice_edge[i-1, j]
-        bottom = ice_edge[i+1, j]
-        left = ice_edge[i, j-1]
-        right = ice_edge[i, j+1]
 
-        neighbors = top + bottom + left + right
+    try:
+        for i,j in np.nditer((I,J)):
+            top = ice_edge[i-1, j]
+            bottom = ice_edge[i+1, j]
+            left = ice_edge[i, j-1]
+            right = ice_edge[i, j+1]
 
-        if neighbors == 0:
-            length += sqrt_two * s
+            neighbors = top + bottom + left + right
 
-        elif neighbors == 1:
-            length += 0.5*(s + sqrt_two)
+            if neighbors == 0:
+                length += sqrt_two * s
 
-        else:
-            length += s
+            elif neighbors == 1:
+                length += 0.5*(s + sqrt_two)
 
-    return 1000. * length
+            else:
+                length += s
+
+    except ValueError:
+        length = np.nan
+
+    return length
 
 def contourAreaDistribution(icefield, mask, num_classes=7, side_length = 1):
     """Computes the area for each sea ice concentration class contour
@@ -231,7 +235,7 @@ def contourAreaDistribution(icefield, mask, num_classes=7, side_length = 1):
     """
 
     contour_matrix = np.zeros((*icefield.shape, num_classes))
-    icefield = np.where(mask == 1, 7, icefield)
+    icefield = np.where(mask == 1, num_classes + 1, icefield)
 
     for i in range(num_classes):
         contour_matrix[...,i] = np.where(icefield == i, 1, 0)
@@ -310,6 +314,17 @@ def coarse_grid_cell_ice_edge_fraction(neighborhood, n):
         for j in range(0, W, n):
             view = neighborhood[i:i+3,j:j+3]
             print(view)
+
+def sea_ice_extent(sic, lsmask, threshold = 2, side_length = 1):
+    sic = np.where(lsmask == 1, 0, sic)
+    extent = np.where(sic >= threshold, 1, 0).sum()*(side_length**2)
+    return extent
+
+def root_mean_square_error(sic_prediction, sic_target, lsmask):
+    sic_prediction_masked = np.ma.masked_array(sic_prediction, lsmask)
+    sic_target_masked = np.ma.masked_array(sic_target, lsmask)
+
+    return np.ma.sqrt(((sic_prediction_masked - sic_target_masked)**2).mean())
 
 
 def test_DistanceToIceEdge():

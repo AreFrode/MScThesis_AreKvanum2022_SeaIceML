@@ -632,3 +632,14 @@ PhysicalModels/Data/test/*.csv
 PrepareDataset/Data/open_ocean/lead_time_*/*.csv
 PrepareDataset/Data/reduced_classes/lead_time_*/*.csv
 ForecastValidation/lead_time_2/figures/*.png
+ForecastValidation/IceChartYears/*/*/*.csv
+ForecastValidation/IceChartYears/logs/*.sh.*
+ForecastValidation/IceChartYears/merged_df.csv
+CreateFigures/lustre_poster_extra/test.pdf
+CreateFigures/lustre_poster_extra/test.png
+CreateFigures/lustre_poster_extra/predictions.pdf
+CreateFigures/lustre_poster_extra/predictions.png
+ForecastValidation/IceChartYears/Persistence_NIIEE.png
+ForecastValidation/IceChartYears/Persistence_SIE.png
+RawIceChart_dataset/figures/*/*/*.png
+RawIceChart_dataset/logs/*.sh.*

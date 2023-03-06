@@ -40,17 +40,22 @@ def main():
     lead_times = [1, 2, 3]
     osisaf_trends = [3, 5, 7, 9, 11, 31]
 
-    # NN land mask path
-    # path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{i}/" for i in lead_times]
+    mode = sys.argv[2]
 
     # open ocean mask path
-    # path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/open_ocean/lead_time_{i}/" for i in lead_times]
+    if mode == 'open_ocean':
+        path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/open_ocean/lead_time_{i}/" for i in lead_times]
 
     # Reduced class output
-    path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/reduced_classes/lead_time_{i}/" for i in lead_times]
+    elif mode == 'reduced_classes':
+        path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/reduced_classes/lead_time_{i}/" for i in lead_times]
+
+    # NN land mask path
+    else:
+        path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{i}/" for i in lead_times]
 
     paths = []
-    for year in range(2019, 2023):
+    for year in range(2016, 2023):
         for month in range(1, 13):
             p = f"{path_arome}{year}/{month:02d}/"
             paths.append(p)
@@ -115,14 +120,16 @@ def main():
         sic = sic_interpolator(*np.indices(sic.shape))
 
         # Apply open ocean mask
-        # sic = np.where(lsmask == 1, 0, sic)
+        if mode == "open_ocean":
+            sic = np.where(lsmask == 1, 0, sic)
 
         # Open OsiSaf trend
         with Dataset(osisaf_path, 'r') as nc_osi:
             conc_trend = nc_osi.variables['ice_conc_trend'][:,:,:-1]
 
         # Apply open ocean lsmask to osi
-        # conc_trend = np.where(osi_lsmask == 1, 0, conc_trend)
+        if mode == "open_ocean":
+            conc_trend = np.where(osi_lsmask == 1, 0, conc_trend)
 
         for i in range(len(lead_times)):
             try:
@@ -146,7 +153,8 @@ def main():
             sic_target = sic_target_interpolator(*np.indices(sic_target.shape))
 
             # Apply open ocean mask to sic target
-            # sic_target = np.where(lsmask == 1, 0, sic_target)
+            if mode == "open_ocean":
+                sic_target = np.where(lsmask == 1, 0, sic_target)
 
             # Open Arome Arctic
             with Dataset(arome_path, 'r') as nc_a:
@@ -158,8 +166,9 @@ def main():
             output_sic_target = onehot_encode_sic(sic_target)
 
             # remove class 1 and 6
-            output_sic = remove_open_water_and_fast_ice(output_sic)
-            output_sic_target = remove_open_water_and_fast_ice(output_sic_target)
+            if mode == "reduced_classes":
+                output_sic = remove_open_water_and_fast_ice(output_sic)
+                output_sic_target = remove_open_water_and_fast_ice(output_sic_target)
 
             # Write to hdf5
             with h5py.File(hdf5_path, 'w') as outfile:
