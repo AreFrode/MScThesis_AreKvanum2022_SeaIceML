@@ -20,7 +20,7 @@ def running_min(df):
 
 
 
-PATH_FILE = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_16022242.log"
+PATH_FILE = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_22021826.log"
 
 PATH_FILE2 = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_15022058.log"
 
@@ -45,4 +45,4 @@ ax.legend()
 print(lr_changes[10:].sum())
 
 plt.show()
-# plt.savefig('loss_best_model_gridsearch.png')
+# plt.savefig('loss_big_data_t2m.png')

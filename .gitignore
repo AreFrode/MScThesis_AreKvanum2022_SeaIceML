@@ -632,6 +632,12 @@ PhysicalModels/Data/test/*.csv
 PrepareDataset/Data/open_ocean/lead_time_*/*.csv
 PrepareDataset/Data/reduced_classes/lead_time_*/*.csv
 ForecastValidation/lead_time_2/figures/*.png
+CreateFigures/poster_figs/*.svg
+CreateFigures/*/*.png
+iicwg/poster/*.pdf
+CreateFigures/poster_figs/Met_cmyk_horisontal_ENG.ai
+CreateFigures/poster_figs/*.pdf
+thesis/methodology/figures/trans_conv.svg
 ForecastValidation/IceChartYears/*/*/*.csv
 ForecastValidation/IceChartYears/logs/*.sh.*
 ForecastValidation/IceChartYears/merged_df.csv
