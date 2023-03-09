@@ -1,12 +1,14 @@
 import sys
 sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
 sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures")
 
 import h5py
 import glob
 import os
 import LambertLabels
 import pyproj
+import WMOcolors
 
 import numpy as np
 import matplotlib.colors as colors
@@ -55,11 +57,13 @@ def main():
     xticks = [-20,-10, 0, 10,20,30,40,50,60,70,80,90,100,110,120]
     yticks = [60,65,70, 75, 80, 85,90]
 
-    cividis = mpl.colormaps['cividis']
-    newcolors = cividis(np.linspace(0, 1, config['num_outputs']))
-    newcolors[0, :-1] = np.array([34., 193., 224.]) / 255.
-    newcolors[0, -1] = 0.3
-    ice_cmap = colors.ListedColormap(newcolors)
+    # cividis = mpl.colormaps['cividis']
+    # newcolors = cividis(np.linspace(0, 1, config['num_outputs']))
+    # newcolors[0, :-1] = np.array([34., 193., 224.]) / 255.
+    # newcolors[0, -1] = 0.3
+    # ice_cmap = colors.ListedColormap(newcolors)
+    ice_cmap = WMOcolors.cm.sea_ice_chart()
+    land_cmap = WMOcolors.cm.land()
 
     ice_levels = np.linspace(0, config['num_outputs'], config['num_outputs'] + 1, dtype = 'int')
     ice_norm = colors.BoundaryNorm(ice_levels, ice_cmap.N)
@@ -96,7 +100,7 @@ def main():
         ax.set_title(f"Forecast for {yyyymmdd_v} initiated {yyyymmdd_b}", fontsize = 30)
     
         ax.pcolormesh(lon, lat, y_pred, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1)
-        ax.pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap='autumn')
+        ax.pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap)
 
         # cbar_ax = fig.add_axes([0.15, 0.1, 0.6, 0.025])
         mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)

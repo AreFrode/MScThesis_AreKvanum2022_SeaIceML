@@ -38,11 +38,13 @@ class convolutional_block(keras.layers.Layer):
     def call(self, input_tensor, training = False):
         x = self.conv1(input_tensor)
         x = self.activation_function(x)
+        # x = keras.activations.linear(x)
         # x = self.bn1(x, training=training)
         x = self.gn1(x)
 
         x = self.conv2(x)
         x = self.activation_function(x)
+        # x = keras.activations.linear(x)
         # x = self.bn2(x, training=training)
         x = self.gn2(x)
 

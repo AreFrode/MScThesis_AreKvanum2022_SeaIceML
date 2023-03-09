@@ -91,7 +91,6 @@ def main():
 
     figname = f"/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/poster_figs/performance.pdf"
 
-    percentages = ['>=0', '>=10', '>=40', '>=70', '>=90', '=100']
     figsize = (19,19)
 
     fig = plt.figure(figsize = figsize, constrained_layout = True)
@@ -160,7 +159,7 @@ def main():
             axs[label].xaxis.set_minor_locator(minor_locator)
             axs[label].xaxis.set_minor_formatter(minor_fmt)
 
-            axs[label].set_title(f"% of days Deep learning beats {name}")
+            axs[label].set_title(f"Fraction of days Deep learning beats {name}", weight='bold')
 
         
         if local_filename == 'barents':
@@ -188,10 +187,13 @@ def main():
         ax = axs['a'])
     
     axs['a'].set_ylim(top = 125)
-    axs['a'].set_title(r'sic >= 10% contour')
+    axs['a'].set_title('Normalized IIEE distribution for sic >= 10% contour', weight='bold')
     axs['a'].set_ylabel('')
     sns.move_legend(axs['a'], "best")
     axs['a'].legend_.set_title('Forecast product')
+    
+    axs['a'].xaxis.set_minor_locator(mticker.FixedLocator([1.5]))
+    axs['a'].xaxis.set_minor_formatter(mticker.FixedFormatter(['2022']))
 
     # Plot figure b)
     sns.boxplot(data = fetched_dataframe, 
@@ -208,7 +210,10 @@ def main():
     axs['b'].set_ylim(top = 125)
     axs['b'].legend_.remove()
     axs['b'].set_ylabel('')
-    axs['b'].set_title('Mean Normalized IIEE of (10-40, 40-70, 70-90, 90-100) contours')
+    axs['b'].set_title('Mean Normalized IIEE of sic >=(10, 40, 70, 90)% contours', weight='bold')
+
+    axs['b'].xaxis.set_minor_locator(mticker.FixedLocator([1.5]))
+    axs['b'].xaxis.set_minor_formatter(mticker.FixedFormatter(['2022']))
 
     # Modify c,d,e,f days beat figures
     trans = mtransforms.ScaledTranslation(-20/72, 7/72, fig.dpi_scale_trans)
@@ -217,10 +222,9 @@ def main():
         axs[i].text(0.0, 1.0, f"{i})", transform = axs[i].transAxes + trans, fontsize='medium', va='bottom')
 
 
-
     fig.supylabel('Ice edge displacement error [km] (Normalized IIEE)', ha='left')
 
-    fig.suptitle('Model intercomparisson and percentage of days where Deep learning has lower Normalized IIEE (sic >= 10%)')
+    fig.suptitle('Model intercomparison and fraction of days where Deep learning has lower Normalized IIEE (sic >= 10%)', weight='bold')
     
     fig.savefig(f"{figname}")
 

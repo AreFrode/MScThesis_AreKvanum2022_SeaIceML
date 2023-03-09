@@ -12,6 +12,7 @@ import numpy as np
 
 from verification_metrics import IIEE_alt, find_ice_edge, ice_edge_length, contourAreaDistribution, minimumDistanceToIceEdge, root_mean_square_error
 from tqdm import tqdm
+from tqdm.contrib import tzip
 from helper_functions import read_config_from_csv
 from loadClimatologicalIceEdge import load_climatological_ice_edge
 
@@ -51,7 +52,7 @@ def main():
 
     output_list = []
 
-    for target, forecast in tqdm(zip(icecharts, forecasts), total = len(icecharts)):
+    for target, forecast in tzip(icecharts, forecasts):
         date = forecast[-17:-9]
 
         with h5py.File(target, 'r') as infile:

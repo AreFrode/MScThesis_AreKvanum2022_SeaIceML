@@ -13,9 +13,9 @@
 
 #New Singularity definitions on rhel8
 
-weights="weights_01031920"
+weights="weights_08031256"
 
-module use /modules/MET/rhel8/user-modules
+module use /modules/MET/rhel8/user-modules/
 
 module load go/1.19.1
 module load singularity/3.10.2

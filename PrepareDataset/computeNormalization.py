@@ -36,7 +36,7 @@ def compute_and_save_normalization(data, fields, outpath, fname, lower_boundary 
 
 
 def main():
-    path_prepareddata = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{sys.argv[1]}/"
+    path_prepareddata = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/open_ocean/lead_time_{sys.argv[1]}/"
 
     data = {}
     for i in range(2016, 2023):
@@ -59,7 +59,7 @@ def main():
                ]
     
     
-    for year in range(2019, 2015, -1):
+    for year in range(2019, 2018, -1):
         data_current = np.concatenate([data[f"{i}"] for i in range(year, 2021)])
         compute_and_save_normalization(data_current, fields, path_prepareddata,  f"normalization_constants_train_start_{year}.csv")
     

@@ -1,6 +1,6 @@
 import sys
-# sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
-sys.path.append("/mnt/SimpleUNET")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
+# sys.path.append("/mnt/SimpleUNET")
 
 import glob
 import os
@@ -16,14 +16,14 @@ from tensorflow import keras
 from unet import create_UNET, create_MultiOutputUNET
 from dataset import HDF5Generator, MultiOutputHDF5Generator
 from focalLoss import categorical_focal_loss
-from customCallbacks import MemoryPrintingCallback, IIEECallback
+# from customCallbacks import MemoryPrintingCallback, IIEECallback
 from helper_functions import read_ice_edge_from_csv
 
 def main():
     current_time = datetime.now().strftime("%d%m%H%M")
     print(f"Time at start of script {current_time}")
 
-    keras.mixed_precision.set_global_policy('mixed_float16')
+    # keras.mixed_precision.set_global_policy('mixed_float16')
 
     SEED_VALUE = 0
     # PATH_OUTPUT = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/"
@@ -32,39 +32,69 @@ def main():
 
     # Comment above and uncomment below if running tensorflow2.11-singularity container
     PATH_OUTPUT = "/mnt/SimpleUNET/TwoDayForecast/outputs/"
-    PATH_DATA = "/mnt/PrepareDataset/Data/two_day_forecast/"
+    # PATH_DATA = "/mnt/PrepareDataset/Data/two_day_forecast/"
     PATH_CLIMATOLOGICAL_ICEEDGE = "/mnt/verification_metrics/Data/climatological_ice_edge.csv"
     log_dir = f"/mnt/SimpleUNET/TwoDayForecast/logs/fit/{datetime.now().strftime('%d%m%H%M')}"
 
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
-        'BATCH_SIZE': 1,
-        'constant_fields': ['sic', 'sic_trend', 'lsmask'],
-        'dated_fields': ['t2m', 'xwind', 'ywind'],
+        'lead_time': 2,
+        'BATCH_SIZE': 4,
+        # 'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 'xwind', 'ywind'],
+        # 'fields': ['sic', 'osisaf_trend_7/sic_trend', 'lsmask', 'xwind', 'ywind'],
+        # 'fields': ['sic', 'osisaf_trend_7/sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
+        'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
         'train_augment': False,
-        'train_normalization': 'normalization_constants_train',
+        'train_normalization': 'normalization_constants_train_start_2019',
         'train_shuffle': True,
         'val_augment': False,
         'val_normalization': 'normalization_constants_validation',
         'val_shuffle': False,
+        'test_augment': False,
+        'test_normalization': 'normalization_constants_test',
+        'test_shuffle': False,
         'learning_rate': 0.001,
-        'epochs': 2,
+        'epochs': 25,
         'pooling_factor': 4,
-        'channels': [64, 128, 256, 512],
+        'num_outputs': 7,
+        'channels': [64, 128, 256],
         'height': 1792,
         'width': 1792,
         'lower_boundary': 578,
         'rightmost_boundary': 1792,
         'model_name': f'weights_{current_time}',
-        'GroupNorm': True
+        'GroupNorm': True,
+        'AveragePool': True,
+        'LeakyReLU': False,
+        'ResidualUNET': False,
+        'lr_scheduler': True,
+        'lr_decay_steps': 71 * 10,
+        'lr_decay_rate': 0.5,
+        'lr_decay_staircase': True,
+        'open_ocean_mask': False,
+        'reduced_classes': False,
+        'train_start': 2019,
+        'train_end': 2020,
+        'validation': 2021
     }
 
+    PATH_DATA = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/"
+
+    data = {}
+    for i in range(config['train_start'], config['validation']+1):
+        data[f"{i}"] = np.array(sorted(glob.glob(f"{PATH_DATA}{i}/**/*.hdf5")))
+
+    train = np.concatenate([data[f"{i}"] for i in range(config['train_start'], config['train_end'] + 1)])
+
+    print(train.shape)
     # gpu = tf.config.list_physical_devices('GPU')[0]
     # tf.config.experimental.set_memory_growth(gpu, True)
     
-    data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))[:5]
-    data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))[:5]
-    data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))[:5]
+    # data_2019 = np.array(sorted(glob.glob(f"{PATH_DATA}2019/**/*.hdf5")))[:5]
+    # data_2020 = np.array(sorted(glob.glob(f"{PATH_DATA}2020/**/*.hdf5")))[:5]
+    # data_2021 = np.array(sorted(glob.glob(f"{PATH_DATA}2021/**/*.hdf5")))[:5]
+
+    exit()
 
     if not os.path.exists(PATH_OUTPUT):
         os.makedirs(PATH_OUTPUT)

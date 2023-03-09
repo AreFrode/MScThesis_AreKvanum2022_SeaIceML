@@ -105,7 +105,7 @@ def main():
     else:
         ice_ticks = ['0', '0 - 10', '10 - 40', '40 - 70', '70 - 90', '90 - 100', '100']
 
-    ice_ticks = ['0', '10 - 40', '40 - 70', '70 - 90', '90 - 100', '100']
+    ice_ticks = ['0', '10 - 30', '40 - 60', '70 - 80', '90 - 100', 'fast ice']
 
     sns.set_theme(context = 'talk')
     figsize = (30,11)
@@ -144,13 +144,17 @@ def main():
     sic0_interpolator = NearestNDInterpolator(mask_T, sic0[mask])
     sic0 = sic0_interpolator(*np.indices(sic0.shape))
 
+    ice_edge0 = find_ice_edge(sic0, lsmask)
+
     sic0 = np.where(sic0 == 1, 0, sic0)
     sic0 = np.where(sic0 > 0, sic0 - 1, sic0)
 
     ax[0].pcolormesh(lon, lat, sic0, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
     ax[0].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
+    ax[0].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=3, color='black', rasterized = True)
 
-    ax[0].set_title(f"Sea ice chart {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}")
+
+    ax[0].set_title(f"Sea ice chart {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}", weight = 'bold')
 
     ax[0].set_xlim(x0,x1)
     ax[0].set_ylim(y0,y1)
@@ -174,13 +178,16 @@ def main():
     sic2_interpolator = NearestNDInterpolator(mask_T, sic2[mask])
     sic2 = sic2_interpolator(*np.indices(sic2.shape))
 
+    ice_edge2 = find_ice_edge(sic2, lsmask)
+
     sic2 = np.where(sic2 == 1, 0, sic2)
     sic2 = np.where(sic2 > 0, sic2 - 1, sic2)
 
-    iiee = IIEE(sic0, sic2, lsmask, threshold = 1)
+    # iiee = IIEE(sic0, sic2, lsmask, threshold = 1)
 
     ax[1].pcolormesh(lon, lat, sic2, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
     ax[1].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
+    ax[1].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=3, color='black', rasterized = True)
 
     # ax[1].pcolormesh(lon, lat, np.ma.masked_less(iiee[0],1),alpha=0.7, transform=data_proj, cmap = 'summer', zorder=3, rasterized = True)
     # ax[1].pcolormesh(lon, lat, np.ma.masked_less(iiee[1], 1),alpha=0.7, transform=data_proj, zorder=4, cmap='winter', rasterized = True)
@@ -188,7 +195,7 @@ def main():
     ax[1].set_xlim(x0,x1)
     ax[1].set_ylim(y0,y1)
 
-    ax[1].set_title(f"Sea ice chart {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}")
+    ax[1].set_title(f"Sea ice chart {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}", weight = 'bold')
     
     fig.canvas.draw()
     ax[1].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
@@ -210,13 +217,16 @@ def main():
     ax[2].pcolormesh(lon, lat, sicml, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
     ax[2].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
 
+    ax[2].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=4, color='black', rasterized = True)
+    ax[2].scatter(lon[::], lat[::], 0.05*ice_edge2[::], transform=data_proj, zorder=3, color='dodgerblue', rasterized=True)
+
     # ax[2].pcolormesh(lon, lat, np.ma.masked_less(iiee[0],1),alpha=0.7, transform=data_proj, cmap = 'summer', zorder=3, rasterized = True)
     # ax[2].pcolormesh(lon, lat, np.ma.masked_less(iiee[1], 1),alpha=0.7, transform=data_proj, zorder=4, cmap='winter', rasterized = True)
 
     ax[2].set_xlim(x0,x1)
     ax[2].set_ylim(y0,y1)
 
-    ax[2].set_title(f"Deep learning prediction {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}, initialized {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}")
+    ax[2].set_title(f"Deep learning {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}, initialized {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}", weight = 'bold')
     
     fig.canvas.draw()
     ax[2].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
