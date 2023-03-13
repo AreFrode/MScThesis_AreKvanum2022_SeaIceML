@@ -42,6 +42,7 @@ The following section will describe the domain covered for this thesis, followed
 
 
 \subsection{Region of interest}
+\label{sec:roi}
 The domain covered by the deep learning system, covers part of the European Arctic, with Svalbard off-centered. The coast of Northern-Norway is located on the Southern Border, the archipelago of Novaya Zemlya on the eastern border with Franz Josef Land located to its north. The northern border reaches ($88^\circ \text{N}, 79^\circ \text{E})$. The region is an intersection between the domain covered by the Ice Charts \citep{Dinessen2020} and AROME Arctic \citep{Mueller2017} as shown in Figure (\ref{fig:studyarea}). The study area is a commercially active region, with regards to fishing, tourism and shipping \citep{Wagner2020}. Moreover, the sea ice area and extent in the domain have a strong seasonal variability \citep{Cavalieri2012}.
 
 The domain has a 1km spatial resolution, and contains $1972 \times 1972$ equidistant grid points. Compared to the AROME Arctic grid, the model domain has a reduced southern and eastern extent, which is manually subsectioned to conform to the square grid imposed by the U-Net architecture \citep{Ronneberger2015}. Another reason for the reduced domain extent was to limit the amount of memory needed when loading data during training. Both reasons will be thoroughly discussed in later sections. Moreover, the choice of limiting the southern and eastern extent of the domain was deliberate to reduce the amount of likely sea ice concentration containing grid cells lost in the process.
