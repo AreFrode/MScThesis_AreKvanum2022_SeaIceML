@@ -572,7 +572,6 @@ thesis/bib/*.pdf
 *.fdb_latexmk
 *.synctex.gz
 *.run.xml
-thesis/model_development/figures/
 ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/Data/
 ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/normalized_iiee.png
 ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/tmp.png
