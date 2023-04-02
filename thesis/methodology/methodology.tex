@@ -4,7 +4,7 @@
 
 \begin{document}
 \section{Methodological framework}
-This section will first outline the theoretical background of convolutions from a deep learning point of view, as well as provide a brief overview of image segmentation as a computer vision task. Second, the methodological framework of the U-Net architecture, the deep neural network which is used in the present work, is outlined with a detailed description of its training loop and central algorithms. Finally, validation metrics which are used to asses the performance of the developed deep learning system will be described.
+This section will first outline the theoretical background of convolutions from a deep learning point of view, as well as provide a brief overview of image segmentation as a computer vision task. Second, the methodological framework of the U-Net architecture, the deep neural network which is used in the present work, is outlined with a detailed description of its training loop and central algorithms. Thirdly, validation metrics which are used to asses the performance of the developed deep learning system will be described. Finally, aspects of explainable ai will be explored in terms of understanding how a deep learning system make a single decision. 
 
 \subsection{Convolutional layers}
 \label{sec:convolutional-layer}
@@ -47,6 +47,15 @@ The convolutional layer adds the convolution described in equation (\ref{eq:sing
 
 If the number of filters increases from $1$ to $N$, equation (\ref{eq:outputconv}) is repeated for all filters, resulting in an output $Y \in{\mathbb{R}^3}$ of size $(Y_\text{dim1}, Y_\text{dim2}, N)$.
 
+Finally, the receptive field is refers to the number of neurons seen by a neuron deeper in the network, and can be seen in figure (\ref{fig:convlayer}) where the feature map pixel sees nine input tensor pixels. Following the derivations described in \citet{Araujo2019}, the receptive field at a layer is mathematically defined as
+
+\begin{equation}
+    \label{eq:receptivefield}
+    r_0 = \sum_{l=1}^L\left(\left(k_l - 1\right)\prod_{i=1}^{l-1}s_i\right) + 1
+\end{equation}
+
+where $r_0$ is the receptive field at layer $L$, $k_l$ is the kernel size at layer $l$ and $s_i$ is the stride at layer $i$. Note that the stride in the last convolutional layer does not influence on the receptive field. The receptive field defined in equation \ref{eq:receptivefield} may be regarded as the theoretical upper bound, with recent results such as \citet{Luo2017} showing that the effective receptive field attains a Gaussian shape with a peak at the center of the receptive field. Hence the effective receptive field is smaller than the theoretical maximum, and assumes that pixels closer to the center of the receptive field are more important.
+
 \subsection{Image segmentation}
 \label{sec:image-segmentation}
 Image segmentation is a computer vision task where pixels are assigned labels according to some predetermined rules. It is common to define an image segmentation task either as a study of countable \textit{things} (Instance segmentation), or recognizing similarly textured \textit{stuff} (Semantic segmentation) \citep{Kirillov2018}. The task for this thesis, which is labeling sea ice concentration according to its predicted concentration class, falls into the latter category following the definition of \textit{stuff} in \citet{Adelson2001}. I.e. the current task is to assign each pixel in a predicted scene a single class label.
@@ -58,6 +67,7 @@ To capture the global context of a scene, network architectures such as \citet{L
 This thesis will utilize the U-Net architecture proposed by \citet{Ronneberger2015}. The U-Net was initially developed for medical image segmentation, however the architecture has shown promising results for both pan-arctic seasonal \citep{Andersson2021} and regional short term \citep{Grigoryev2022} sea ice concentration forecasting amongst other applications. Another aspect which makes the U-Net more suitable to the current task, compared to other previously mentioned image-to-image architectures is that the network converges quickly, which is ideal when working with a dataset consisting of few samples \citep{Ronneberger2015}.
 
 \subsection{Describing the U-Net architecture}
+\label{sec:unet}
 Figure (\ref{fig:unet-overview}) shows the U-Net architecture. This section intends to describe the different components constituting the architecture from a technical point of view. 
 
 \begin{figure}
@@ -77,6 +87,8 @@ A single convolutional block consists of two repeat convolutional layers, each f
 The ReLU function, similar to other activation functions used in deep neural networks, introduce non-linearities to the connections in the network. Thus the network is able to learn non-linear connections in the data.
 
 Each convolution is performed using a $3 \times 3$ window. The original formulation of the U-Net also does not apply padding to the input, resulting the convolutional filter only being applied to the entries of the input where the filter is never out of bounds. With a stride $S=1$, this results in each convolutional layer reducing the spatial extent by two pixels in each direction following equation (\ref{eq:outputdim}). It is also noted that the number of feature maps is doubled after each downsampling step, which is performed by the pooling layers.
+
+\todo{Either in this section or next section write about equation for calculating domain of influence (receptive field).}
 
 \subsubsection{Maxpooling}
 \label{sec:maxpool}
@@ -121,6 +133,7 @@ where $a_k$ is the feature map for feature channel $k$ of input $x$ and $K$ is t
 For the case of binary classification, i.e. when the number of classes $k=2$, the softmax function in equation (\ref{eq:psoftmax}) is reduced to the Sigmoid function which is defined as, 
 
 \begin{equation}
+    \label{eq:sigmoid}
     p_{i,j} = \frac{e^{a_{i,j}}}{e^{a_{i,j}} + 1} \qquad
     \includegraphics[valign = c, width=.3\linewidth]{sigmoid}
 \end{equation}
@@ -128,7 +141,8 @@ For the case of binary classification, i.e. when the number of classes $k=2$, th
 To quantify the prediction error, a loss function is defined. The overall goal of training a neural network is to minimize the loss function with respect to the trainable weights. For the U-Net, a weighted variation of the cross entropy loss function is proposed \citep{Ronneberger2015}. 
 
 \begin{equation}
-    L(p) = \sum_{i,j \subset \mathbb{Z}^2}w_{i,j}log(p_{l,i,j})
+    \label{eq:unet-loss}
+    L(p) = \sum_{i,j \subset \mathbb{Z}}w_{i,j}log(p_{l,i,j})
 \end{equation}
 
 where $w$ is a predefined weight map and $p_{l,i,j}$ is the prediction made at pixel $i,j$ at the true label $l$.
@@ -243,6 +257,44 @@ with $A \in{\mathbb{R}^2}$ being the area of interest, and is of similar size as
 Additionally, the IIEE can also be represented as a spatial metric by removing the integral with respect to $A$ in equation (\ref{eq:a_plus} and \ref{eq:a_minus}). In this way, the metric is used to define the set of pixels which constitutes its area. To clearly distinguish between the area O (overestimation) and the set of pixels used to compute O, $A^+$ will be used to note the latter. Similarly, $A^-$ will represent the set of pixels constituting U (underestimation). Finally, it can be seen that $A^+$ and $A^-$ represent the spatial distribution of False Positive and False Negatives of the forecast respectively.
 
 The length of the ice edge has a strong influence on the IIEE \citep{Goessling2018,Palerme2019}. Hence, to ensure that forecast errors are comparable across seasons, IIEE is normalized with the length of the ice edge, as mentioned in section (\ref{sec:osisaf}). Furthermore, the normalized IIEE provides an estimate of the displacement error between the forecasted and target sea ice edge \citep{Melsom2019}.
+
+\subsection{AI explainability}
+Explainable Artificial Intelligence (XAI) is a field which has seen a recent relevance growth in conjunction with the renewed interest in deep learning methods (especially for image analysis) launched by the network proposed by \citet{Krizhevsky2012}. XAI covers methods which aim to provide insight into the "black-box problem" of machine learning \citep{Adadi2018}, which for deep learning models arise partly due to the complex structures and many nonlinear connections found in the models \citep{Lopes2022}. For the purpose of this thesis, XAI methods which aim explaining a single decision will be applied both to increase the transparency of the developed deep learning system, as well as attempting to connect a single prediction to the underlying physics present in the input variables.
+
+\subsubsection{Gradient-weighted Class Activation Mapping for semantic segmentation}
+Several methods of XAI for visual explanations for decisions made by CNN-based models exists, such as \citep{Simonyan2013,Zhou2016,Selvaraju2016,Sundararajan2017,Lundberg2017}. The aforementioned methods are designed for image classification tasks, which covers problems where the entire image is associated with a single label. However, there has been limited work related to understanding the decisions made by semantic segmentation models \citep{Linardatos2020}.
+
+A method for activation based explanation of semantic segmentation predictions was proposed by \citet{Vinogradova2020}, which is a modification of the Gradient-weighted Class Activation Map (Grad-CAM) that was first introduced by \citet{Selvaraju2016}. Grad-CAM is an activation based explanation method, hence, Grad-CAM constructs a class activated map that highlights a weighted combination of all feature maps at a given layer for a given class. The assigned weights determines whether each feature map was considered important when predicting the considered class, and are computed from the gradient of the predicted logit with respect to each feature map at the considered layer \citep{Selvaraju2016}. Grad-CAM is mathematically defined as
+
+\begin{equation}
+    \label{eq:gradcam}
+    L^c = \text{ReLU}\left(\sum_k \alpha_k^c A^k\right)    
+\end{equation}
+
+with the weights computed as
+
+\begin{equation}
+    \label{eq:importance-weight}
+    \alpha_k^c = \frac{1}{Z} \sum_{i,j} \frac{\partial{y^c}}{\partial{A_{ij}^k}}
+\end{equation}
+
+where $c$ denote the chosen class of interest, $k$ the number of feature maps and $i,j$ the spatial dimensions. $A \in \mathbb{R}^3$ are $k$ feature maps of size $i,j$ and $y^c$ is the predicted logit for class $c$. Finally $Z$ denote the number of nodes in feature map $A$. 
+
+Figure (\ref{fig:gradcam}) provides an overview which summarizes equations (\ref{eq:gradcam} and \ref{eq:importance-weight}). The figure also demonstrates the use of the deepest layer as the chosen feature maps, which \citet{Selvaraju2016} argues for as they contain object specific information rather than positional information, although the choice of feature map is a free parameter. Moreover, the outputted class activation map to the lower left corner of figure (\ref{fig:gradcam}) represent where the model had to look to make the prediction \citep{Selvaraju2016}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{GradCAM}
+    \caption{\label{fig:gradcam}Overview showing how a class activation map is constructed form a single image. The bottom left image (captioned "Grad-CAM") provides an example class activation map for the class "tiger cat". The figure is heavily adapted from \protect\citep{Selvaraju2016}, where references in the figure to Guided Grad-CAM and Guided backpropagation has been removed.}
+\end{figure}
+
+Furthermore, the modification presented by \citet{Vinogradova2020}, hereafter referred to as seg-Grad-CAM, replaces $y^c$ in equation (\ref{eq:importance-weight}) with a new term 
+
+\begin{equation}
+    \sum_{(i,j) \in M} y_{ij}^c
+\end{equation}
+
+where $M$ is a set of pixel indices \citep{Vinogradova2020}. Thus, the pixel indices chosen becomes a free parameter. Similarly to \citep{Selvaraju2016}, \citet{Vinogradova2020} also argues that computing the gradient w.r.t. the lowest resolution feature maps returns the most informative class activation maps. Hence, contrary to Grad-CAM which consider encoder only networks where the final convolutional layer contain the lowest resolution feature maps, seg-Grad-CAM compute the gradient w.r.t. the second convolutional layer located in the bottleneck of the U-Net, which in Figure (\ref{fig:unet-overview}) is represented by the lower right blue rectangle (followed by the first up-conv arrow).
 
 \biblio
 

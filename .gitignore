@@ -649,3 +649,8 @@ ForecastValidation/IceChartYears/Persistence_NIIEE.png
 ForecastValidation/IceChartYears/Persistence_SIE.png
 RawIceChart_dataset/figures/*/*/*.png
 RawIceChart_dataset/logs/*.sh.*
+CreateFigures/inkscape/Selvaraju2016.svg
+CreateFigures/inkscape/Selvaraju2016.xcf
+local_results/seg-grad-cam/Data/models/weights_21021550.data-00000-of-00001
+local_results/seg-grad-cam/Data/models/weights_21021550.index
+.gitignore
