@@ -1,10 +1,10 @@
 \documentclass[../main/thesis.tex]{subfiles}
 
 % Overleaf graphics path
-% \graphicspath{{thesis/datasets/figures/}}
+\graphicspath{{thesis/datasets/figures/}}
 
 % local graphics path
-\graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/datasets/figures/}}
+% \graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/datasets/figures/}}
 
 
 \begin{document}
@@ -129,7 +129,7 @@ The current AMSR2 product was chosen as the ASI retrieval algorithm \citep{Spree
 
 Figure (\ref{fig:dist-amsr2}) shows the monthly distribution of sea ice contours for the AMSR2 dataset. Similarly to Figure (\ref{fig:2022-areadist-sic}), a majority of the scenes are covered by Ice Free Open Water. However, Figure (\ref{fig:dist-amsr2}) shows the AMSR2 dataset has less very close drift ice, which may stem from an increased fast ice contour. Furthermore, AMSR2 has a less resolved open water contour compared to the sea-ice charts. This may be a result of AMSR2 being a algorithmically derived product, whereas the sea-ice charts are drawn for operational use such that regions of potential sea ice encounters are exaggerated to ensure maritime safety. Lastly, \citet{Spreen2008} demonstrated that the ASI algorithm provide the most certainty at concentrations above $65\%$, with lower concentrations having higher deviations, mainly due to the error contributed by the atmosphere. \todo{DETTE MÅ NEVNES I DISKUSJON NÅR MAN SAMMENLIKNER MOT AMSR2}
 
-As the sea ice charts are treated as the ground truth during training of the deep learning model, it can be assumed that the model is best at predicting sea ice concentration distributions similar to those found in the training data. As such, the AMSR2 data will serve as an independent dataset, and will be used for validation only. Thus, the performance of the deep learning system can be inspected with regards to another dataset that is less similar than the sea ice charts, which measures the generalizability of the model.
+As the sea ice charts are treated as the ground truth during training of the deep learning model, it can be assumed that the model is best at predicting sea ice concentration distributions similar to those found in the training data. As such, the AMSR2 data will serve as an independent dataset with high spatial resolution, and will be used for validation only. Thus, the performance of the deep learning system can be inspected with regards to another dataset that is less similar than the sea ice charts, which measures the generalizability of the model.
 
 \subsection{Forecasting systems} 
 \subsubsection{AROME Arctic}
