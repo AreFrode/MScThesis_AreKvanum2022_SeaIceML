@@ -41,6 +41,17 @@ class IceEdgeStatisticsFigure:
                       "markerfacecolor": 'firebrick'},
                     whis = [5,95],
                     ax = self.ax)
+        
+    def addViolinPlot(self, df, x_label, y_label, hue_label):
+        # df.boxplot(by = 'met_index', column='IIEE', ax = self.ax)
+        sns.violinplot(data = df, 
+                    x = x_label, 
+                    y = y_label, 
+                    hue = hue_label,
+                    palette='deep',
+                    inner = 'box',
+                    ax = self.ax)
+        
 
     def addNewErrorPlot(self, df, label):
         self.ax.errorbar(x= df.index, y = df['mean'], yerr = (df['min'], df['max']), label = label)
@@ -106,7 +117,7 @@ def main():
     # Create figure classes
 
     # ice_edge_length_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}ice_edge_length_seasons_box.png", "Ice Edge Length Comparison", "Ice Edge Length [km]")
-    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}IIEE_spread_model.png", "Normalized IIEE comparison", "IIEE [km]")
+    IIEE_figure = IceEdgeStatisticsFigure(f"{PATH_FIGURES}IIEE_spread_no_t2m.png", "Normalized IIEE comparison", "IIEE [km]", (10,10))
 
 
     # Fill figures
@@ -140,7 +151,10 @@ def main():
 
     # b = [4, 5, -4, -2] Old forecast index
 
-    for forecast in files[1:]:
+    b = [11, 15]
+    forecasts = [files[i] for i in b]
+
+    for forecast in forecasts:
         local_filename = filename_regex.findall(forecast)[0]
 
         local_figure_path = f"{PATH_FIGURES}{local_filename}/"
@@ -215,7 +229,7 @@ def main():
     # seasonal_mean_IIEE_df['min'] = seasonal_mean_IIEE_df.min(axis = 1)
     # seasonal_mean_IIEE_df['max'] = seasonal_mean_IIEE_df.max(axis = 1)
     # IIEE_figure.addNewErrorPlot(monthly_mean_IIEE_df, 'forecasts')
-    IIEE_figure.addBoxPlot(df = fetched_dataframe, x_label = 'met_index', y_label = 'NIIEE_2', hue_label = 'forecast_name')
+    IIEE_figure.addViolinPlot(df = fetched_dataframe, x_label = 'met_index', y_label = 'NIIEE_2', hue_label = 'forecast_name')
     IIEE_figure.savefig('Months', 'Normalized_IIEE [km]')
     
 

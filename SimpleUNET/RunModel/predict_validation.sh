@@ -13,7 +13,7 @@
 
 #New Singularity definitions on rhel8
 
-weights="weights_08031256"
+weights="weights_07030737"
 
 module use /modules/MET/rhel8/user-modules/
 

@@ -89,7 +89,7 @@ def main():
     else:
         exit('No valid grid supplied')
 
-    figname = f"/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/poster_figs/performance.pdf"
+    figname = f"/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/poster_figs/performance_not2m.pdf"
 
     figsize = (19,19)
 

@@ -1,7 +1,11 @@
 import sys
-sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset")
+
 
 import LambertLabels
+import WMOcolors
 
 import numpy as np
 import matplotlib as mpl
@@ -18,6 +22,7 @@ from cartopy import crs as ccrs
 from cartopy import feature as cfeature
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
 from shapely.errors import ShapelyDeprecationWarning
+from createHDF import onehot_encode_sic
 
 
 import warnings
@@ -34,7 +39,7 @@ def main():
     with Dataset(PATH_DATA) as nc:
         lat = nc.variables['lat'][bottom:, :right]
         lon = nc.variables['lon'][bottom:, :right]
-        sic = nc.variables['sic'][bottom:, :right]
+        sic = onehot_encode_sic(nc.variables['sic'][bottom:, :right])
 
 
 
@@ -58,7 +63,9 @@ def main():
     newcolors = cividis(np.linspace(0, 1, 7))
     newcolors[0, :-1] = np.array([34., 193., 224.]) / 255.
     newcolors[0, -1] = 0.3
-    ice_cmap = colors.ListedColormap(newcolors)
+    # ice_cmap = colors.ListedColormap(newcolors)
+    ice_cmap = WMOcolors.cm.sea_ice_chart()
+    
 
     LAND_highres = cfeature.NaturalEarthFeature('physical', 'land', '50m',
                                         facecolor=cfeature.COLORS['land'],
@@ -80,7 +87,7 @@ def main():
   
     ax.add_feature(LAND_highres)
 
-    ax.pcolormesh(lon, lat, sic, transform = data_proj, cmap = ice_cmap, zorder = 0)
+    ax.pcolormesh(lon, lat, sic, transform = data_proj, cmap = ice_cmap, zorder = 0, rasterized = True)
 
     xlim = [-60, 100]
     ylim = [50, 89]
@@ -105,7 +112,7 @@ def main():
     ax.plot(lon[-1,:],lat[-1,:],'--', color = 'black', lw = 1.5, transform=ccrs.PlateCarree(), zorder = 1)
 
     fig.tight_layout()
-    plt.savefig('study_area.png')
+    plt.savefig('study_area.pdf')
 
 
 

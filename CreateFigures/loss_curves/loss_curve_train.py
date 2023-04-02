@@ -20,17 +20,19 @@ def running_min(df):
 
 
 
-PATH_FILE = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_22021826.log"
+# PATH_FILE = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_22021826.log"
 
-PATH_FILE2 = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_15022058.log"
+# PATH_FILE2 = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_15022058.log"
+
+PATH_FILE = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_09021654.log"
 
 file = pd.read_table(PATH_FILE, sep = ',', index_col=0)
 
 file_mins, lr_changes = running_min(file)
 
-file2 = pd.read_table(PATH_FILE2, sep = ',', index_col=0)
+# file2 = pd.read_table(PATH_FILE2, sep = ',', index_col=0)
 
-file2_mins, lr2_changes = running_min(file2)
+# file2_mins, lr2_changes = running_min(file2)
 
 sns.set_theme(context='paper')
 
@@ -44,5 +46,6 @@ ax.legend()
 
 print(lr_changes[10:].sum())
 
-plt.show()
+# plt.show()
 # plt.savefig('loss_big_data_t2m.png')
+plt.savefig('/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/loss_curves/loss_gs_middle_left.png')

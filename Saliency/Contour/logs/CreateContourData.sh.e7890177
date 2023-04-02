@@ -1,0 +1,11 @@
+2023-03-27 18:51:01.143555: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-03-27 18:51:07.477749: E tensorflow/compiler/xla/stream_executor/cuda/cuda_driver.cc:267] failed call to cuInit: UNKNOWN ERROR (34)
+2023-03-27 18:51:07.477840: I tensorflow/compiler/xla/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (c6525-jzgp7w3-bc-compute): /proc/driver/nvidia/version does not exist
+2023-03-27 18:51:07.478136: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-03-27 18:51:29.831488: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 7398752256 exceeds 10% of free system memory.
+2023-03-27 18:51:31.084377: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 7398752256 exceeds 10% of free system memory.
+2023-03-27 18:51:32.663688: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 14797504512 exceeds 10% of free system memory.
+2023-03-27 18:51:35.408579: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 14797504512 exceeds 10% of free system memory.
+2023-03-27 18:53:31.217160: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 7398752256 exceeds 10% of free system memory.

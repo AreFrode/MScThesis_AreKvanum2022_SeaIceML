@@ -3,7 +3,7 @@
 #$ -q research-r8.q
 #$ -l h_rss=8G
 #$ -l mem_free=8G
-#$ -t 1-84
+#$ -t 1-24
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/data_processing_files/OUT
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
@@ -11,13 +11,14 @@ echo "Got $NSLOTS slots for job $SGE_TASK_ID."
 module use /modules/MET/centos7/GeneralModules/
 module load Python-devel/3.8.7
 
-# ''/'open_ocean'/'reduced_classes'
-MODE='reduced_classes'
+# 'None'/'open_ocean'/'reduced_classes'
+MODE='None'
 
 # python createHDF.py lead_time osisaf_trend member
 python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/createHDF.py $SGE_TASK_ID $MODE
 
-if [ $SGE_TASK_ID -eq 26 ]
+# remove problematic date 20210223
+if [ $SGE_TASK_ID -eq 62 ]
 then
     if [ -z "$MODE" ]
     then

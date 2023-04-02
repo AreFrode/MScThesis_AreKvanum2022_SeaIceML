@@ -6,7 +6,7 @@
 #$ -t 1-12
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/logs/
 
-weights="weights_21021550"
+weights="weights_09031802"
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
 

@@ -32,12 +32,12 @@ def main():
 
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
-        'lead_time': 3,
+        'lead_time': 2,
         'BATCH_SIZE': 4,
         # 'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 'xwind', 'ywind'],
         # 'fields': ['sic', 'osisaf_trend_7/sic_trend', 'lsmask', 'xwind', 'ywind'],
         # 'fields': ['sic', 'osisaf_trend_7/sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
-        'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
+        'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 'xwind', 'ywind'],
         'train_augment': False,
         'train_normalization': 'normalization_constants_train_start_2019',
         'train_shuffle': True,
@@ -62,7 +62,7 @@ def main():
         'LeakyReLU': False,
         'ResidualUNET': False,
         'lr_scheduler': True,
-        'lr_decay_steps': 71 * 10,
+        'lr_decay_steps': 72 * 10,
         'lr_decay_rate': 0.5,
         'lr_decay_staircase': True,
         'open_ocean_mask': False,

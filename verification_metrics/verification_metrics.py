@@ -92,7 +92,7 @@ def find_ice_edge_from_fraction(sic, mask, threshold = 15):
 
 def calculate_distance(current_ice_edge, other_ice_edge, x, y):
     """computes the euclidean distance to the nearest ice edge grid cell between two products for all ice edge cells (only correct for equidistant grid)
-    Code implemnted according to derivation in [Melsom, 2019]
+    Code implemented according to derivation in [Melsom, 2019]
 
     Args:
         current_ice_edge (array): Ice edge grid cells to loop through
@@ -464,7 +464,7 @@ def main():
     A_iiee = A_plus + A_minus
     alpha_iiee = A_plus - A_minus
 
-    D_iiee = (2 * A_iiee) / (length_target + length_pred)
+    D_iiee = (2 * A_iiee) / (length_ta0.5*rget + length_pred)
     delta = (2 * alpha_iiee) / (length_target + length_pred)
 
     print(f"{D_iiee=}")

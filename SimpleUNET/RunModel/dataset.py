@@ -11,6 +11,7 @@ import tensorflow as tf
 
 from tensorflow import keras
 from unet import UNET, MultiOutputUNET
+from numpy.random import default_rng
 
 
 class HDF5Generator(keras.utils.Sequence):
@@ -170,8 +171,87 @@ class MultiOutputHDF5Generator(HDF5Generator):
         concat = tf.concat((X, y), axis = -1)
         concat_aug = self.data_augmentation(concat)
         return concat_aug[..., :self.n_fields], concat_aug[..., self.n_fields:]
-
     
+    
+class NoisyMultiOutputHDF5Generator(MultiOutputHDF5Generator):
+    def __init__(self,
+                 data, 
+                 batch_size = 1, 
+                 fields = ['sic', 'lsmask', 't2m', 'xwind', 'ywind'], 
+                 target = 'sic_target',
+                 num_target_classes = 7, 
+                 lower_boundary = 450, 
+                 rightmost_boundary = 1840,
+                 normalization_file = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/normalization_constants.csv', 
+                 seed=0, 
+                 shuffle = True, 
+                 augment = False,
+                 noise_index = 0
+        ):
+
+        MultiOutputHDF5Generator.__init__(self, data, batch_size, fields, target, num_target_classes, lower_boundary, rightmost_boundary, normalization_file, seed, shuffle, augment)
+
+        self.noise_index = noise_index
+        self.rng = default_rng(seed = seed)
+
+
+    def __getitem__(self, index):
+        # Get the minibatch associated with index
+        samples = self.get_dates(index)
+        X, y = self._MultiOutputHDF5Generator__generate_data(samples)
+
+        X[..., self.noise_index] = self.rng.uniform(low = 0.0, high = 1.0, size = X[..., self.noise_index].shape)
+        return X, y
+   
+
+class SwappedMultiOutputHDF5Generator(MultiOutputHDF5Generator):
+    def __init__(self,
+                 data, 
+                 batch_size = 1, 
+                 fields = ['sic', 'lsmask', 't2m', 'xwind', 'ywind'], 
+                 target = 'sic_target',
+                 num_target_classes = 7, 
+                 lower_boundary = 450, 
+                 rightmost_boundary = 1840,
+                 normalization_file = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/normalization_constants.csv', 
+                 seed=0, 
+                 shuffle = True, 
+                 augment = False,
+                 swap_index = 0
+        ):
+
+        MultiOutputHDF5Generator.__init__(self, data, batch_size, fields, target, num_target_classes, lower_boundary, rightmost_boundary, normalization_file, seed, shuffle, augment)
+
+        self.swap_index = swap_index
+        self.swap_field = self.fields[self.swap_index]
+        self.swap_data = self.rng.permutation(self.data)
+
+    def __getitem__(self, index):
+        samples = self.get_dates(index)
+        X, y = self._MultiOutputHDF5Generator__generate_data(samples)
+
+        print(X[..., self.swap_index])
+        swap_samples = self.get_swap_dates(index)
+        X[..., self.swap_index] = self.__generate_swap_data(swap_samples)
+
+        print(X[..., self.swap_index])
+        return X, y
+
+    def get_swap_dates(self, index):
+        return self.swap_data[index*self.batch_size:(index+1)*self.batch_size]
+    
+    def __generate_swap_data(self, samples):
+        # Helper function to read data from files
+        swap_X = np.empty((self.batch_size, *self.dim, 1))
+
+        for idx, sample in enumerate(samples):
+            with h5py.File(sample, 'r') as hf:
+
+                swap_X[idx, ..., 0] = (hf[f"{self.swap_field}"][:] - self.mins[self.swap_field]) / (self.maxs[self.swap_field] - self.mins[self.swap_field])
+
+        return swap_X[:, self.lower_boundary:, :self.rightmost_boundary, 0]
+
+
 if __name__ == "__main__":
     path_data = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 

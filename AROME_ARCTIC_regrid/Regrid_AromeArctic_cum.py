@@ -16,6 +16,8 @@ from netCDF4 import Dataset
 from rotate_winds import rotate
 from interpolate import nearest_neighbor_interp
 
+from matplotlib import pyplot as plt
+
 
 def main():
     ################################################
@@ -72,16 +74,19 @@ def main():
     # Data processing
     ################################################
     for dd in range(1, nb_days_task + 1):
+        ice_flag = False
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(yyyymmdd)
 
         path_day = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T18Z.nc")
         path_day_det = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_det_2_5km_{yyyymmdd}T18Z.nc")
         path_day_extracted = glob.glob(f"{path_data_task}{dd:02}/arome_arctic_extracted_2_5km_{yyyymmdd}T18Z.nc")
+        path_day_sfx = glob.glob(f"{path_data_task}{dd:02}/arome_arctic_sfx_2_5km_{yyyymmdd}T18Z.nc")
 
         try:
             dataset = path_day[0]
 
+            
         except IndexError:
             try:
                 print(f"{path_data_task}{dd:02}/arome_arctic_extracted_2_5km_{yyyymmdd}T18.nc")
@@ -92,9 +97,17 @@ def main():
 
                 try:
                     dataset = path_day_det[0]
+                    ice_flag = True
             
                 except IndexError:
                     continue
+
+        try:
+            if not ice_flag:
+                dataset_sfx = path_day_sfx[0]
+
+        except IndexError:
+            continue
 
         # Fetch variables from Arome Arctic
         with Dataset(dataset, 'r') as nc:
@@ -107,6 +120,12 @@ def main():
             uwind_arome = nc.variables['x_wind_10m'][:]
             vwind_arome = nc.variables['y_wind_10m'][:]
             # lsmask_arome = nc.variables['land_area_fraction'][:]
+            
+            if ice_flag:
+                sic_arome = np.ma.filled(nc.variables['SFX_SIC'][0,0], fill_value = np.nan)
+            else:
+                with Dataset(dataset_sfx, 'r') as nc_sfx:
+                    sic_arome = np.ma.filled(nc_sfx.variables['SIC'][0], fill_value = np.nan)
 
         nx_input = len(x_input)
         ny_input = len(y_input)
@@ -125,6 +144,8 @@ def main():
         uwind_cum_mean = np.zeros((3, ny_input, nx_input))
         vwind_cum_mean = np.zeros((3, ny_input, nx_input))
 
+        sic_target = np.zeros((ny, nx))
+
 
         # Compute "Cumulative" means for the temporal variables
         lead_times = [18, 42, 66]
@@ -135,7 +156,7 @@ def main():
             vwind_cum_mean[idx] = vwind_arome[0:i,0,...].mean(axis = 0)
         
         
-        cat_fields = np.concatenate((lat_arome[None, :], lon_arome[None, :], lsmask_arome[0], t2m_cum_mean, uwind_cum_mean, vwind_cum_mean))
+        cat_fields = np.concatenate((lat_arome[None, :], lon_arome[None, :], lsmask_arome[0], t2m_cum_mean, uwind_cum_mean, vwind_cum_mean, sic_arome[None,:]))
 
         regrid_cat = nearest_neighbor_interp(xx_input, yy_input, x_target, y_target, cat_fields)
         
@@ -147,6 +168,8 @@ def main():
 
         uwind_regrid = regrid_cat[6:9]
         vwind_regrid = regrid_cat[9:12]
+
+        sic_target = regrid_cat[-1]
 
         # ROTATION assuming u: zonal, v: meridional
         for i in range(3):
@@ -201,6 +224,10 @@ def main():
             lsmask_out.units = '1'
             lsmask_out .standard_name = 'Land Area Fraction'
 
+            sic_out = output_netcdf.createVariable('sic', 'd', ('y', 'x'))
+            sic_out.units = '1'
+            sic_out .standard_name = 'Sea ice cover'
+
             yc[:] = y_target
             xc[:] = x_target
             tc[:] = np.linspace(0,2,3)
@@ -210,10 +237,10 @@ def main():
             t2m_out[:] = t2m_target
             xwind_out[:] = xwind_target
             ywind_out[:] = ywind_target
+            sic_out[:] = sic_target
 
             ##
             output_netcdf.description = proj4_arome
-
 
 if __name__ == "__main__":
     main()

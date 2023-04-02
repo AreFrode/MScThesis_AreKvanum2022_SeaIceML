@@ -115,6 +115,8 @@ def main():
             x = nc_ic.variables['x'][:-1]
             y = nc_ic.variables['y'][:]
 
+        xx, yy = np.meshgrid(x, y)
+
         # Apply Wang et.al NearestNeighbor mask to sic
         sic_interpolator = NearestNDInterpolator(mask_T, sic[mask])
         sic = sic_interpolator(*np.indices(sic.shape))
@@ -177,7 +179,9 @@ def main():
                 outfile['lon'] = lon
                 outfile['lat'] = lat
                 outfile['x'] = x
+                outfile['xx'] = xx
                 outfile['y'] = y
+                outfile['yy'] = yy
                 outfile['lsmask'] = lsmask
                 outfile[f"t2m"] = t2m
                 outfile[f"xwind"] = xwind

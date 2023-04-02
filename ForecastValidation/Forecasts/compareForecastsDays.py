@@ -115,8 +115,10 @@ def main():
     
     target['forecast_name'] = 'persistence'
 
+    b = [11, 15]
+    forecasts = [files[i] for i in b]
 
-    for forecast in files[1:]:
+    for forecast in forecasts:
         local_filename = filename_regex.findall(forecast)[0]
 
         local_figure_path = f"{PATH_FIGURES}{local_filename}/"

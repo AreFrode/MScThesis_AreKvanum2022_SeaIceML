@@ -1,5 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
+from keras import backend as K
+import numpy as np
 
 from typing import List
 
@@ -15,11 +17,11 @@ class convolutional_block(keras.layers.Layer):
     def __init__(self, out_channel, kernel_initializer, leaky_relu, name='unet_conv_block'):
         super(convolutional_block, self).__init__(name=name)
 
-        self.conv1 = keras.layers.Conv2D(filters = out_channel, kernel_size = 3, padding='same', kernel_initializer=kernel_initializer,)
-        # self.bn1 = keras.layers.BatchNormalization()
+        self.conv1 = keras.layers.Conv2D(filters = out_channel, kernel_size = 3, padding='same', kernel_initializer=kernel_initializer)
+        self.bn1 = keras.layers.BatchNormalization()
         
         self.conv2 = keras.layers.Conv2D(filters = out_channel, kernel_size = 3, padding='same', kernel_initializer = kernel_initializer)
-        # self.bn2 = keras.layers.BatchNormalization()
+        self.bn2 = keras.layers.BatchNormalization()
         if out_channel < 32:
             self.gn1 = keras.layers.GroupNormalization(groups = int(0.5*out_channel))
             self.gn2 = keras.layers.GroupNormalization(groups = int(0.5*out_channel))
@@ -133,6 +135,41 @@ class ResidualDecoder(keras.layers.Layer):
             x = out + identity
 
         return x
+    
+class Encoder_Model(keras.Model):
+    def __init__(self, channels, pooling_factor = 2, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name='Encode model'):
+        super(Encoder_Model, self).__init__(name = name)
+        self.encoder = Encoder(channels = channels, pooling_factor=pooling_factor, average_pool=average_pool, kernel_initializer=kernel_initializer, leaky_relu=leaky_relu)
+
+    @tf.autograph.experimental.do_not_convert
+    def call(self, x, training = False):
+        encoder_feature_maps = self.encoder(x)
+
+        return encoder_feature_maps
+    
+class Decoder_Model(keras.Model):
+    def __init__(self, channels, feature_maps, num_classes = 1, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name = 'Decoder_model'):
+        super(Decoder_Model, self).__init__(name = name)
+        self.feature_maps = feature_maps
+        self.num_outputs = num_outputs
+        self.average_pool = average_pool
+        self.decoder = Decoder(channels = channels[:-1][::-1], pooling_factor = pooling_factor, kernel_initializer=kernel_initializer, leaky_relu=leaky_relu)
+        self.output_layers = [keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = f'out{i}') for i in range(self.num_outputs)]
+
+    @tf.autograph.experimental.do_not_convert
+    def call(self, x, training = False):
+        x = self.decoder(x, self.feature_maps[1:])
+
+        return [self.output_layers[i](x) for i in range(self.num_outputs)]
+
+def create_Decoder_Model(feature_maps, input_shape: List[int] = (112, 112, 256), channels: List[int] = [64, 128, 256], num_classes: int = 1, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer: str = 'HeNormal', leaky_relu = False):
+    input = keras.Input(shape=input_shape)
+    outputs = Decoder_Model(channels = channels, feature_maps=feature_maps, num_classes = num_classes, pooling_factor=pooling_factor, num_outputs=num_outputs, average_pool=average_pool, kernel_initializer = kernel_initializer, leaky_relu = leaky_relu)(input)
+
+    model = keras.models.Model(inputs=input, outputs=outputs)
+
+    return model 
+
 
 
 class UNET(keras.Model):
@@ -169,9 +206,27 @@ class MultiOutputUNET(UNET):
         x = self.decoder(x, encoder_feature_maps[1:])
 
         return [self.output_layers[i](x) for i in range(self.num_outputs)]
+    
 
+class MultiOutputUNET_seggradcam(UNET):
+    def __init__(self, channels, num_classes = 1, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name = 'unet'):
+        UNET.__init__(self, channels, num_classes, pooling_factor, num_outputs, average_pool, kernel_initializer, leaky_relu, name)
+        self.output_layers = [keras.layers.Conv2D(filters = num_classes, kernel_size = 1, kernel_initializer = kernel_initializer, dtype=tf.float32, name = f'out{i}') for i in range(self.num_outputs)]
+        
+        self.bottleneck = None
 
+    @tf.autograph.experimental.do_not_convert
+    def call(self, x, training = False):
+        encoder_feature_maps = self.encoder(x)
+        x = encoder_feature_maps[0]
+        self.bottleneck = encoder_feature_maps
+        x = self.decoder(x, encoder_feature_maps[1:])
 
+        print(f"Parameters in encoder: {np.sum([K.count_params(p) for p in self.encoder.trainable_weights])}")
+        print(f"Parameters in decoder: {np.sum([K.count_params(p) for p in self.decoder.trainable_weights])}")
+
+        return [self.output_layers[i](x) for i in range(self.num_outputs)], self.bottleneck
+    
 
 def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 7, kernel_initializer: str = 'HeNormal'):
     input = keras.Input(shape=input_shape)
@@ -184,6 +239,14 @@ def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = 
 def create_MultiOutputUNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 1, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer: str = 'HeNormal', leaky_relu = False):
     input = keras.Input(shape=input_shape)
     outputs = MultiOutputUNET(channels = channels, num_classes = num_classes, pooling_factor=pooling_factor, num_outputs=num_outputs, average_pool=average_pool, kernel_initializer = kernel_initializer, leaky_relu = leaky_relu)(input)
+
+    model = keras.models.Model(inputs=input, outputs=outputs)
+
+    return model
+
+def create_MultiOutputUNET_seggradcam(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 1, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer: str = 'HeNormal', leaky_relu = False):
+    input = keras.Input(shape=input_shape)
+    outputs = MultiOutputUNET_seggradcam(channels = channels, num_classes = num_classes, pooling_factor=pooling_factor, num_outputs=num_outputs, average_pool=average_pool, kernel_initializer = kernel_initializer, leaky_relu = leaky_relu)(input)
 
     model = keras.models.Model(inputs=input, outputs=outputs)
 

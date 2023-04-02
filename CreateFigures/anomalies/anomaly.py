@@ -42,7 +42,7 @@ def main():
 
     path = f"/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/2022/01/"
     # path_figure = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/lustre_poster_extra/"
-    path_figure = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/anomalies/"
+    path_figure = "/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/anomalies/"
 
 
     lower_boundary = 578
@@ -69,7 +69,15 @@ def main():
     xticks = [-20,-10, 0, 10,20,30,40,50,60,70,80,90,100,110,120]
     yticks = [60,65,70, 75, 80, 85,90]
 
-    ice_cmap = mpl.colormaps['RdYlBu']
+    ice_cmap = mpl.colormaps['RdBu']
+    ice_colors = ice_cmap(np.linspace(0, 1, 13))
+    ice_cmap = colors.ListedColormap(ice_colors)
+
+    ice_levels = np.linspace(-6, 7, 14, dtype = 'int')
+    ice_norm = colors.BoundaryNorm(ice_levels, ice_cmap.N)
+
+    ice_ticks = [f'{i}' for i in range(-6,7)]
+
     land_cmap = WMOcolors.cm.land()
 
     sns.set_theme(context='paper')
@@ -95,25 +103,19 @@ def main():
     x0,y0 = PRJ(lon[0,0], lat[0,0])
     x1,y1 = PRJ(lon[-1,-1], lat[-1,-1])
 
-
-    # Plot figure b
     with Dataset(data_ic, 'r') as ic:
         sic_ic = onehot_encode_sic(ic['sic'][lower_boundary:, :rightmost_boundary])
     
     sic_ic_interpolator = NearestNDInterpolator(mask_T, sic_ic[mask])
     sic_ic = sic_ic_interpolator(*np.indices(sic_ic.shape))
 
-    # divider1 = make_axes_locatable(ax[1])
-    # cax1 = divider1.append_axes("bottom", size="3%", pad=.05)
-
-    # Plot figure c
     with h5py.File(data_ml, 'r') as ml:
         sicml = ml['y_pred'][0,:,:]
 
     
     anomalies = sicml - sic_ic
 
-    ax[0].pcolormesh(lon, lat, anomalies, transform=data_proj, cmap = ice_cmap, zorder=1, rasterized = True)
+    ax[0].pcolormesh(lon, lat, anomalies, transform=data_proj, cmap = ice_cmap, norm = ice_norm, zorder=1, rasterized = True)
     ax[0].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
 
     ax[0].set_xlim(x0,x1)
@@ -128,18 +130,18 @@ def main():
     LambertLabels.lambert_xticks(ax[0], xticks)
     LambertLabels.lambert_yticks(ax[0], yticks)
 
+    mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)
 
-    mapper = mpl.cm.ScalarMappable(cmap = ice_cmap)
 
-    cbar = fig.colorbar(mapper,
+    cbar = fig.colorbar(mapper, 
                         ax = ax[0],
-                        # spacing = 'uniform',
+                        spacing = 'uniform',
                         orientation = 'vertical'
                         # drawedges = True
     )
 
     cbar.set_label(label = 'Category anomaly')
-    # cbar.set_ticks(ice_levels[:-1] + .5, labels = ice_ticks)
+    cbar.set_ticks(ice_levels[:-1] + .5, labels = ice_ticks)
 
 
     print('saving fig')
