@@ -20,7 +20,6 @@ def running_min(df):
 
 
 
-# PATH_FILE = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_22021826.log"
 
 # PATH_FILE2 = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_15022058.log"
 
@@ -34,7 +33,7 @@ file_mins, lr_changes = running_min(file)
 
 # file2_mins, lr2_changes = running_min(file2)
 
-sns.set_theme(context='paper')
+sns.set_theme()
 
 ax = file['loss'].plot(label='Training loss', zorder = 1)
 file['val_loss'].plot(ax = ax, label='Validation loss', zorder = 3)
@@ -47,5 +46,9 @@ ax.legend()
 print(lr_changes[10:].sum())
 
 # plt.show()
+<<<<<<< HEAD
 # plt.savefig('loss_big_data_t2m.png')
 plt.savefig('/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/loss_curves/loss_gs_middle_left.png')
+=======
+plt.savefig('loss_curve_best_model_gs.pdf')
+>>>>>>> 83ab271fbe32bf18cd1627ea6d379f65690f8960
