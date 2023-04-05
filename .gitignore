@@ -653,3 +653,4 @@ CreateFigures/inkscape/Selvaraju2016.xcf
 local_results/seg-grad-cam/Data/models/weights_21021550.data-00000-of-00001
 local_results/seg-grad-cam/Data/models/weights_21021550.index
 find_large_files.sh
+local_results/seg-grad-cam/SegGradCAM-0.1.2.tar.gz
