@@ -178,7 +178,22 @@ Motivated by the bias-variance tradeoff described at the end of section (\ref{se
 
 
 \subsection{Hyperparameter tuning and model selection}
-Throughout this section, the ice edge displacement metric is referred to frequently. If not otherwise stated, what is referred to is the IIEE of the $(> 10\%)$ contour normalized with respect to the climatological sea ice edge (section \ref{sec:osisafcdr}). Notations such as NIIEE refer to the just described metric. 
+\label{sec:model_development_results}
+Throughout this section, the ice edge displacement metric is referred to frequently. If not otherwise stated, what is referred to is the IIEE of the $(> 10\%)$ contour normalized with respect to the climatological sea ice edge (section \ref{sec:osisafcdr}). Notations such as NIIEE refer to the just described metric. The details are described in the following section \ref{sec:clim_iceedge_compute}.
+
+\subsubsection{Computing a climatological sea ice edge}
+\label{sec:clim_iceedge_compute}
+The IIEE \citep{Goessling2016} was derived in section \ref{sec:iiee} as an ice edge aware metric, which reports the average sea ice edge displacement error between two products when divided by the length of the sea ice edge \citep{Melsom2019}. Moreover, section \ref{sec:osisafcdr} presented the OSI SAF CDR as an independent observational product which will be utilized to derive a climatological sea ice edge which will serve as a normalization factor for the computed IIEE. What follows are the considerations made to construct the climatological sea ice edge.
+
+Following the definition of the MIZ from \citet{Strong2012}, the lower boundary of the MIZ is used to define the sea ice edge concentration threshold. Using the 15\% sea ice concentration as a threshold for the sea ice edge is customary in similar works on sea ice edge verification metrics \citep{Dukhovskoy2015,Goessling2016,Goessling2018,Melsom2019}. With a threshold for the sea ice edge defined, computing the sea ice edge is done following the methodology of \citet{Melsom2019} described in section \ref{sec:iceedgelength}. As previously mentioned in section \ref{sec:osisafcdr}, the climatology sea ice edge is computed from a ten year mean (2011 - 2020) and is delivered on a daily frequency.
+
+The relationship between IIEE and a varying sea ice edge length is shown in figure \ref{fig:iiee_1km_10km}. The IIEE used in this figure was computed at 1km spatial resolution from the contour starting at 10\% sea ice concentration, with the resolution of the sea ice edge being varied. When computing the sea ice edge at 10km, both sea ice concentration fields were interpolated onto a 10km resolution grid using nearest neighbor interpolation. The correlation between the two Normalized IIEE curves in figure \ref{fig:iiee_1km_10km} is 0.98.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=.62\textwidth]{normalized_iiee}
+    \caption{\label{fig:iiee_1km_10km}Integrated Ice Edge Error computed across three years (2019, 2020 and 2021) where the target is the sea ice charts and the forecast is persistence with a two day lead time. The IIEE was computed using a 1km spatial resolution, with the resolution of the sea ice edge varied. The ice edge length was computed as the mean sea ice edge length between the two products.}
+\end{figure}
 
 \subsubsection{Single output, multiple label model}
 \label{sec:singleoutputmodel}
