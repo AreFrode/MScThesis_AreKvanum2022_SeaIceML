@@ -46,9 +46,5 @@ ax.legend()
 print(lr_changes[10:].sum())
 
 # plt.show()
-<<<<<<< HEAD
 # plt.savefig('loss_big_data_t2m.png')
 plt.savefig('/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/loss_curves/loss_gs_middle_left.png')
-=======
-plt.savefig('loss_curve_best_model_gs.pdf')
->>>>>>> 83ab271fbe32bf18cd1627ea6d379f65690f8960

@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/Debian) (preloaded format=xelatex 2023.1.11)  2 APR 2023 20:40
+This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/Debian) (preloaded format=xelatex 2023.1.11)  27 APR 2023 14:00
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -296,14 +296,14 @@ File: tikzlibrarycalc.code.tex 2013/07/15 v3.0.1a (rcs-revision 1.9)
 ! I can't write on file `/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/pipeline.aux'.
 \document ...ate \openout \@mainaux \jobname .aux 
                                                   \immediate \write \@mainau...
-l.15 \begin{document}
+l.16 \begin{document}
                      
 (Press Enter to retry, or Control-D to exit; default file extension is `.tex')
 Please type another output file name
 ! Emergency stop.
 \document ...ate \openout \@mainaux \jobname .aux 
                                                   \immediate \write \@mainau...
-l.15 \begin{document}
+l.16 \begin{document}
                      
 *** (job aborted, file error in nonstop mode)
 

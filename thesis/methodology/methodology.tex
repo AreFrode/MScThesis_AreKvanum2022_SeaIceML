@@ -150,7 +150,7 @@ To quantify the prediction error, a loss function is defined. The overall goal o
     L(p) = \sum_{i,j \subset \mathbb{Z}}w_{i,j}log(p_{l,i,j})
 \end{equation}
 
-where $w$ is a predefined weight map and $p_{l,i,j}$ is the prediction made at pixel $i,j$ at the true label $l$.
+where $w$ is a predefined weight map and $p_{l,i,j}$ (equation \ref{eq:psoftmax}) is the prediction made at pixel $i,j$ at the true label $l$.
 
 The error computed by the loss function is then sent backwards throughout the network according to the backpropagation algorithm \citep{Rumelhart1986}, which effectively computes the gradient of the loss function with regards to the trainable parameters 
 \begin{equation}
@@ -223,6 +223,7 @@ Moreover, all the entries in $E$ each contribute to the total length of the sea 
 The final length of the sea ice edge length then becomes
 
 \begin{equation}
+    \label{eq:ice-edge-length}
     L = \sum_\text{e in E} l^e
 \end{equation}
 
@@ -267,6 +268,7 @@ The length of the ice edge has a strong influence on the IIEE \citep{Goessling20
 Explainable Artificial Intelligence (XAI) is a field which has seen a recent relevance growth in conjunction with the renewed interest in deep learning methods (especially for image analysis) launched by the network proposed by \citet{Krizhevsky2012}. XAI covers methods which aim to provide insight into the "black-box problem" of machine learning \citep{Adadi2018}, which for deep learning models arise partly due to the complex structures and many nonlinear connections found in the models \citep{Lopes2022}. For the purpose of this thesis, XAI methods which aim explaining a single decision will be applied both to increase the transparency of the developed deep learning system, as well as attempting to connect a single prediction to the underlying physics present in the input variables.
 
 \subsubsection{Gradient-weighted Class Activation Mapping for semantic segmentation}
+\label{sec:seg-grad-cam}
 Several methods of XAI for visual explanations for decisions made by CNN-based models exists, such as \citep{Simonyan2013,Zhou2016,Selvaraju2016,Sundararajan2017,Lundberg2017}. The aforementioned methods are designed for image classification tasks, which covers problems where the entire image is associated with a single label. However, there has been limited work related to understanding the decisions made by semantic segmentation models \citep{Linardatos2020}.
 
 A method for activation based explanation of semantic segmentation predictions was proposed by \citet{Vinogradova2020}, which is a modification of the Gradient-weighted Class Activation Map (Grad-CAM) that was first introduced by \citet{Selvaraju2016}. Grad-CAM is an activation based explanation method, hence, Grad-CAM constructs a class activated map that highlights a weighted combination of all feature maps at a given layer for a given class. The assigned weights determines whether each feature map was considered important when predicting the considered class, and are computed from the gradient of the predicted logit with respect to each feature map at the considered layer \citep{Selvaraju2016}. Grad-CAM is mathematically defined as
