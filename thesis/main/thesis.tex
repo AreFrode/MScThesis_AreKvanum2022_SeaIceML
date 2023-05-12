@@ -14,6 +14,7 @@
 \date{\today}
 
 \begin{document}
+\graphicspath{{thesis/datasets/figures/}{thesis/methodology/figures/}{thesis/data_and_pipeline/figures/}{thesis/model_development/figures/}{thesis/performance_assessment/figures/}{thesis/physical_connections/figures/}{thesis/discussion/figures/}{thesis/appendix/figures/}}
 \def\biblio{} % Reset command defined to apply bibliography in subfiles
 
 \maketitle
@@ -26,19 +27,10 @@
 
 
 % Data
-% - Describe the datasets used for the thesis, this includes 
-% * AROME ARCTIC
-% * Ice Charts
-% * OsiSaf
-% * AMSR2
-%
-% - Describe their spatial information, how data is gathered, are there any errors in the data, missing dates?
-% - 
 \subfile{../datasets/datasets.tex}
 
 
 % Theory and Methodology
-% - Describe the general methods used to develop a unet
 \subfile{../methodology/methodology.tex}
 % \subfile{../verification_metrics/verification.tex}
 
