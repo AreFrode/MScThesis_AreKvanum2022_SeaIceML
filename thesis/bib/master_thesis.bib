@@ -11,20 +11,6 @@
   publisher = {Copernicus {GmbH}},
 }
 
-@Article{Fritzner2020,
-  author    = {Sindre Fritzner and Rune Graversen and Kai H. Christensen},
-  title     = {Assessment of High-Resolution Dynamical and Machine Learning Models for Prediction of Sea Ice Concentration in a Regional Application},
-  year      = {2020},
-  month     = oct,
-  note      = {Neural Networks for predicting Sea-Ice concentration are only slightly more accurate than persistence forecasting for short-term predictions.},
-  number    = {11},
-  volume    = {125},
-  comment   = {*Read*},
-  doi       = {10.1029/2020jc016277},
-  file      = {:fritzner2020.pdf:PDF},
-  publisher = {American Geophysical Union ({AGU})},
-}
-
 @Article{Soenderby2020,
   author        = {Casper Kaae Sønderby and Lasse Espeholt and Jonathan Heek and Mostafa Dehghani and Avital Oliver and Tim Salimans and Shreya Agrawal and Jason Hickey and Nal Kalchbrenner},
   title         = {MetNet: A Neural Weather Model for Precipitation Forecasting},
@@ -754,18 +740,6 @@ The Cold Air Outbreak (CAO) phenomena is described. A CAO is an event that occur
   file   = {:/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/bib/nvidia-ampere-architecture-whitepaper.pdf:PDF},
 }
 
-@Article{Roehrs2022,
-  author   = {Johannes Röhrs and Yvonne Gusdal and Edel Rikardsen and Marina Duran Moro and Jostein Brændshøi and Nils Melsom Kristensen and Sindre Fritzner and Keguang Wang and Ann Kristin Sperrevik and Martina Idžanović and Thomas Lavergne and Jens Debernard and Kai H. Christensen},
-  title    = {"in prep for GMD" An operational data-assimilative coupled ocean and sea ice ensembleprediction model for the Barents Sea and Svalbard},
-  year     = {2022},
-  pages    = {20},
-  abstract = {An operational ocean and sea ice forecast model, Barents-2.5 , is implemented at MET Norway for short-term forecasting of the ocean’s state at the coast off Northern Norway, the Barents Sea, and waters around Svalbard. Primary forecast parameters are the extent of the ice cover, sea surface temperature (SST), and ocean currents. The model is also an
-substantial input for drift modeling of pollutants, ice berg, and in search-and-rescue pertinent applications in the Arctic domain. Barents-2.5 has recently been upgraded to include an Ensemble Prediction System with 24 daily realizations of the model state. Sea ice cover, SST and in-situ hydrography are constrained through a Ensemble-Kalman filter (EnKF) data assimilation scheme executed in daily forecast cycles with lead time up to 66 hours. While the ocean circulation is not directly constrained
-by assimilation of ocean currents, the model ensemble represents the given uncertainty in the short-term current field by retaining the current state for each member throughout forecast cycles. We present here a model validation in terms of sea ice concentration, SST and in-situ hydrography, the performance of the ensemble to represent the models uncertainty, and the performance of the EnKF to constrain the model state. Finally, a discussion of forecast skill for selected variables is provided.},
-  comment  = {"GMD" = Geoscientific Model Development?},
-  file     = {:Roehrs2022.pdf:PDF},
-}
-
 @TechReport{Hunke2015,
   author      = {Elizabeth C. Hunke and William H. Lipscomb and Adrian K. Turner and Nicole Jeffery and Scott Elliott},
   institution = {Los Alamos National Laboratory},
@@ -998,13 +972,14 @@ This is an interesting remark as to why I should avoid computing the MHD for my 
 }
 
 @TechReport{Lavergne2019a,
-  author = {Thomas Lavergne and Rasmus Tonboe and John Lavelle and Steinar Eastwood},
-  title  = {Algorithm Theoretical Basis Document for the OSI SAF Global Sea Ice Concentration Climate Data Record OSI-450, OSI-430-b},
-  year   = {2019},
-  month  = mar,
-  number = {1.2},
-  type   = {techreport},
-  file   = {:Lavergne2019a.pdf:PDF},
+  author      = {Thomas Lavergne and Rasmus Tonboe and John Lavelle and Steinar Eastwood},
+  institution = {EUMETSAT Ocean and Sea Ice SAF High Latitude Processing Centre},
+  title       = {Algorithm Theoretical Basis Document for the OSI SAF Global Sea Ice Concentration Climate Data Record OSI-450, OSI-430-b},
+  year        = {2019},
+  month       = mar,
+  number      = {1.2},
+  type        = {techreport},
+  file        = {:Lavergne2019a.pdf:PDF},
 }
 
 @Misc{Melsheimer2020,
@@ -1020,6 +995,7 @@ This is an interesting remark as to why I should avoid computing the MHD for my 
 
 @Article{Haiden2022,
   author    = {Haiden, Thomas and Janousek, Martin and Vitart, Frédéric and Ben-Bouallegue, Zied and Ferranti, Laura and Prates, Fernando and Richardson, David},
+  journal   = {ECMWF Technical Memoranda},
   title     = {Evaluation of ECMWF forecasts, including the 2021 upgrade},
   year      = {2022},
   doi       = {10.21957/XQNU5O3P},
@@ -1028,6 +1004,7 @@ This is an interesting remark as to why I should avoid computing the MHD for my 
 
 @Article{Bauer2013,
   author    = {Bauer, Peter and Beljaars, Anton and Ahlgrimm, Maike and Bechtold, Peter and Bidlot, Jean-Raymond and Bonavita, Massimo and Bozzo, Alessio and Forbes, Richard and Hólm, E. and Leutbecher, Martin and Lopez, Philippe and Magnusson, L. and Prates, F. and Rodwell, Mark and Sandu, Irina and Untch, A. and Vitart, Frédéric},
+  journal   = {ECMWF Technical Memoranda},
   title     = {Model Cycle 38r2: Components and Performance},
   year      = {2013},
   doi       = {10.21957/XC1R0LJ6L},
@@ -1250,13 +1227,14 @@ This is an interesting remark as to why I should avoid computing the MHD for my 
 }
 
 @InProceedings{Nair2010,
-author = {Nair, Vinod and Hinton, Geoffrey},
-year = {2010},
-month = {06},
-pages = {807-814},
-title = {Rectified Linear Units Improve Restricted Boltzmann Machines Vinod Nair},
-volume = {27},
-journal = {Proceedings of ICML}
+  author    = {Nair, Vinod and Hinton, Geoffrey},
+  booktitle = {ICML'10: Proceedings of the 27th International Conference on International Conference on Machine Learning},
+  title     = {Rectified Linear Units Improve Restricted Boltzmann Machines Vinod Nair},
+  year      = {2010},
+  month     = {06},
+  pages     = {807-814},
+  volume    = {27},
+  journal   = {Proceedings of ICML},
 }
 
 @TechReport{Lavelle2017,
@@ -1281,7 +1259,7 @@ journal = {Proceedings of ICML}
 }
 
 @InProceedings{MihaiDaniel2020,
-  author    = {Mihai Daniel RADU and Ilona Madalina COSTEA and Valentin Alexandru STAN},
+  author    = {Mihai Daniel Radu and Ilona Madalina Costea and Valentin Alexandru Stan},
   booktitle = {2020 12th International Conference on Electronics, Computers and Artificial Intelligence ({ECAI})},
   title     = {Automatic Traffic Sign Recognition Artificial Inteligence - Deep Learning Algorithm},
   year      = {2020},
@@ -1910,15 +1888,10 @@ journal = {Proceedings of ICML}
 }
 
 @TechReport{Carrasco2022,
-  author = {Ana Carrasco and Øyvind Saetra and Arild Burud and Malte Müller and Arne Melsom},
-  title  = {PRODUCT USER MANUAL For Arctic Ocean Wave Analysis and Forecasting Products ARCTIC\_ANALYSIS\_FORECAST\_WAV\_002\_014},
-  year   = {2022},
-}
-
-@Article{Mueller2023,
-  author = {Malte Müller and Yurii Batrak and Frode Dinessen and Rafael Grote and Keguang Wang},
-  title  = {"Submitted" Challenges in the description of sea-ice for a kilometer-scale weather forecasting system},
-  year   = {2023},
+  author      = {Ana Carrasco and Øyvind Saetra and Arild Burud and Malte Müller and Arne Melsom},
+  institution = {EU Copernicus Marine Service},
+  title       = {PRODUCT USER MANUAL For Arctic Ocean Wave Analysis and Forecasting Products ARCTIC\_ANALYSIS\_FORECAST\_WAV\_002\_014},
+  year        = {2022},
 }
 
 @Article{Murphy1993,
@@ -1932,6 +1905,152 @@ journal = {Proceedings of ICML}
   volume    = {8},
   doi       = {10.1175/1520-0434(1993)008<0281:wiagfa>2.0.co;2},
   publisher = {American Meteorological Society},
+}
+
+@Article{Fritzner2020,
+  author    = {Sindre Fritzner and Rune Graversen and Kai H. Christensen},
+  journal   = {Journal of Geophysical Research: Oceans},
+  title     = {Assessment of High-Resolution Dynamical and Machine Learning Models for Prediction of Sea Ice Concentration in a Regional Application},
+  year      = {2020},
+  month     = oct,
+  number    = {11},
+  volume    = {125},
+  comment   = {*Read*},
+  doi       = {10.1029/2020jc016277},
+  file      = {:fritzner2020.pdf:PDF},
+  publisher = {American Geophysical Union ({AGU})},
+}
+
+@Article{Roehrs2022,
+  author    = {Johannes Röhrs and Yvonne Gusdal and Edel Rikardsen and Marina Duran Moro and Jostein Br{\ae}ndsh{\o}i and Nils Melsom Kristensen and Sindre Fritzner and Keguang Wang and Ann Kristin Sperrevik and Martina Id{\v{z}}anovi{\'{c}} and Thomas Lavergne and Jens Debernard and Kai H. Christensen},
+  journal   = {Geoscientific Model Development},
+  title     = {Barents-2.5km v2.0: An operational data-assimilative coupled ocean and sea ice ensemble prediction model for the Barents Sea and Svalbard},
+  year      = {2023},
+  month     = {mar},
+  doi       = {10.5194/gmd-2023-20},
+  publisher = {Copernicus {GmbH}},
+}
+
+@Article{Mueller2023,
+  author    = {Malte Müller and Yurii Batrak and Frode Dinesen and Rafael Grote and Keguang Wang},
+  journal   = {Weather and Forecasting},
+  title     = {Challenges in the description of sea-ice for a kilometer-scale weather forecasting system},
+  year      = {2023},
+  month     = {apr},
+  doi       = {10.1175/waf-d-22-0134.1},
+  publisher = {American Meteorological Society},
+}
+
+@TechReport{WMO2014,
+  author      = {{World Meteorological Organization}},
+  institution = {WMO},
+  title       = {Sea-Ice Nomenclature: WMO 259},
+  year        = {2014},
+}
+
+@Article{Palma2019,
+  author    = {David Palma and Alix Varnajot and Kari Dalen and Ilker K. Basaran and Charles Brunette and Marta Bystrowska and Anastasia D. Korablina and Robynne C. Nowicki and Thomas A. Ronge},
+  journal   = {Polar Geography},
+  title     = {Cruising the marginal ice zone: climate change and Arctic tourism},
+  year      = {2019},
+  month     = {aug},
+  number    = {4},
+  pages     = {215--235},
+  volume    = {42},
+  doi       = {10.1080/1088937x.2019.1648585},
+  publisher = {Informa {UK} Limited},
+}
+
+@Article{Stocker2020,
+  author    = {Alexandra N. Stocker and Angelika H. H. Renner and Maaike Knol-Kauffman},
+  journal   = {Scientific Reports},
+  title     = {Sea ice variability and maritime activity around Svalbard in the period 2012{\textendash}2019},
+  year      = {2020},
+  month     = {oct},
+  number    = {1},
+  volume    = {10},
+  doi       = {10.1038/s41598-020-74064-2},
+  publisher = {Springer Science and Business Media {LLC}},
+}
+
+@Article{Kohout2014,
+  author    = {A. L. Kohout and M. J. M. Williams and S. M. Dean and M. H. Meylan},
+  journal   = {Nature},
+  title     = {Storm-induced sea-ice breakup and the implications for ice extent},
+  year      = {2014},
+  month     = {may},
+  number    = {7502},
+  pages     = {604--607},
+  volume    = {509},
+  doi       = {10.1038/nature13262},
+  publisher = {Springer Science and Business Media {LLC}},
+}
+
+@Article{Oziel2016,
+  author    = {L. Oziel and J. Sirven and J.-C. Gascard},
+  journal   = {Ocean Science},
+  title     = {The Barents Sea frontal zones and water masses variability (1980{\textendash}2011)},
+  year      = {2016},
+  month     = {jan},
+  number    = {1},
+  pages     = {169--184},
+  volume    = {12},
+  doi       = {10.5194/os-12-169-2016},
+  publisher = {Copernicus {GmbH}},
+}
+
+@Article{Castro2023,
+  author  = {Sandra L. Castro and Gary A. Wick and Steinar Eastwood and Michael A Steele and Rasmus T. Tonboe},
+  journal = {Remote Sensing},
+  title   = {"in review" Examining the Consistency of Sea Surface Temperature and Sea Ice Concentration in Arctic Satellite Products},
+  year    = {2023},
+}
+
+@Conference{Durand2023,
+  author    = {Charlotte Durand and Tobias Finn and Alban Farchi and Marc Bocquet and Einar Ólason},
+  booktitle = {11th International Workshop on Sea Ice Modelling, Assimilation, Observations, Predictions and Verification, Oslo, Norway},
+  title     = {Deep learning for surrogate modeling of neXtSIM},
+  year      = {2023},
+  month     = mar,
+  url       = {https://iicwg-da-11.met.no/},
+}
+
+@Article{Johannessen1978,
+  author    = {Ola M. Johannessen and L. A. Foster},
+  journal   = {Journal of Geophysical Research},
+  title     = {A note on the topographically controlled Oceanic Polar Front in the Barents Sea},
+  year      = {1978},
+  number    = {C9},
+  pages     = {4567},
+  volume    = {83},
+  doi       = {10.1029/jc083ic09p04567},
+  publisher = {American Geophysical Union ({AGU})},
+}
+
+@Article{Fennel1998,
+  author    = {Wolfgang Fennel and Ola M. Johannessen},
+  journal   = {Journal of Marine Systems},
+  title     = {Wind forced oceanic responses near ice edges revisited},
+  year      = {1998},
+  month     = {jan},
+  number    = {1-2},
+  pages     = {57--79},
+  volume    = {14},
+  doi       = {10.1016/s0924-7963(97)00018-3},
+  publisher = {Elsevier {BV}},
+}
+
+@Article{Kim2006,
+  author    = {Jong G. Kim and Elizabeth C. Hunke and William H. Lipscomb},
+  journal   = {Ocean Modelling},
+  title     = {Sensitivity analysis and parameter tuning scheme for global sea-ice modeling},
+  year      = {2006},
+  month     = {jan},
+  number    = {1-2},
+  pages     = {61--80},
+  volume    = {14},
+  doi       = {10.1016/j.ocemod.2006.03.003},
+  publisher = {Elsevier {BV}},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
