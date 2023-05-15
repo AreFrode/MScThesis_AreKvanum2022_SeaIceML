@@ -22,7 +22,7 @@
 
 \pagenumbering{roman} % Roman page numbering
 \section*{Acknowledgements}
-I would like to thank all my supervisors for all the help, discussions, feedback and inspiration. A special thanks is extended to Cyril Palerme for introducing me to the field of Arctic sea ice, giving me the possibility to interact with the sea ice community and for always being available regardless the length of my inquiries. I am also thankful to my co-supervisors Malte Müller and Jean Rabault for presenting ideas and giving me advice this last year and a half. Many thanks to Nick Hughes and Penelope Wagner at the Norwegian Ice Service for the hospitality during my visit in June 2022, and for the possibility to observe and discuss directly with Trond Robertsen while he produced a sea ice chart, giving me unique insight into the process. Extra thanks to Nick Hughes for preparing multiple sea ice charts datasets. I am also grateful to MET Norway for giving me access to their technical resources, and for letting me use the NVIDIA A100 GPU which this work would not be possible without.
+I would like to thank my supervisors for all the help, discussions, feedback and inspiration. A special thanks is extended to Cyril Palerme for introducing me to the field of Arctic sea ice, giving me the possibility to interact with the sea ice community and for always being available regardless the length of my inquiries. I am also thankful to my co-supervisors Malte Müller and Jean Rabault for presenting ideas and giving me advice this last year and a half. Many thanks to Nick Hughes and Penelope Wagner at the Norwegian Ice Service for the hospitality during my visit in June 2022, and for the possibility to observe and discuss directly with Trond Robertsen while he produced a sea ice chart, giving me unique insight into the process. Extra thanks to Nick Hughes for preparing multiple sea ice chart datasets. I am also grateful to MET Norway for giving me access to their technical resources, and for letting me use the NVIDIA A100 GPU which this work would not be possible without.
 
 To all my friends, thank you for making my studies a fun and memorable time, either on or off campus. Thank you to my family for always supporting me.
 
@@ -36,13 +36,13 @@ Finally, I want to thank Elise for all the late-night dinners, invaluable discus
 \newpage
 
 \begin{abstract}
-This thesis aims to develop a deep learning forecasting system which can predict sea ice concentration at one kilometer resolution for 1 to 3-day lead time. There has been a steady increase of marine activity throughout the Arctic Ocean during the last decades, and maritime end users are requesting skillful high-resolution sea ice forecasts to ensure the safety of operations. Different studies have demonstrated the effectiveness of utilizing computationally lightweight deep learning models to predict sea ice concentration in the Arctic, but few have explored the integration of real-time data to create an operational forecasting system.
+There has been a steady increase of marine activity throughout the Arctic Ocean during the last decades, and maritime end users are requesting skillful high-resolution sea ice forecasts to ensure operational safety. Different studies have demonstrated the effectiveness of utilizing computationally lightweight deep learning models to predict sea ice concentration in the Arctic, but few have explored the integration of real-time data to create an operational forecasting system.
 
-A modified U-Net architecture has been trained on sea ice charts drawn by the Norwegian Ice Service, atmospheric forecasts from the AROME Arctic numerical weather prediction system hosted by MET Norway and OSI SAF SSMIS passive microwave sea ice concentration observations to establish the Deep learning forecasting system. The Deep learning system has primarily been validated against the normalized integrated ice edge error, which is a sea ice edge aware skill-metric that ensures operational relevance.
+This thesis aims to develop a deep learning forecasting system which can predict sea ice concentration at one kilometer resolution for 1 to 3-day lead time. Deep learning models have been trained using sea-ice charts form the Norwegian Ice Service, and predictors from the AROME Arctic numerical weather prediction system hosted by the Norwegian Meteorological Institute and OSI SAF SSMIS passive microwave sea ice concentration observations to establish the deep learning forecasting system. The deep learning system has primarily been validated using the normalized integrated ice edge error, which is a sea ice edge aware skill-metric that ensures operational relevance.
 
-It is shown that the Deep learning forecasting system achieves lower seasonal mean and median normalized integrated ice edge error for several sea ice concentration contours when compared against baseline-forecasts (persistence-forecasts and linear trend), as well as two state-of-the-art dynamical sea ice models (neXtSIM and Barents-2.5) for all considered lead times and seasons. This result was repeated when changing the validational data to sea ice concentration from independent AMSR2 observations, demonstrating generalizability of the Deep learning forecasts.
+It is shown that the deep learning forecasting system achieves lower seasonal mean and median normalized integrated ice edge error for several sea ice concentration contours when compared against baseline-forecasts (persistence-forecasts and linear trend), as well as two state-of-the-art dynamical sea ice forecasting systems (neXtSIM and Barents-2.5) for all considered lead times and seasons. This result was repeated when changing the validational data to sea ice concentration from independent AMSR2 observations, demonstrating generalizability of the deep learning forecasts.
 
-The Deep learning system was also investigated in terms of explainability. Through different predictor-modifying experiments, it is shown that the contributions from AROME Arctic forecasts are essential for the Deep learning forecasts to achieve performance beyond persistence-forecasting. However, through use of the novel segmentation gradient-weighted class activation mapping technique, it is suggested that 2-meter temperature from AROME Arctic may degrade deep learning performance by limiting the extent of important pixels to the sea ice extent.
+The deep learning system was also investigated in terms of explainability. With different predictor-modifying experiments, it is shown that the contributions from AROME Arctic weather forecasts are essential for the deep learning forecasts to achieve performance beyond persistence-forecasting. However, through use of the novel segmentation gradient-weighted class activation mapping technique, it is suggested that 2-meter temperature from AROME Arctic may degrade deep learning performance by limiting the extent of important pixels to be contained within the sea ice extent.
 
 \end{abstract}
 \newpage
@@ -50,38 +50,84 @@ The Deep learning system was also investigated in terms of explainability. Throu
 \tableofcontents
 \newpage
 
+\listoffigures
+\newpage
+
+\listoftables
+\newpage
+
+\section*{List of Abbreviations}
+\textbf{NIS} Ice Service of the Norwegian Meteorological Institute
+
+\textbf{OSI SAF} Ocean and Sea Ice Satellite Application Facilities
+
+\textbf{ECMWF} European Center for Medium-Range Weather Forecasts
+
+\textbf{GPU} Graphics Processing Unit
+
+\textbf{CNN} Convolutional Neural Network
+
+\textbf{IIEE} Integrated Ice Edge Error
+
+\textbf{MIZ} Marginal Ice Zone
+
+\textbf{SSMIS} Special Sensor Microwave Imager and Sounder
+
+\textbf{CDR} Climate Data Record
+
+\textbf{AMSR2} Advanced Microwave Scanning Radiometer 2
+
+\textbf{AI} Artificial Intelligence
+
+\textbf{CPU} Central Processing Unit
+
+\textbf{ReLU} Rectified Linear Unit
+
+\textbf{NIIEE} Normalized Integrated Ice Edge Error
+
+\textbf{XAI} Explainable Artificial Intelligence
+
+\textbf{Grad-CAM} Gradient-weighted Class Activation Mapping
+
+\textbf{Seg-GradCAM} Gradient-weighted Class Activation Mapping for Semantic Segmentation
+
+\textbf{IID} Independently and Identically Distributed
+
+\newpage
+
 \pagenumbering{arabic} % start arabic page numbering
 % Introductions
 \subfile{../introduction/introduction.tex}
-
+\newpage
 
 % Data
 \subfile{../datasets/datasets.tex}
-
+\newpage
 
 % Theory and Methodology
 \subfile{../methodology/methodology.tex}
+\newpage
 
 
 % Developing the unet
 \subfile{../model_development/model_development.tex}
-
+\newpage
 
 % Performance assessment
 \subfile{../performance_assessment/performance_assessment.tex}
-
+\newpage
 
 % Physical connections
 \subfile{../physical_connections/physical_connection.tex}
-
+\newpage
 
 % Discussion
 \subfile{../discussion/discussion.tex}
-
+\newpage
 
 % Conclusions
 \subfile{../conclusions_and_perspectives/conclusions_and_perspectives.tex}
-
+\newpage
 
 % Bibliography
 % \bibliographystyle{unsrt}
