@@ -1,9 +1,9 @@
 \documentclass[../main/thesis]{subfiles}
 
 % Overleaf graphics path
-% \graphicspath{{thesis/model_development/figures/}}
+\graphicspath{{thesis/model_development/figures/}}
 
-\graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/}}
+% \graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/}}
 \begin{document}
 
 \section{Model development}
@@ -17,7 +17,8 @@ An overview of the data pipeline and workflow is described in Figure \ref{fig:da
 
 \begin{figure}
     \centering
-    \includestandalone[width=.865\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/pipeline}
+    % \includestandalone[width=.865\textwidth]{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/model_development/figures/pipeline}
+    \includestandalone[width=.865\textwidth]{thesis/model_development/figures/pipeline}
     \caption{\label{fig:data_pipeline} Workflow figure providing an overview of the data pipeline. Data are sampled from four sources (Sea Ice Charts, OSI SAF SSMIS, AROME Arctic and a Land Sea Mask), preprocessed and merged into a single sample. The sample is fed into the network together with an associated sea ice chart which is the target variable. The predicted sea ice chart is compared against the ground truth sea ice chart, and their binary cross entropy error is propagated backwards throughout the network, which constitutes a step in the training loop.}
 \end{figure}
 

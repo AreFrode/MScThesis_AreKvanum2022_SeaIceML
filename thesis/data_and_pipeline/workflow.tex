@@ -1,9 +1,11 @@
 \documentclass[../main/thesis.tex]{subfiles}
-\graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/data_and_pipeline/figures/}{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/tikz/figures/}}
+
+% overleaf compile
+\graphicspath{{thesis/data_and_pipeline/figures/}}
+
+% local compile
+% \graphicspath{{/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/data_and_pipeline/figures/}}
 \begin{document}
-
-\todo{Dette kan integreres med \textbf{model\_development}}
-
 \section{Data pipeline}
 The deep learning system can be disassembled into two parts working in tangent. The deep learning architecture which propagates fields containing information through its weights, and the dataloader which structures the dataset into trainable samples. This section will describe the process from raw data to ready sample, with the following Section (\ref{sec:developing a unet}) containing a rundown and results of the model architecture.
 
