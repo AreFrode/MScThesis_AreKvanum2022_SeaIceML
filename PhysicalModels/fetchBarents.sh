@@ -8,9 +8,9 @@
 
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
 
-module use /modules/MET/centos7/GeneralModules
+source /modules/rhel8/conda/install/etc/profile.d/conda.sh
 
-module load Python-devel/3.8.7
+conda activate /lustre/storeB/users/arefk/conda_envs/conda_compute
 
 python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchBarents.py $SGE_TASK_ID nextsim
 python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchBarents.py $SGE_TASK_ID amsr2

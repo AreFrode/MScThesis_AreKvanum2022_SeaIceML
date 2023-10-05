@@ -61,13 +61,13 @@ def main():
         with h5py.File(forecast, 'r') as infile:
             sic_forecast = infile['y_pred'][0]
 
-        rmse = root_mean_square_error(sic_forecast, sic_target, lsmask)
+        # rmse = root_mean_square_error(sic_forecast, sic_target, lsmask)
 
-        # ice_edge_target = find_ice_edge(sic_target, lsmask)
-        # target_length = ice_edge_length(ice_edge_target)
+        ice_edge_target = find_ice_edge(sic_target, lsmask)
+        target_length = ice_edge_length(ice_edge_target)
 
-        # ice_edge_forecast = find_ice_edge(sic_forecast, lsmask)
-        # forecast_length = ice_edge_length(ice_edge_forecast)
+        ice_edge_forecast = find_ice_edge(sic_forecast, lsmask)
+        forecast_length = ice_edge_length(ice_edge_forecast)
         
         NIIEE = []
         for i in range(1, config['num_outputs']):
@@ -84,11 +84,11 @@ def main():
         # a_plus_minimum_distance = minimumDistanceToIceEdge(a_plus, ice_edge_target, lat, lon)
         # a_minus_minimum_distance = minimumDistanceToIceEdge(a_minus, ice_edge_target, lat, lon)
 
-        output_list.append([pd.to_datetime(date, format="%Y%m%d"), rmse, *NIIEE, *area_dist_target.tolist(), *area_dist_forecast.tolist()])
+        output_list.append([pd.to_datetime(date, format="%Y%m%d"), target_length, forecast_length, *NIIEE, *area_dist_target.tolist(), *area_dist_forecast.tolist()])
 
 
     # output_df = pd.DataFrame(output_list, columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus', 'mean_minimum_distance_to_ice_edge_a_plus', 'mean_minimum_distance_to_ice_edge_a_minus', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6'])
-    output_df = pd.DataFrame(output_list, columns = ['date', 'rmse', *[f"NIIEE_{i}" for i in range(1, config['num_outputs'])], *[f"target_area{i}" for i in range(config['num_outputs'])], *[f"forecast_area{i}" for i in range(config['num_outputs'])]])
+    output_df = pd.DataFrame(output_list, columns = ['date', 'target_length', 'forecast_length', *[f"NIIEE_{i}" for i in range(1, config['num_outputs'])], *[f"target_area{i}" for i in range(config['num_outputs'])], *[f"forecast_area{i}" for i in range(config['num_outputs'])]])
 
     output_df = output_df.set_index('date')
     output_df.to_csv(f"{PATH_OUTPUTS}{model_name}.csv")

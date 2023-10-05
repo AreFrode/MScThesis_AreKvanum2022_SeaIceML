@@ -1,9 +1,7 @@
 import pandas as pd
 import seaborn as sns
 
-from matplotlib import pyplot as plt
-from matplotlib import dates as mdates
-from matplotlib import ticker as mticker
+from matplotlib import pyplot as plt, dates as mdates, ticker as mticker
 
 
     
@@ -21,27 +19,28 @@ def main():
     climatological_ice_edge.index = '2022-' + climatological_ice_edge.index
     climatological_ice_edge = climatological_ice_edge.set_index(pd.DatetimeIndex(pd.to_datetime(climatological_ice_edge.index)))
     
-    # Convert length from [m] to [km]
-    climatological_ice_edge['ice_edge_length'] = climatological_ice_edge['ice_edge_length'] / 1000.
-
     # Plotting
 
     sns.set_theme()
-    fig = plt.figure(figsize = (12,8))
-    ax = climatological_ice_edge['ice_edge_length'].plot()
+    fig, ax = plt.subplots(figsize = (12,8))
+    # ax = climatological_ice_edge['ice_edge_length'].plot()
+    sns.lineplot(data = climatological_ice_edge, x = climatological_ice_edge.index, y = '15%', ax = ax)
     ax.tick_params(labelsize = 14)
     ax.set_ylim(bottom = 0, top = 4000)
 
-    ax.xaxis.set_major_locator(mticker.LinearLocator(numticks = 12))
+    # ax.xaxis.set_major_locator(mticker.LinearLocator(numticks = 12))
+    months = mdates.MonthLocator()
     date_form = mdates.DateFormatter("%b")
+    ax.xaxis.set_major_locator(months)
     ax.xaxis.set_major_formatter(date_form)
+    ax.xaxis.get_major_ticks()[-1].label1.set_visible(False)
 
 
     ax.set_xlabel('Dates', fontsize = 16)
     ax.set_ylabel('Ice Edge Length [km]', fontsize = 16)
     ax.set_title('Climatological sea ice edge length', fontsize = 16)
 
-    plt.savefig('clim_iceedge.png')
+    fig.savefig('clim_iceedge.pdf')
 
 
 if __name__ == "__main__":

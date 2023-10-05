@@ -5,7 +5,7 @@
 #$ -l mem_free=8G
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/logs/visualizations
 
-weights="weights_21021550"
+weights="weights_09021654"
 
 source /modules/rhel8/conda/install/etc/profile.d/conda.sh
 

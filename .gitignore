@@ -572,7 +572,6 @@ thesis/bib/*.pdf
 *.fdb_latexmk
 *.synctex.gz
 *.run.xml
-thesis/model_development/figures/
 ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/Data/
 ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/normalized_iiee.png
 ForecastValidation/IIEE_IceEdgeLenght_CorrelationStudy/tmp.png
@@ -654,3 +653,7 @@ CreateFigures/inkscape/Selvaraju2016.xcf
 local_results/seg-grad-cam/Data/models/weights_21021550.data-00000-of-00001
 local_results/seg-grad-cam/Data/models/weights_21021550.index
 find_large_files.sh
+local_results/seg-grad-cam/SegGradCAM-0.1.2.tar.gz
+thesis/previous_writing/old.tex
+thesis/model_development/figures/pipeline.log
+CreateFigures/forecast_time_series/Forecast_time_series.pdf

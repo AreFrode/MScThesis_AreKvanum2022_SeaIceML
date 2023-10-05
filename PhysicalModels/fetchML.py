@@ -101,6 +101,10 @@ def main():
 
         output_filename = f"{weights}_{yyyymmdd_v}_b{yyyymmdd_b}.nc"
 
+        if config['reduced_classes'] == True:
+            interp_target[1] = np.where(interp_target[1] >= 0, interp_target[1] + 1, interp_target[1])
+            interp_target[1] = np.where(interp_target[1] == 1, 0, interp_target[1])
+
 
         with Dataset(f"{path_output_task}{output_filename}", 'w', format = "NETCDF4") as nc_out:
             nc_out.createDimension('x', nx)

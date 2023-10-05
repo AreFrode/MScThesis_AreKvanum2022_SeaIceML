@@ -6,13 +6,11 @@
 #$ -t 1-12
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/logs/
 
-weights="weights_09031802"
-
+weights="weights_09031047"
 echo "Got $NSLOTS slots for job $SGE_TASK_ID."
 
-module use /modules/MET/centos7/GeneralModules
-
-module load Python-devel/3.8.7
+source /modules/rhel8/conda/install/etc/profile.d/conda.sh
+conda activate /lustre/storeB/users/arefk/conda_envs/conda_compute
 
 python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/fetchML.py $weights $SGE_TASK_ID nextsim
 

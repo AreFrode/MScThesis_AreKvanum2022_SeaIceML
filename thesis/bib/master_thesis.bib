@@ -11,20 +11,6 @@
   publisher = {Copernicus {GmbH}},
 }
 
-@Article{Fritzner2020,
-  author    = {Sindre Fritzner and Rune Graversen and Kai H. Christensen},
-  title     = {Assessment of High-Resolution Dynamical and Machine Learning Models for Prediction of Sea Ice Concentration in a Regional Application},
-  year      = {2020},
-  month     = oct,
-  note      = {Neural Networks for predicting Sea-Ice concentration are only slightly more accurate than persistence forecasting for short-term predictions.},
-  number    = {11},
-  volume    = {125},
-  comment   = {*Read*},
-  doi       = {10.1029/2020jc016277},
-  file      = {:fritzner2020.pdf:PDF},
-  publisher = {American Geophysical Union ({AGU})},
-}
-
 @Article{Soenderby2020,
   author        = {Casper Kaae Sønderby and Lasse Espeholt and Jonathan Heek and Mostafa Dehghani and Avital Oliver and Tim Salimans and Shreya Agrawal and Jason Hickey and Nal Kalchbrenner},
   title         = {MetNet: A Neural Weather Model for Precipitation Forecasting},
@@ -754,18 +740,6 @@ The Cold Air Outbreak (CAO) phenomena is described. A CAO is an event that occur
   file   = {:/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/thesis/bib/nvidia-ampere-architecture-whitepaper.pdf:PDF},
 }
 
-@Article{Roehrs2022,
-  author   = {Johannes Röhrs and Yvonne Gusdal and Edel Rikardsen and Marina Duran Moro and Jostein Brændshøi and Nils Melsom Kristensen and Sindre Fritzner and Keguang Wang and Ann Kristin Sperrevik and Martina Idžanović and Thomas Lavergne and Jens Debernard and Kai H. Christensen},
-  title    = {"in prep for GMD" An operational data-assimilative coupled ocean and sea ice ensembleprediction model for the Barents Sea and Svalbard},
-  year     = {2022},
-  pages    = {20},
-  abstract = {An operational ocean and sea ice forecast model, Barents-2.5 , is implemented at MET Norway for short-term forecasting of the ocean’s state at the coast off Northern Norway, the Barents Sea, and waters around Svalbard. Primary forecast parameters are the extent of the ice cover, sea surface temperature (SST), and ocean currents. The model is also an
-substantial input for drift modeling of pollutants, ice berg, and in search-and-rescue pertinent applications in the Arctic domain. Barents-2.5 has recently been upgraded to include an Ensemble Prediction System with 24 daily realizations of the model state. Sea ice cover, SST and in-situ hydrography are constrained through a Ensemble-Kalman filter (EnKF) data assimilation scheme executed in daily forecast cycles with lead time up to 66 hours. While the ocean circulation is not directly constrained
-by assimilation of ocean currents, the model ensemble represents the given uncertainty in the short-term current field by retaining the current state for each member throughout forecast cycles. We present here a model validation in terms of sea ice concentration, SST and in-situ hydrography, the performance of the ensemble to represent the models uncertainty, and the performance of the EnKF to constrain the model state. Finally, a discussion of forecast skill for selected variables is provided.},
-  comment  = {"GMD" = Geoscientific Model Development?},
-  file     = {:Roehrs2022.pdf:PDF},
-}
-
 @TechReport{Hunke2015,
   author      = {Elizabeth C. Hunke and William H. Lipscomb and Adrian K. Turner and Nicole Jeffery and Scott Elliott},
   institution = {Los Alamos National Laboratory},
@@ -998,13 +972,14 @@ This is an interesting remark as to why I should avoid computing the MHD for my 
 }
 
 @TechReport{Lavergne2019a,
-  author = {Thomas Lavergne and Rasmus Tonboe and John Lavelle and Steinar Eastwood},
-  title  = {Algorithm Theoretical Basis Document for the OSI SAF Global Sea Ice Concentration Climate Data Record OSI-450, OSI-430-b},
-  year   = {2019},
-  month  = mar,
-  number = {1.2},
-  type   = {techreport},
-  file   = {:Lavergne2019a.pdf:PDF},
+  author      = {Thomas Lavergne and Rasmus Tonboe and John Lavelle and Steinar Eastwood},
+  institution = {EUMETSAT Ocean and Sea Ice SAF High Latitude Processing Centre},
+  title       = {Algorithm Theoretical Basis Document for the OSI SAF Global Sea Ice Concentration Climate Data Record OSI-450, OSI-430-b},
+  year        = {2019},
+  month       = mar,
+  number      = {1.2},
+  type        = {techreport},
+  file        = {:Lavergne2019a.pdf:PDF},
 }
 
 @Misc{Melsheimer2020,
@@ -1020,6 +995,7 @@ This is an interesting remark as to why I should avoid computing the MHD for my 
 
 @Article{Haiden2022,
   author    = {Haiden, Thomas and Janousek, Martin and Vitart, Frédéric and Ben-Bouallegue, Zied and Ferranti, Laura and Prates, Fernando and Richardson, David},
+  journal   = {ECMWF Technical Memoranda},
   title     = {Evaluation of ECMWF forecasts, including the 2021 upgrade},
   year      = {2022},
   doi       = {10.21957/XQNU5O3P},
@@ -1028,6 +1004,7 @@ This is an interesting remark as to why I should avoid computing the MHD for my 
 
 @Article{Bauer2013,
   author    = {Bauer, Peter and Beljaars, Anton and Ahlgrimm, Maike and Bechtold, Peter and Bidlot, Jean-Raymond and Bonavita, Massimo and Bozzo, Alessio and Forbes, Richard and Hólm, E. and Leutbecher, Martin and Lopez, Philippe and Magnusson, L. and Prates, F. and Rodwell, Mark and Sandu, Irina and Untch, A. and Vitart, Frédéric},
+  journal   = {ECMWF Technical Memoranda},
   title     = {Model Cycle 38r2: Components and Performance},
   year      = {2013},
   doi       = {10.21957/XC1R0LJ6L},
@@ -1250,13 +1227,14 @@ This is an interesting remark as to why I should avoid computing the MHD for my 
 }
 
 @InProceedings{Nair2010,
-author = {Nair, Vinod and Hinton, Geoffrey},
-year = {2010},
-month = {06},
-pages = {807-814},
-title = {Rectified Linear Units Improve Restricted Boltzmann Machines Vinod Nair},
-volume = {27},
-journal = {Proceedings of ICML}
+  author    = {Nair, Vinod and Hinton, Geoffrey},
+  booktitle = {ICML'10: Proceedings of the 27th International Conference on International Conference on Machine Learning},
+  title     = {Rectified Linear Units Improve Restricted Boltzmann Machines Vinod Nair},
+  year      = {2010},
+  month     = {06},
+  pages     = {807-814},
+  volume    = {27},
+  journal   = {Proceedings of ICML},
 }
 
 @TechReport{Lavelle2017,
@@ -1281,7 +1259,7 @@ journal = {Proceedings of ICML}
 }
 
 @InProceedings{MihaiDaniel2020,
-  author    = {Mihai Daniel RADU and Ilona Madalina COSTEA and Valentin Alexandru STAN},
+  author    = {Mihai Daniel Radu and Ilona Madalina Costea and Valentin Alexandru Stan},
   booktitle = {2020 12th International Conference on Electronics, Computers and Artificial Intelligence ({ECAI})},
   title     = {Automatic Traffic Sign Recognition Artificial Inteligence - Deep Learning Algorithm},
   year      = {2020},
@@ -1784,6 +1762,295 @@ journal = {Proceedings of ICML}
   keywords      = {Computer Vision and Pattern Recognition (cs.CV), Artificial Intelligence (cs.AI), Machine Learning (cs.LG), FOS: Computer and information sciences},
   primaryclass  = {cs.CV},
   publisher     = {arXiv},
+}
+
+@Article{Kingma2014,
+  author        = {Kingma, Diederik P. and Ba, Jimmy},
+  title         = {Adam: A Method for Stochastic Optimization},
+  year          = {2014},
+  month         = dec,
+  abstract      = {We introduce Adam, an algorithm for first-order gradient-based optimization of stochastic objective functions, based on adaptive estimates of lower-order moments. The method is straightforward to implement, is computationally efficient, has little memory requirements, is invariant to diagonal rescaling of the gradients, and is well suited for problems that are large in terms of data and/or parameters. The method is also appropriate for non-stationary objectives and problems with very noisy and/or sparse gradients. The hyper-parameters have intuitive interpretations and typically require little tuning. Some connections to related algorithms, on which Adam was inspired, are discussed. We also analyze the theoretical convergence properties of the algorithm and provide a regret bound on the convergence rate that is comparable to the best known results under the online convex optimization framework. Empirical results demonstrate that Adam works well in practice and compares favorably to other stochastic optimization methods. Finally, we discuss AdaMax, a variant of Adam based on the infinity norm.},
+  archiveprefix = {arXiv},
+  copyright     = {arXiv.org perpetual, non-exclusive license},
+  doi           = {10.48550/ARXIV.1412.6980},
+  eprint        = {1412.6980},
+  file          = {:http\://arxiv.org/pdf/1412.6980v9:PDF},
+  keywords      = {Machine Learning (cs.LG), FOS: Computer and information sciences},
+  primaryclass  = {cs.LG},
+  publisher     = {arXiv},
+}
+
+@Article{Shorten2019,
+  author    = {Connor Shorten and Taghi M. Khoshgoftaar},
+  journal   = {Journal of Big Data},
+  title     = {A survey on Image Data Augmentation for Deep Learning},
+  year      = {2019},
+  month     = {jul},
+  number    = {1},
+  volume    = {6},
+  doi       = {10.1186/s40537-019-0197-0},
+  publisher = {Springer Science and Business Media {LLC}},
+}
+
+@Article{Williams2013,
+  author    = {Timothy D. Williams and Luke G. Bennetts and Vernon A. Squire and Dany Dumont and Laurent Bertino},
+  journal   = {Ocean Modelling},
+  title     = {Wave{\textendash}ice interactions in the marginal ice zone. Part 1: Theoretical foundations},
+  year      = {2013},
+  month     = {nov},
+  pages     = {81--91},
+  volume    = {71},
+  doi       = {10.1016/j.ocemod.2013.05.010},
+  file      = {:Williams2013.pdf:PDF},
+  publisher = {Elsevier {BV}},
+}
+
+@Article{Boutin2020,
+  author    = {Guillaume Boutin and Camille Lique and Fabrice Ardhuin and Cl{\'{e}}ment Rousset and Claude Talandier and Mickael Accensi and Fanny Girard-Ardhuin},
+  journal   = {The Cryosphere},
+  title     = {Towards a coupled model to investigate wave{\textendash}sea ice interactions in the Arctic marginal ice zone},
+  year      = {2020},
+  month     = {mar},
+  number    = {2},
+  pages     = {709--735},
+  volume    = {14},
+  doi       = {10.5194/tc-14-709-2020},
+  file      = {:Boutin2020.pdf:PDF},
+  publisher = {Copernicus {GmbH}},
+}
+
+@Article{Liu2018,
+  author        = {Liu, Guilin and Reda, Fitsum A. and Shih, Kevin J. and Wang, Ting-Chun and Tao, Andrew and Catanzaro, Bryan},
+  title         = {Image Inpainting for Irregular Holes Using Partial Convolutions},
+  year          = {2018},
+  month         = apr,
+  abstract      = {Existing deep learning based image inpainting methods use a standard convolutional network over the corrupted image, using convolutional filter responses conditioned on both valid pixels as well as the substitute values in the masked holes (typically the mean value). This often leads to artifacts such as color discrepancy and blurriness. Post-processing is usually used to reduce such artifacts, but are expensive and may fail. We propose the use of partial convolutions, where the convolution is masked and renormalized to be conditioned on only valid pixels. We further include a mechanism to automatically generate an updated mask for the next layer as part of the forward pass. Our model outperforms other methods for irregular masks. We show qualitative and quantitative comparisons with other methods to validate our approach.},
+  archiveprefix = {arXiv},
+  copyright     = {arXiv.org perpetual, non-exclusive license},
+  doi           = {10.48550/ARXIV.1804.07723},
+  eprint        = {1804.07723},
+  file          = {:http\://arxiv.org/pdf/1804.07723v2:PDF},
+  keywords      = {Computer Vision and Pattern Recognition (cs.CV), FOS: Computer and information sciences},
+  primaryclass  = {cs.CV},
+  publisher     = {arXiv},
+}
+
+@InProceedings{Jha2020,
+  author    = {Ankit Jha and Awanish Kumar and Shivam Pande and Biplab Banerjee and Subhasis Chaudhuri},
+  booktitle = {2020 {IEEE} International Conference on Image Processing ({ICIP})},
+  title     = {{MT}-{UNET}: A Novel U-Net Based Multi-Task Architecture For Visual Scene Understanding},
+  year      = {2020},
+  month     = {oct},
+  publisher = {{IEEE}},
+  doi       = {10.1109/icip40778.2020.9190695},
+}
+
+@Article{Crawshaw2020,
+  author        = {Crawshaw, Michael},
+  title         = {Multi-Task Learning with Deep Neural Networks: A Survey},
+  year          = {2020},
+  month         = sep,
+  abstract      = {Multi-task learning (MTL) is a subfield of machine learning in which multiple tasks are simultaneously learned by a shared model. Such approaches offer advantages like improved data efficiency, reduced overfitting through shared representations, and fast learning by leveraging auxiliary information. However, the simultaneous learning of multiple tasks presents new design and optimization challenges, and choosing which tasks should be learned jointly is in itself a non-trivial problem. In this survey, we give an overview of multi-task learning methods for deep neural networks, with the aim of summarizing both the well-established and most recent directions within the field. Our discussion is structured according to a partition of the existing deep MTL techniques into three groups: architectures, optimization methods, and task relationship learning. We also provide a summary of common multi-task benchmarks.},
+  archiveprefix = {arXiv},
+  copyright     = {arXiv.org perpetual, non-exclusive license},
+  doi           = {10.48550/ARXIV.2009.09796},
+  eprint        = {2009.09796},
+  file          = {:http\://arxiv.org/pdf/2009.09796v1:PDF},
+  keywords      = {Machine Learning (cs.LG), Computer Vision and Pattern Recognition (cs.CV), Machine Learning (stat.ML), FOS: Computer and information sciences},
+  primaryclass  = {cs.LG},
+  publisher     = {arXiv},
+}
+
+@InCollection{Zhang2014,
+  author    = {Zhanpeng Zhang and Ping Luo and Chen Change Loy and Xiaoou Tang},
+  booktitle = {Computer Vision {\textendash} {ECCV} 2014},
+  publisher = {Springer International Publishing},
+  title     = {Facial Landmark Detection by Deep Multi-task Learning},
+  year      = {2014},
+  pages     = {94--108},
+  doi       = {10.1007/978-3-319-10599-4_7},
+}
+
+@Article{DeVries2018,
+  author        = {DeVries, Terrance and Taylor, Graham W.},
+  title         = {Learning Confidence for Out-of-Distribution Detection in Neural Networks},
+  year          = {2018},
+  month         = feb,
+  abstract      = {Modern neural networks are very powerful predictive models, but they are often incapable of recognizing when their predictions may be wrong. Closely related to this is the task of out-of-distribution detection, where a network must determine whether or not an input is outside of the set on which it is expected to safely perform. To jointly address these issues, we propose a method of learning confidence estimates for neural networks that is simple to implement and produces intuitively interpretable outputs. We demonstrate that on the task of out-of-distribution detection, our technique surpasses recently proposed techniques which construct confidence based on the network's output distribution, without requiring any additional labels or access to out-of-distribution examples. Additionally, we address the problem of calibrating out-of-distribution detectors, where we demonstrate that misclassified in-distribution examples can be used as a proxy for out-of-distribution examples.},
+  archiveprefix = {arXiv},
+  copyright     = {arXiv.org perpetual, non-exclusive license},
+  doi           = {10.48550/ARXIV.1802.04865},
+  eprint        = {1802.04865},
+  file          = {:http\://arxiv.org/pdf/1802.04865v1:PDF},
+  keywords      = {Machine Learning (stat.ML), Machine Learning (cs.LG), FOS: Computer and information sciences},
+  primaryclass  = {stat.ML},
+  publisher     = {arXiv},
+}
+
+@TechReport{Carrasco2022,
+  author      = {Ana Carrasco and Øyvind Saetra and Arild Burud and Malte Müller and Arne Melsom},
+  institution = {EU Copernicus Marine Service},
+  title       = {PRODUCT USER MANUAL For Arctic Ocean Wave Analysis and Forecasting Products ARCTIC\_ANALYSIS\_FORECAST\_WAV\_002\_014},
+  year        = {2022},
+}
+
+@Article{Murphy1993,
+  author    = {Allan H. Murphy},
+  journal   = {Weather and Forecasting},
+  title     = {What Is a Good Forecast? An Essay on the Nature of Goodness in Weather Forecasting},
+  year      = {1993},
+  month     = {jun},
+  number    = {2},
+  pages     = {281--293},
+  volume    = {8},
+  doi       = {10.1175/1520-0434(1993)008<0281:wiagfa>2.0.co;2},
+  publisher = {American Meteorological Society},
+}
+
+@Article{Fritzner2020,
+  author    = {Sindre Fritzner and Rune Graversen and Kai H. Christensen},
+  journal   = {Journal of Geophysical Research: Oceans},
+  title     = {Assessment of High-Resolution Dynamical and Machine Learning Models for Prediction of Sea Ice Concentration in a Regional Application},
+  year      = {2020},
+  month     = oct,
+  number    = {11},
+  volume    = {125},
+  comment   = {*Read*},
+  doi       = {10.1029/2020jc016277},
+  file      = {:fritzner2020.pdf:PDF},
+  publisher = {American Geophysical Union ({AGU})},
+}
+
+@Article{Roehrs2022,
+  author    = {Johannes Röhrs and Yvonne Gusdal and Edel Rikardsen and Marina Duran Moro and Jostein Br{\ae}ndsh{\o}i and Nils Melsom Kristensen and Sindre Fritzner and Keguang Wang and Ann Kristin Sperrevik and Martina Id{\v{z}}anovi{\'{c}} and Thomas Lavergne and Jens Debernard and Kai H. Christensen},
+  journal   = {Geoscientific Model Development},
+  title     = {Barents-2.5km v2.0: An operational data-assimilative coupled ocean and sea ice ensemble prediction model for the Barents Sea and Svalbard},
+  year      = {2023},
+  month     = {mar},
+  doi       = {10.5194/gmd-2023-20},
+  publisher = {Copernicus {GmbH}},
+}
+
+@Article{Mueller2023,
+  author    = {Malte Müller and Yurii Batrak and Frode Dinesen and Rafael Grote and Keguang Wang},
+  journal   = {Weather and Forecasting},
+  title     = {Challenges in the description of sea-ice for a kilometer-scale weather forecasting system},
+  year      = {2023},
+  month     = {apr},
+  doi       = {10.1175/waf-d-22-0134.1},
+  publisher = {American Meteorological Society},
+}
+
+@TechReport{WMO2014,
+  author      = {{World Meteorological Organization}},
+  institution = {WMO},
+  title       = {Sea-Ice Nomenclature: WMO 259},
+  year        = {2014},
+}
+
+@Article{Palma2019,
+  author    = {David Palma and Alix Varnajot and Kari Dalen and Ilker K. Basaran and Charles Brunette and Marta Bystrowska and Anastasia D. Korablina and Robynne C. Nowicki and Thomas A. Ronge},
+  journal   = {Polar Geography},
+  title     = {Cruising the marginal ice zone: climate change and Arctic tourism},
+  year      = {2019},
+  month     = {aug},
+  number    = {4},
+  pages     = {215--235},
+  volume    = {42},
+  doi       = {10.1080/1088937x.2019.1648585},
+  publisher = {Informa {UK} Limited},
+}
+
+@Article{Stocker2020,
+  author    = {Alexandra N. Stocker and Angelika H. H. Renner and Maaike Knol-Kauffman},
+  journal   = {Scientific Reports},
+  title     = {Sea ice variability and maritime activity around Svalbard in the period 2012{\textendash}2019},
+  year      = {2020},
+  month     = {oct},
+  number    = {1},
+  volume    = {10},
+  doi       = {10.1038/s41598-020-74064-2},
+  publisher = {Springer Science and Business Media {LLC}},
+}
+
+@Article{Kohout2014,
+  author    = {A. L. Kohout and M. J. M. Williams and S. M. Dean and M. H. Meylan},
+  journal   = {Nature},
+  title     = {Storm-induced sea-ice breakup and the implications for ice extent},
+  year      = {2014},
+  month     = {may},
+  number    = {7502},
+  pages     = {604--607},
+  volume    = {509},
+  doi       = {10.1038/nature13262},
+  publisher = {Springer Science and Business Media {LLC}},
+}
+
+@Article{Oziel2016,
+  author    = {L. Oziel and J. Sirven and J.-C. Gascard},
+  journal   = {Ocean Science},
+  title     = {The Barents Sea frontal zones and water masses variability (1980{\textendash}2011)},
+  year      = {2016},
+  month     = {jan},
+  number    = {1},
+  pages     = {169--184},
+  volume    = {12},
+  doi       = {10.5194/os-12-169-2016},
+  publisher = {Copernicus {GmbH}},
+}
+
+@Article{Castro2023,
+  author  = {Sandra L. Castro and Gary A. Wick and Steinar Eastwood and Michael A Steele and Rasmus T. Tonboe},
+  journal = {Remote Sensing},
+  title   = {"in review" Examining the Consistency of Sea Surface Temperature and Sea Ice Concentration in Arctic Satellite Products},
+  year    = {2023},
+}
+
+@Conference{Durand2023,
+  author    = {Charlotte Durand and Tobias Finn and Alban Farchi and Marc Bocquet and Einar Ólason},
+  booktitle = {11th International Workshop on Sea Ice Modelling, Assimilation, Observations, Predictions and Verification, Oslo, Norway},
+  title     = {Deep learning for surrogate modeling of neXtSIM},
+  year      = {2023},
+  month     = mar,
+  url       = {https://iicwg-da-11.met.no/},
+}
+
+@Article{Johannessen1978,
+  author    = {Ola M. Johannessen and L. A. Foster},
+  journal   = {Journal of Geophysical Research},
+  title     = {A note on the topographically controlled Oceanic Polar Front in the Barents Sea},
+  year      = {1978},
+  number    = {C9},
+  pages     = {4567},
+  volume    = {83},
+  doi       = {10.1029/jc083ic09p04567},
+  publisher = {American Geophysical Union ({AGU})},
+}
+
+@Article{Fennel1998,
+  author    = {Wolfgang Fennel and Ola M. Johannessen},
+  journal   = {Journal of Marine Systems},
+  title     = {Wind forced oceanic responses near ice edges revisited},
+  year      = {1998},
+  month     = {jan},
+  number    = {1-2},
+  pages     = {57--79},
+  volume    = {14},
+  doi       = {10.1016/s0924-7963(97)00018-3},
+  publisher = {Elsevier {BV}},
+}
+
+@Article{Kim2006,
+  author    = {Jong G. Kim and Elizabeth C. Hunke and William H. Lipscomb},
+  journal   = {Ocean Modelling},
+  title     = {Sensitivity analysis and parameter tuning scheme for global sea-ice modeling},
+  year      = {2006},
+  month     = {jan},
+  number    = {1-2},
+  pages     = {61--80},
+  volume    = {14},
+  doi       = {10.1016/j.ocemod.2006.03.003},
+  publisher = {Elsevier {BV}},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}

@@ -68,7 +68,8 @@ def read_amsr2(path_counts):
 def main():
     path_counts = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/stacked_hist/2022_amsr2_counts.csv'
     if not os.path.exists(path_counts):
-        read_amsr2(path_counts)
+        read_data(path_counts)
+        # read_amsr2(path_counts)
 
     df = pd.read_csv(path_counts, index_col = 0)
     df.index = pd.to_datetime(df.index, format='%Y%m%d')
@@ -98,7 +99,8 @@ def main():
 
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], ['Ice Free Open Water', 'Open Water', 'Very Open Drift Ice', 'Open Drift Ice', 'Close Drift Ice', 'Very Close Drift Ice', 'Fast Ice'][::-1], fontsize = 18)
-    plt.savefig('2022-sic-distribution_amsr2.png')
+    plt.savefig('2022-sic-distribution.pdf', dpi=300)
+    # plt.savefig('2022-sic-distribution_amsr2.png')
 
     
 

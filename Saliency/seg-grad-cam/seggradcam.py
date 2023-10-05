@@ -20,14 +20,17 @@ from predict_validation import numpy_where_wrapper
 
 from matplotlib import pyplot as plt, colors as mcolors
 
-# weights = "weights_21021550"
+weights = "weights_21021550"
 # weights = "weights_09031802"
-weights = "weights_10021139"
+# weights = "weights_01031920"
 config = read_config_from_csv(f"/mnt/SimpleUNET/RunModel/outputs/configs/{weights}.csv")
 
 
 
 PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/"
+
+if config['reduced_classes'] == True:
+    PATH_DATA = f"/mnt/PrepareDataset/Data/reduced_classes/lead_time_{config['lead_time']}/"
 
 data_2022 = np.array(sorted(glob.glob(f"{PATH_DATA}2022/**/*.hdf5")))
 
@@ -54,7 +57,7 @@ model = create_MultiOutputUNET_seggradcam(
         average_pool = config['AveragePool'],
         leaky_relu = config['LeakyReLU']
     )
-exit()
+
 
 # print(model.summary())
 # print(model.get_layer('unet').summary())
@@ -76,25 +79,25 @@ model_singleoutput.layers[0].set_weights(model.layers[0].get_weights())
 model_singleoutput.layers[1].layers[0].set_weights(model.layers[1].layers[0].get_weights())
 model_singleoutput.layers[1].layers[1].set_weights(model.layers[1].layers[1].get_weights())
 model_singleoutput.layers[1].layers[2].set_weights(model.layers[1].layers[2].get_weights())
-model_singleoutput.layers[1].layers[3].set_weights(model.layers[1].layers[5].get_weights()) # 10%
+model_singleoutput.layers[1].layers[3].set_weights(model.layers[1].layers[7].get_weights()) # 10%
 # model_singleoutput.layers[1].layers[3].set_weights(model.layers[1].layers[8].get_weights()) # 90%
 
 # Create new model to find difference
-model_singleoutput2 = create_MultiOutputUNET_seggradcam(
-        input_shape = (config['height'], config['width'], len(config['fields'])), 
-        channels = config['channels'],
-        pooling_factor = config['pooling_factor'],
-        num_outputs = 1,
-        average_pool = config['AveragePool'],
-        leaky_relu = config['LeakyReLU']
-    )
+# model_singleoutput2 = create_MultiOutputUNET_seggradcam(
+        # input_shape = (config['height'], config['width'], # len(config['fields'])), 
+        # channels = config['channels'],
+        # pooling_factor = config['pooling_factor'],
+        # num_outputs = 1,
+        # average_pool = config['AveragePool'],
+        # leaky_relu = config['LeakyReLU']
+    # )
 
-model_singleoutput2.layers[0].set_weights(model.layers[0].get_weights())
-model_singleoutput2.layers[1].layers[0].set_weights(model.layers[1].layers[0].get_weights())
-model_singleoutput2.layers[1].layers[1].set_weights(model.layers[1].layers[1].get_weights())
-model_singleoutput2.layers[1].layers[2].set_weights(model.layers[1].layers[2].get_weights())
+# model_singleoutput2.layers[0].set_weights(model.layers[0].get_weights())
+# model_singleoutput2.layers[1].layers[0].set_weights(model.layers[1].layers[0].get_weights())
+# model_singleoutput2.layers[1].layers[1].set_weights(model.layers[1].layers[1].get_weights())
+# model_singleoutput2.layers[1].layers[2].set_weights(model.layers[1].layers[2].get_weights())
 # model_singleoutput2.layers[1].layers[3].set_weights(model.layers[1].layers[5].get_weights()) # 10%
-model_singleoutput2.layers[1].layers[3].set_weights(model.layers[1].layers[8].get_weights()) # 90%
+# model_singleoutput2.layers[1].layers[3].set_weights(model.layers[1].layers[8].get_weights()) # 90%
 
 
 # Extract sample from dataloader
@@ -110,14 +113,14 @@ print(y.shape)
 single_y_pred, fmaps = model_singleoutput.predict(X)
 single_y_pred = single_y_pred[0]
 
-single2_y_pred, fmaps = model_singleoutput2.predict(X)
-single2_y_pred = single2_y_pred[0]
+# single2_y_pred, fmaps = model_singleoutput2.predict(X)
+# single2_y_pred = single2_y_pred[0]
 
 single_out = tf.round(tf.nn.sigmoid(single_y_pred))
 
-single2_out = tf.round(tf.nn.sigmoid(single2_y_pred))
+# single2_out = tf.round(tf.nn.sigmoid(single2_y_pred))
 
-roi_diff = tf.math.subtract(single_out, single2_out)
+# roi_diff = tf.math.subtract(single_out, single2_out)
 
 # Create roi 
 true_target = np.moveaxis(y[2], 0, -1)
@@ -150,7 +153,6 @@ decoder.layers[1].layers[0].set_weights(model_singleoutput.layers[1].layers[1].g
 decoder.layers[1].layers[1].set_weights(model_singleoutput.layers[1].layers[3].get_weights())
 
 print(decoder.summary())
-exit()
 
 # Compute gradient w.r.t. bottleneck
 bottleneck = tf.Variable(fmaps[0])
@@ -159,7 +161,7 @@ with tf.GradientTape() as tape:
     tape.watch(bottleneck)
     decoder_pred = decoder(bottleneck, training = False)[0]
     # y_c = decoder_pred * tf.expand_dims(roi[0], axis=-1)
-    y_c = tf.where(roi_diff == 1, decoder_pred, 0)
+    y_c = tf.where(roi == 1, decoder_pred, 0)
     y_c = tf.math.reduce_sum(y_c)
 
 
@@ -236,9 +238,10 @@ ax[1, 1].pcolormesh(X[0,...,3], cmap = cmocean.cm.thermal)
 # ax[1, 2].pcolormesh(X[0,...,5])
 
 ax[1, 2].set_title('Target contour (>=10%)')
-ax[1, 2].pcolormesh(y[5, 0, :, :], cmap = cmocean.cm.ice)
+ax[1, 2].pcolormesh(y[4, 0, :, :], cmap = cmocean.cm.ice)
 
-fig.savefig(f'{weights}_difference_Overlay_class10%_sample{sample}_ml_largest2.png')
+fig.savefig(f'{weights}_Overlay_class90%_sample{sample}_ml_largest2.png')
+# fig.savefig(f'{weights}_difference_Overlay_class10%_sample{sample}_ml_largest2.png')
 
 # gradient_function = K.function([model_singleoutput.input], [bottleneck, grads])
 # print((decoder_pred - single_y_pred[0]).mean())

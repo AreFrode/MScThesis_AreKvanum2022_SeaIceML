@@ -120,9 +120,9 @@ def main():
                             pad = .05
         )
 
-        cbar.set_label(label = 'SIC range [%]', size = 16)
+        cbar.set_label(label = 'SIC range [%]')#, size = 16)
         cbar.set_ticks(ice_levels[:-1] + .5, labels = ice_ticks)
-        cbar.ax.tick_params(labelsize = 16)
+        # cbar.ax.tick_params(labelsize = 16)
 
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
