@@ -13,14 +13,14 @@ import numpy as np
 
 from calendar import monthrange
 from verification_metrics import IIEE_alt, IIEE_fast, find_ice_edge, ice_edge_length, contourAreaDistribution, minimumDistanceToIceEdge, root_mean_square_error
-from tqdm import tqdm
+# from tqdm import tqdm
 from helper_functions import read_config_from_csv
 from datetime import datetime, timedelta
 from netCDF4 import Dataset
 from createHDF import remove_open_water_and_fast_ice
 from loadClimatologicalIceEdge import load_climatological_ice_edge
 
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 def load_barents(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
     # Currently only returns arome member
@@ -28,6 +28,7 @@ def load_barents(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
     
     yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
     yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time - 1)).strftime('%Y%m%d')
+    
     yyyymmdd_ml = (yyyymmdd_datetime - timedelta(days = 1)).strftime('%Y%m%d')
 
     barents_path = glob.glob(f"{PATH_FORECAST}{yyyymmdd[:4]}/{yyyymmdd[4:6]}/barents_mean_b{yyyymmdd}.nc")[0]
@@ -234,20 +235,24 @@ def main():
             NIIEE = []
             for i in range(1, 7):
                 niiee = IIEE_alt(sic_forecast, sic_target, lsmask, side_length = side_length, threshold = i)
-                NIIEE.append((niiee[0].sum() + niiee[1].sum()) / climatological_ice_edge[conc].loc[yyyymmdd])
+                NIIEE.append((niiee[0].sum() + niiee[1].sum()) / climatological_ice_edge[conc].loc[yyyymmdd_ml]) # 04.10.23 Changed to yyyymmdd_ml here, should be correct
 
             area_dist_target = contourAreaDistribution(sic_target, lsmask, num_classes = 7, side_length = side_length)
             area_dist_forecast = contourAreaDistribution(sic_forecast, lsmask, num_classes = 7, side_length = side_length)
+
+            sic_forecast = np.where(sic_forecast == 1, 0, sic_forecast)
+
+            niiee_no_1contour = IIEE_alt(sic_forecast, sic_target, lsmask, side_length = side_length, threshold = 1)
 
             # a_plus_minimum_distance = minimumDistanceToIceEdge(a_plus, ice_edge_target, lat, lon)
             # a_minus_minimum_distance = minimumDistanceToIceEdge(a_minus, ice_edge_target, lat, lon)
 
             # output_list.append([pd.to_datetime(yyyymmdd_ml, format="%Y%m%d"), target_length, forecast_length, np.mean([target_length, forecast_length]), a_plus.sum() + a_minus.sum(), a_plus.sum(), a_minus.sum(), a_plus_minimum_distance.mean(), a_minus_minimum_distance.mean()] + area_dist_target.tolist() + area_dist_forecast.tolist())
-            output_list.append([pd.to_datetime(yyyymmdd_ml, format="%Y%m%d"), rmse, *NIIEE, *area_dist_forecast.tolist(), *area_dist_target.tolist()])
+            output_list.append([pd.to_datetime(yyyymmdd_ml, format="%Y%m%d"), rmse, *NIIEE, *area_dist_forecast.tolist(), *area_dist_target.tolist(), (niiee_no_1contour[0].sum() + niiee_no_1contour[1].sum()) / climatological_ice_edge[conc].loc[yyyymmdd_ml]])
 
 
     # output_df = pd.DataFrame(output_list, columns = ['date', 'target_length', 'forecast_length', 'mean_length', 'IIEE', 'a_plus', 'a_minus', 'mean_minimum_distance_to_ice_edge_a_plus', 'mean_minimum_distance_to_ice_edge_a_minus', 'target_area0', 'target_area1', 'target_area2', 'target_area3', 'target_area4', 'target_area5', 'target_area6', 'forecast_area0', 'forecast_area1', 'forecast_area2', 'forecast_area3', 'forecast_area4', 'forecast_area5', 'forecast_area6'])
-    output_df = pd.DataFrame(output_list, columns = ['date', 'rmse', *[f"NIIEE_{i}" for i in range(1, 7)], *[f"forecast_area{i}" for i in range(7)], *[f"target_area{i}" for i in range(7)]])
+    output_df = pd.DataFrame(output_list, columns = ['date', 'rmse', *[f"NIIEE_{i}" for i in range(1, 7)], *[f"forecast_area{i}" for i in range(7)], *[f"target_area{i}" for i in range(7)], 'niiee_no_1contour'])
 
     output_df = output_df.set_index('date')
     output_df.to_csv(f"{PATH_OUTPUTS}{product}.csv")

@@ -120,7 +120,7 @@ def main():
 
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], ['Ice Free Open Water', 'Open Water', 'Very Open Drift Ice', 'Open Drift Ice', 'Close Drift Ice', 'Very Close Drift Ice', 'Fast Ice'][::-1], fontsize = 18)
-    plt.savefig('2022-sic-distribution_lead1.png')
+    plt.savefig('2022-sic-distribution_lead1.pdf')
 
     
 

@@ -68,6 +68,18 @@ def main():
             barents_sic = nc.variables['ice_concentration'][:,:,:,:]
             barents_lsmask = nc.variables['sea_mask'][0,:,:].astype(int)
 
+        fields = barents_sic[:, 0, :, :]
+
+        is_broken = False
+
+        for i in range(fields.shape[0]):
+            if np.isnan(np.ma.filled(fields[i], np.nan)).all():
+                is_broken = True
+        
+        if is_broken:
+            print('Array misses values')
+            continue
+
         # Swap 1 and 0
         barents_lsmask = np.where((barents_lsmask==0)|(barents_lsmask==1), barents_lsmask^1, barents_lsmask)
 

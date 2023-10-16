@@ -5,7 +5,7 @@
 #$ -l mem_free=8G
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/Forecasts/logs
 
-weights="weights_08031256"
+weights="weights_09031047"
 
 # module use module use /modules/MET/centos7/GeneralModules
 

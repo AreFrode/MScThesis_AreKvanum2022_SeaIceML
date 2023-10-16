@@ -14,6 +14,7 @@ import WMOcolors
 
 import numpy as np
 import matplotlib.colors as colors
+import matplotlib as mpl
 
 from matplotlib import pyplot as plt
 from cartopy import crs as ccrs
@@ -24,6 +25,7 @@ from datetime import datetime
 from helper_functions import read_config_from_csv
 from netCDF4 import Dataset
 from verification_metrics import find_ice_edge
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 import warnings
 warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning) 
@@ -83,7 +85,7 @@ def main():
         ice_ticks = ['0', '10 - 40', '40 - 70', '70 - 90', '90 - 100']
 
     else:
-        ice_ticks = ['0', '0 - 10', '10 - 40', '40 - 70', '70 - 90', '90 - 100', '100']
+        ice_ticks = ['ice free', '<10', '10–30', '40–60', '70–80', '90–100', 'fast ice']
 
 
     save_location = f"{path_figures}"
@@ -117,8 +119,8 @@ def main():
             day_ice_edge = find_ice_edge(sic, lsmask)
 
 
-            axs[i,j].pcolormesh(lon, lat, y_pred, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1)
-            axs[i,j].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap)
+            axs[i,j].pcolormesh(lon, lat, y_pred, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
+            axs[i,j].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
             axs[i,j].scatter(lon, lat, s=.1*day_ice_edge, zorder = 3, transform = data_proj, c='black', alpha=.5)
             # cbar_ax = fig.add_axes([0.15, 0.1, 0.6, 0.025])
 
@@ -135,25 +137,26 @@ def main():
             # LambertLabels.lambert_xticks(axs[i,j], xticks)
             # LambertLabels.lambert_yticks(axs[i,j], yticks)
 
-
-    # mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)
+    cax = axs[-1, 1].inset_axes([-.5, -.4, 2, .125])
+    mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)
     # mapper.set_array([-1, 8])
 
-    # cbar = fig.colorbar(mapper,
-                        # ax = ax,
-                        # spacing = 'uniform',
+    cbar = fig.colorbar(mapper,
+                        ax = axs[-1, 1],
+                        cax = cax,
+                        spacing = 'uniform',
                         # location = 'bottom',
-                        # orientation = 'horizontal',
+                        orientation = 'horizontal',
                         # shrink = .7,
                         # pad = .05
-    # )
+    )
 
-    # cbar.set_label(label = 'SIC range [%]', size = 16)
-    # cbar.set_ticks(ice_levels[:-1] + .5, labels = ice_ticks)
-    # cbar.ax.tick_params(labelsize = 16)
+    cbar.set_label(label = 'WMO sea ice concentration intervals [%]', size = 16)
+    cbar.set_ticks(ice_levels[:-1] + .5, labels = ice_ticks)
+    cbar.ax.tick_params(labelsize = 16)
 
     
-    plt.savefig(f"{save_location}Forecast_time_series.png")
+    plt.savefig(f"{save_location}Forecast_time_series.pdf", dpi = 300)
 
 
 if __name__ == "__main__":

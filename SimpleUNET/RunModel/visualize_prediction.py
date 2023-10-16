@@ -2,6 +2,7 @@ import sys
 sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
 sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel")
 sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics")
 
 import h5py
 import glob
@@ -18,6 +19,8 @@ from matplotlib import pyplot as plt
 from cartopy import crs as ccrs
 from shapely.errors import ShapelyDeprecationWarning
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
+from netCDF4 import Dataset
+from verification_metrics import find_ice_edge
 
 from datetime import datetime, timedelta
 from helper_functions import read_config_from_csv
@@ -51,6 +54,8 @@ def main():
         lon = f['lon'][config['lower_boundary']:, :config['rightmost_boundary']]
         lsmask = f['lsmask'][config['lower_boundary']:, :config['rightmost_boundary']]
 
+    osisaf_iceedge = sorted(glob.glob("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/Data/old/2022/**/*.nc"))
+
     x0,y0 = PRJ(lon[0,0], lat[0,0])
     x1,y1 = PRJ(lon[-1,-1], lat[-1,-1])
 
@@ -72,7 +77,7 @@ def main():
         ice_ticks = ['0', '10 - 40', '40 - 70', '70 - 90', '90 - 100']
 
     else:
-        ice_ticks = ['0', '0 - 10', '10 - 40', '40 - 70', '70 - 90', '90 - 100', '100']
+        ice_ticks = ['ice free', '  <10  ', '10 - 30', '40 - 60', '70 - 80', '90 - 100', 'fast ice']
 
     for date in data_2022:
         # New definition after name change
@@ -81,6 +86,16 @@ def main():
 
         year = yyyymmdd_b[:4]
         month = yyyymmdd_b[4:6]
+
+        valid_date =  datetime.strptime(yyyymmdd_v, '%Y%m%d')
+        print(valid_date)
+
+        doy = valid_date.timetuple().tm_yday
+
+        with Dataset(osisaf_iceedge[doy], 'r') as nc:
+            osisaf_sic = nc.variables['ice_conc'][0, 578:, :1792]
+
+        day_ice_edge = find_ice_edge(osisaf_sic, lsmask)
 
         save_location = f"{path_figures}{weights}/{year}/{month}/"
         if not os.path.exists(save_location):
@@ -101,6 +116,7 @@ def main():
     
         ax.pcolormesh(lon, lat, y_pred, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1)
         ax.pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap)
+        ax.scatter(lon, lat, s=2.*day_ice_edge, zorder = 3, transform = data_proj, c='black', alpha=.5)
 
         # cbar_ax = fig.add_axes([0.15, 0.1, 0.6, 0.025])
         mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)
@@ -115,7 +131,7 @@ def main():
                             pad = .05
         )
 
-        cbar.set_label(label = 'SIC range [%]', size = 16)
+        cbar.set_label(label = 'WMO sea ice concentration intervals [%]', size = 16)
         cbar.set_ticks(ice_levels[:-1] + .5, labels = ice_ticks)
         cbar.ax.tick_params(labelsize = 16)
 
@@ -130,7 +146,7 @@ def main():
         LambertLabels.lambert_yticks(ax, yticks)
 
 
-        plt.savefig(f"{save_location}v{yyyymmdd_v}_b{yyyymmdd_b}.png")
+        plt.savefig(f"{save_location}v{yyyymmdd_v}_b{yyyymmdd_b}.png", bbox_inches='tight')
 
         f_model.close()
         ax.cla()

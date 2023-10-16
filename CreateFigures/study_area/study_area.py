@@ -111,8 +111,31 @@ def main():
     ax.plot(lon[0,:],lat[0,:],'--', color = 'black', lw = 1.5, transform=ccrs.PlateCarree(), zorder = 1)
     ax.plot(lon[-1,:],lat[-1,:],'--', color = 'black', lw = 1.5, transform=ccrs.PlateCarree(), zorder = 1)
 
+    ice_levels = np.linspace(0, 7, 8, dtype = 'int')
+    ice_norm = colors.BoundaryNorm(ice_levels, ice_cmap.N)
+    ice_ticks = ['ice free', '<10', '10–30', '40–60', '70–80', '90–100', 'fast ice']
+
+    mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)
+    # mapper.set_array([-1, 8])
+
+    cbar = fig.colorbar(mapper,
+                        ax = ax,
+                        spacing = 'uniform',
+                        orientation = 'vertical',
+                        pad = .01,
+                        drawedges = True,
+                        shrink = 0.7
+    )
+
+    cbar.set_label(label = 'WMO sea ice concentration intervals [%]')#, size = 16)
+    cbar.set_ticks(ice_levels[:-1] + .5, labels = ice_ticks)
+    cbar.outline.set_linewidth(2)
+    cbar.dividers.set_linewidth(2)
+    cbar.outline.set_edgecolor('black')
+    cbar.dividers.set_edgecolor('black')
+
     fig.tight_layout()
-    plt.savefig('study_area.pdf')
+    plt.savefig('study_area.pdf', dpi = 300)
 
 
 
