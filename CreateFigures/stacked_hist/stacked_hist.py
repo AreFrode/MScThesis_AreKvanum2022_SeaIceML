@@ -1,6 +1,7 @@
 import os
 import glob
 import sys
+import h5py
 sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset")
 
 import pandas as pd
@@ -11,7 +12,7 @@ from matplotlib import pyplot as plt
 from createHDF import onehot_encode_sic
 from netCDF4 import Dataset
 
-def read_data(path_counts):
+def read_data(path_counts, path = None):
     PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/2022/"
     icecharts = sorted(glob.glob(f"{PATH_DATA}**/*.nc"))
 
@@ -31,7 +32,27 @@ def read_data(path_counts):
     df = pd.DataFrame([i[1:] for i in data_list], index = [i[0] for i in data_list], columns = ['0', '1', '2', '3', '4', '5', '6'])
     df.to_csv(path_counts)
 
-def read_amsr2(path_counts):
+def read_ml(path_counts, path):
+    # PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/2022/"
+    icecharts = sorted(glob.glob(f"{path}**/*.hdf5"))
+
+    data_list = []
+
+    for ic in icecharts:
+        yyyymmdd = ic[-27:-19]
+        print(yyyymmdd, end='\r')
+
+        with h5py.File(ic, 'r') as infile:
+            sic = infile['y_pred'][:]
+
+        idxs, counts = np.unique(sic, return_counts = True)
+    
+        data_list.append([yyyymmdd, *counts])
+
+    df = pd.DataFrame([i[1:] for i in data_list], index = [i[0] for i in data_list], columns = ['0', '1', '2', '3', '4', '5', '6'])
+    df.to_csv(path_counts)
+
+def read_amsr2(path_counts, path = None):
     PATH_DATA = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/amsr2/2022/"
     
     with Dataset("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/amsr2_grid/ml/2022/01/weights_05011118_20220105_b20220103.nc", 'r') as nc:
@@ -66,9 +87,10 @@ def read_amsr2(path_counts):
 
 
 def main():
-    path_counts = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/stacked_hist/2022_amsr2_counts.csv'
+    path_counts = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/stacked_hist/2022_lead1_counts.csv'
+    path_ml = '/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/Data/weights_08031256/2022/'
     if not os.path.exists(path_counts):
-        read_amsr2(path_counts)
+        read_ml(path_counts, path_ml)
 
     df = pd.read_csv(path_counts, index_col = 0)
     df.index = pd.to_datetime(df.index, format='%Y%m%d')
@@ -94,11 +116,11 @@ def main():
     ax = df_frac.plot(kind = 'bar', stacked = True, figsize = (14,8), rot = 0, fontsize = 20)
     ax.set_xlabel('Month', fontsize = 18)
     ax.set_ylabel('Fraction', fontsize = 18)
-    ax.set_title('2022 Monthly Sea Ice area fraction AMSR2', fontsize = 18)
+    ax.set_title('2022 Monthly Sea Ice area fraction ML 1-day lead time', fontsize = 18)
 
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], ['Ice Free Open Water', 'Open Water', 'Very Open Drift Ice', 'Open Drift Ice', 'Close Drift Ice', 'Very Close Drift Ice', 'Fast Ice'][::-1], fontsize = 18)
-    plt.savefig('2022-sic-distribution_amsr2.png')
+    plt.savefig('2022-sic-distribution_lead1.png')
 
     
 
