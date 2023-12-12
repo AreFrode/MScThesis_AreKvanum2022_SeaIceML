@@ -1,9 +1,9 @@
 import sys
-sys.path.append("/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
-sys.path.append("/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel")
-sys.path.append("/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset")
-sys.path.append("/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/verification_metrics")
-sys.path.append("/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/CreateFigures")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/verification_metrics")
+sys.path.append("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures")
 
 import h5py
 import glob
@@ -21,11 +21,11 @@ from matplotlib import pyplot as plt, transforms as mtransforms, colors as mcolo
 from cartopy import crs as ccrs
 from shapely.errors import ShapelyDeprecationWarning
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
+# from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from netCDF4 import Dataset
 from createHDF import onehot_encode_sic
 from scipy.interpolate import NearestNDInterpolator
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from verification_metrics import find_ice_edge, IIEE
+from verification_metrics import find_ice_edge, ice_edge_length, IIEE_alt as IIEE
 
 
 from datetime import datetime, timedelta
@@ -43,11 +43,11 @@ def main():
     assert len(sys.argv) > 1, "Remember to provide weights"
     weights = sys.argv[1]
 
-    path_pred = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/Data/"
-    path_raw = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/"
+    path_pred = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/Data/"
+    path_raw = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/"
     config = read_config_from_csv(f"{path_pred[:-5]}configs/{weights}.csv")
 
-    path = f"/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/2022/"
+    path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/2022/"
     # path_figure = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/lustre_poster_extra/"
     path_figure = "/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/lustre_poster_extra/"
 
@@ -57,8 +57,8 @@ def main():
 
     year = '2022'
     month = '03'
-    bday = '16'
-    vday = '18'
+    bday = '23'
+    vday = '25'
 
     bdate = datetime.strptime(f"{year}{month}{bday}", '%Y%m%d')
     vdate = datetime.strptime(f"{year}{month}{vday}", '%Y%m%d')
@@ -75,8 +75,10 @@ def main():
     PRJ = pyproj.Proj(map_proj.proj4_init)
     data_proj = ccrs.PlateCarree()
 
-    xticks = [-20,-10, 0, 10,20,30,40,50,60,70,80,90,100,110,120]
-    yticks = [60,65,70, 75, 80, 85,90]
+    # xticks = [-20,-10, 0, 10,20,30,40,50,60,70,80,90,100,110,120]
+    xticks = [-10, 0, 10, 20, 30, 40, 50, 60, 70]
+    # yticks = [60,65,70, 75, 80, 85,90]
+    yticks = [70, 75, 80, 85]
 
     cividis = mpl.colormaps['cividis']
     ice_colors = cmocean.cm.ice
@@ -105,10 +107,10 @@ def main():
     else:
         ice_ticks = ['0', '0 - 10', '10 - 40', '40 - 70', '70 - 90', '90 - 100', '100']
 
-    ice_ticks = ['0', '\n10 - 30', '40 - 60', '\n70 - 80', '90 - 100', '\nfast ice']
+    ice_ticks = ['0', '10 - 30', '40 - 60', '70 - 80', '90 - 100', 'fast ice']
 
     sns.set_theme(context = 'talk')
-    figsize = (15,6)
+    figsize = (20,8)
 
     # fig, ax = plt.subplots(ncols = 3, nrows=2, figsize=(25,10), constrained_layout = True, subplot_kw={'projection': map_proj})
     fig = plt.figure(figsize = figsize, constrained_layout = True)
@@ -154,13 +156,19 @@ def main():
     ax[0].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=3, color='black', rasterized = True)
 
 
-    ax[0].set_title(f"Sea ice chart {bdate.strftime('%d')}th {bdate.strftime('%B')} {bdate.strftime('%Y')}")
+    ax[0].set_title(f"Sea ice chart {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}")
 
     ax[0].set_xlim(x0,x1)
     ax[0].set_ylim(y0,y1)
     
     fig.canvas.draw()
+    # ax[0].gridlines(draw_labels = True, xlocs = xticks, ylocs = yticks, rotate_labels = False, color = 'dimgrey')
     ax[0].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
+
+    # ax[0].tick_params(axis='both', direction = 'out', right = False, top = False)
+
+    # ax[0].set_xticks(xticks, crs = data_proj)
+    # ax[0].set_yticks(yticks, crs = data_proj)
     ax[0].xaxis.set_major_formatter(LONGITUDE_FORMATTER)
     ax[0].yaxis.set_major_formatter(LATITUDE_FORMATTER)
     LambertLabels.lambert_xticks(ax[0], xticks)
@@ -170,6 +178,7 @@ def main():
     # cax0 = divider0.append_axes("bottom", size="3%", pad=.05)
     # cax0.axis('off')
 
+    ax[0].set_frame_on(False)
 
     # Plot figure b
     with Dataset(data_ict2, 'r') as ic_2:
@@ -201,12 +210,21 @@ def main():
     ax[1].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
     ax[1].xaxis.set_major_formatter(LONGITUDE_FORMATTER)
     ax[1].yaxis.set_major_formatter(LATITUDE_FORMATTER)
-    # LambertLabels.lambert_xticks(ax[1], xticks)
+    LambertLabels.lambert_xticks(ax[1], xticks)
     LambertLabels.lambert_yticks(ax[1], yticks)
+
+    ax[1].set_frame_on(False)
 
     # divider1 = make_axes_locatable(ax[1])
     # cax1 = divider1.append_axes("bottom", size="3%", pad=.05)
 
+    '''
+    ax[1].spines['top'].set_visible(False)
+    ax[1].spines['right'].set_visible(False)
+    ax[1].spines['bottom'].set_visible(False)
+    ax[1].spines['left'].set_visible(False)
+    '''
+    
     # Plot figure c
     with h5py.File(data_ml, 'r') as ml:
         sicml = ml['y_pred'][0,:,:]
@@ -214,7 +232,17 @@ def main():
     sicml = np.where(sicml == 1, 0, sicml)
     sicml = np.where(sicml > 0, sicml - 1, sicml)
 
-    iiee = IIEE(sicml, sic2, lsmask, threshold = 1)
+    # iiee = IIEE(sicml, sic2, lsmask, threshold = 1)
+    # iiee_p = IIEE(sic0, sic2, lsmask, threshold = 1)
+    
+    # print(iiee[0].sum() + iiee[1].sum())
+    # print(ice_edge2)
+    # print(ice_edge_length(ice_edge2, s = 1))
+
+    # print(f"niiee ml {(iiee[0].sum() + iiee[1].sum()) / ice_edge_length(ice_edge2, s = 1)}")
+    # print(f"niiee persistence {(iiee_p[0].sum() + iiee_p[1].sum()) / ice_edge_length(ice_edge2, s = 1)}")
+
+
 
     ax[2].pcolormesh(lon, lat, sicml, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
     ax[2].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
@@ -228,7 +256,7 @@ def main():
     ax[2].set_xlim(x0,x1)
     ax[2].set_ylim(y0,y1)
 
-    ax[2].set_title(f"Deep learning")
+    ax[2].set_title(f"Deep learning {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}, initialized {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}")
     
     fig.canvas.draw()
     ax[2].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
@@ -237,9 +265,18 @@ def main():
     LambertLabels.lambert_xticks(ax[2], xticks)
     LambertLabels.lambert_yticks(ax[2], yticks)
 
+    ax[2].set_frame_on(False)
+
     # divider2 = make_axes_locatable(ax[2])
     # cax2 = divider2.append_axes("bottom", size="3%", pad=.05)
     # cax2.axis('off')
+
+    '''
+    ax[2].spines['top'].set_visible(False)
+    ax[2].spines['right'].set_visible(False)
+    ax[2].spines['bottom'].set_visible(False)
+    ax[2].spines['left'].set_visible(False)
+    '''
 
     mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)
         # mapper.set_array([-1, 8])
@@ -256,23 +293,25 @@ def main():
 
     cbar.set_label(label = 'WMO sea ice concentration intervals [%]')#, size = 16)
     cbar.set_ticks(ice_levels[:-1] + .5, labels = ice_ticks)
-    cbar.outline.set_linewidth(2)
-    cbar.dividers.set_linewidth(2)
+    cbar.outline.set_linewidth(1.2)
+    cbar.dividers.set_linewidth(1.2)
     cbar.outline.set_edgecolor('black')
     cbar.dividers.set_edgecolor('black')
+    cbar.minorticks_off()
     
         
     trans = mtransforms.ScaledTranslation(-20/72, 7/72, fig.dpi_scale_trans)    
     for i,j in zip(range(3), ['a', 'b', 'c']):
         ax[i].set_anchor('N')
-        ax[i].text(0.0, 1.0, f"{j})", transform = ax[i].transAxes + trans, fontsize='medium', va='bottom')
+        ax[i].text(0.0, 1.0, f"{j})", transform = ax[i].transAxes + trans, va='bottom')
 
     # cbar.ax.tick_params(labelsize = 16)
 
     # plt.tight_layout()
     print('saving fig')
-    fig.savefig(f"{path_figure}predictions.png")
+    fig.savefig(f"{path_figure}new_predictions.png")
 
+    exit()
     with h5py.File(f'{path}{month}/PreparedSample_v{vdate.strftime("%Y%m%d")}_b{bdate.strftime("%Y%m%d")}.hdf5', 'r') as arome:
         t2m = arome['t2m'][lower_boundary:, :rightmost_boundary]
         xwind = arome['xwind'][lower_boundary:, :rightmost_boundary]
