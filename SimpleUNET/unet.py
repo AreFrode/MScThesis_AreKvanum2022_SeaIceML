@@ -173,7 +173,7 @@ def create_Decoder_Model(feature_maps, input_shape: List[int] = (112, 112, 256),
 
 
 class UNET(keras.Model):
-    def __init__(self, channels, num_classes = 7, pooling_factor = 2, num_outputs = 7, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name='unet'):
+    def __init__(self, channels, num_classes = 7, pooling_factor = 2, num_outputs = 1, average_pool = False, kernel_initializer = 'HeNormal', leaky_relu = False, name='unet'):
         super(UNET, self).__init__(name=name)
         # self.normalizer = keras.layers.Normalization(axis=-1)
         self.encoder = Encoder(channels = channels, pooling_factor=pooling_factor, average_pool=average_pool, kernel_initializer=kernel_initializer, leaky_relu=leaky_relu)
@@ -228,9 +228,9 @@ class MultiOutputUNET_seggradcam(UNET):
         return [self.output_layers[i](x) for i in range(self.num_outputs)], self.bottleneck
     
 
-def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 7, kernel_initializer: str = 'HeNormal'):
+def create_UNET(input_shape: List[int] = (2370, 1844, 6), channels: List[int] = [64, 128, 256], num_classes: int = 7, pooling_factor = 2, num_outputs = 1, average_pool = False, kernel_initializer: str = 'HeNormal', leaky_relu = False):
     input = keras.Input(shape=input_shape)
-    output = UNET(channels = channels, num_classes = num_classes, kernel_initializer = kernel_initializer)(input)
+    output = UNET(channels = channels, num_classes = num_classes, pooling_factor = pooling_factor, num_outputs = num_outputs, average_pool = average_pool, kernel_initializer = kernel_initializer, leaky_relu = leaky_relu)(input)
 
     model = keras.models.Model(inputs=input, outputs=output)
 

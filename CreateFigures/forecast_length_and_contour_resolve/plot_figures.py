@@ -8,14 +8,14 @@ from matplotlib import pyplot as plt, dates as mdates
 
 
 def main():
-    df = pd.read_csv("/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/forecast_length_and_contour_resolve/weights_21021550.csv", index_col = 0)
+    df = pd.read_csv("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/forecast_length_and_contour_resolve/weights_21021550.csv", index_col = 0)
 
     df.index = pd.to_datetime(df.index)
 
-    one_day = pd.read_csv("/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/forecast_length_and_contour_resolve/weights_08031256.csv", index_col = 0)
+    one_day = pd.read_csv("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/forecast_length_and_contour_resolve/weights_08031256.csv", index_col = 0)
     one_day.index = pd.to_datetime(one_day.index)
 
-    three_day = pd.read_csv("/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/forecast_length_and_contour_resolve/weights_09031047.csv", index_col = 0)
+    three_day = pd.read_csv("/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/forecast_length_and_contour_resolve/weights_09031047.csv", index_col = 0)
     three_day.index = pd.to_datetime(three_day.index)
 
     columns={"target_length": "length", 'target_area1': 'area1', 'target_area2': 'area2', 'target_area3': 'area3', 'target_area4': 'area4', 'target_area5': 'area5', 'target_area6': 'area6'}
@@ -59,7 +59,7 @@ def main():
     fig = plt.figure(figsize = (7.5, 7.5))
     ax = fig.add_subplot()
 
-    line = sns.lineplot(data = df_months, x = df_months.index, y = 'length', hue='name', ax = ax, marker = 'o', color='k', markeredgewidth='1', markersize = '8', mec = None, ls = '--')
+    line = sns.lineplot(data = df_months, x = df_months.index, y = 'length', hue='name', ax = ax, marker = 'o', color='k', markeredgewidth='1', markersize = '8', mec = None, ls = '--', palette = 'Dark2')
 
     ax.set_xlim([datetime.date(2021, 12, 2), datetime.date(2022, 12, 31)])
     ax.xaxis.set_major_locator(locator)
@@ -86,7 +86,9 @@ def main():
     # for i in range(12):
         # ax.text(df_deep_learning.index[i], df_deep_learning['length'].iloc[i] + 150, f"{bias_months['length'].iloc[i]:.0f}")
 
-    plt.savefig('ice_edge_length.pdf')
+    plt.savefig('ice_edge_length.png', dpi = 300)
+
+    exit()
 
     cat = pd.concat([target, forecast])
     

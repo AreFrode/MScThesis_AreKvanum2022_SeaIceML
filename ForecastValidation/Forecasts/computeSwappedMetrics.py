@@ -26,8 +26,8 @@ def main():
 
     config = read_config_from_csv(f"{PATH_FORECAST[:int(fname_slice)]}configs/{model_name}.csv")
 
-    concentration = '15%'
-    climatological_ice_edge = load_climatological_ice_edge(2022, concentration, int(config['lead_time']))
+    concentration = '10-40%'
+    climatological_ice_edge = load_climatological_ice_edge(2022, concentration, int(config['lead_time']), 'nextsim')
 
     # PATH_PERSISTANCE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/two_day_forecast/"
 

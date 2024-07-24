@@ -49,7 +49,7 @@ def main():
 
     path = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{config['lead_time']}/2022/"
     # path_figure = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/lustre_poster_extra/"
-    path_figure = "/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/lustre_poster_extra/"
+    path_figure = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/lustre_poster_extra/"
 
 
     lower_boundary = 578
@@ -109,16 +109,20 @@ def main():
 
     ice_ticks = ['0', '10 - 30', '40 - 60', '70 - 80', '90 - 100', 'fast ice']
 
-    sns.set_theme(context = 'talk')
-    figsize = (20,8)
+    sns.set_theme(context = 'poster')
+    # sns.set(font_scale = 3)
+    figsize = (14,11.5)
 
     # fig, ax = plt.subplots(ncols = 3, nrows=2, figsize=(25,10), constrained_layout = True, subplot_kw={'projection': map_proj})
     fig = plt.figure(figsize = figsize, constrained_layout = True)
-    ax = []
+    ax = fig.subplot_mosaic([
+        ['a', 'b'],
+        ['c', 'c']
+    ], subplot_kw={'projection': map_proj})
 
-    ax.append(fig.add_subplot(131, projection = map_proj))
-    ax.append(fig.add_subplot(132, projection = map_proj))
-    ax.append(fig.add_subplot(133, projection = map_proj))
+    # ax.append(fig.add_subplot(131, projection = map_proj))
+    # ax.append(fig.add_subplot(132, projection = map_proj))
+    # ax.append(fig.add_subplot(133, projection = map_proj))
     # ax.append(fig.add_subplot(235))
 
 
@@ -151,34 +155,34 @@ def main():
     sic0 = np.where(sic0 == 1, 0, sic0)
     sic0 = np.where(sic0 > 0, sic0 - 1, sic0)
 
-    ax[0].pcolormesh(lon, lat, sic0, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
-    ax[0].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
-    ax[0].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=3, color='black', rasterized = True)
+    ax['a'].pcolormesh(lon, lat, sic0, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
+    ax['a'].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
+    ax['a'].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=3, color='black', rasterized = True)
 
 
-    ax[0].set_title(f"Sea ice chart {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}")
+    ax['a'].set_title(f"Sea ice chart {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}")
 
-    ax[0].set_xlim(x0,x1)
-    ax[0].set_ylim(y0,y1)
+    ax['a'].set_xlim(x0,x1)
+    ax['a'].set_ylim(y0,y1)
     
     fig.canvas.draw()
-    # ax[0].gridlines(draw_labels = True, xlocs = xticks, ylocs = yticks, rotate_labels = False, color = 'dimgrey')
-    ax[0].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
+    # ax['a'].gridlines(draw_labels = True, xlocs = xticks, ylocs = yticks, rotate_labels = False, color = 'dimgrey')
+    ax['a'].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
 
-    # ax[0].tick_params(axis='both', direction = 'out', right = False, top = False)
+    # ax['a'].tick_params(axis='both', direction = 'out', right = False, top = False)
 
-    # ax[0].set_xticks(xticks, crs = data_proj)
-    # ax[0].set_yticks(yticks, crs = data_proj)
-    ax[0].xaxis.set_major_formatter(LONGITUDE_FORMATTER)
-    ax[0].yaxis.set_major_formatter(LATITUDE_FORMATTER)
-    LambertLabels.lambert_xticks(ax[0], xticks)
-    LambertLabels.lambert_yticks(ax[0], yticks)
+    # ax['a'].set_xticks(xticks, crs = data_proj)
+    # ax['a'].set_yticks(yticks, crs = data_proj)
+    ax['a'].xaxis.set_major_formatter(LONGITUDE_FORMATTER)
+    ax['a'].yaxis.set_major_formatter(LATITUDE_FORMATTER)
+    LambertLabels.lambert_xticks(ax['a'], xticks)
+    LambertLabels.lambert_yticks(ax['a'], yticks)
 
-    # divider0 = make_axes_locatable(ax[0])
+    # divider0 = make_axes_locatable(ax['a'])
     # cax0 = divider0.append_axes("bottom", size="3%", pad=.05)
     # cax0.axis('off')
 
-    ax[0].set_frame_on(False)
+    ax['a'].set_frame_on(False)
 
     # Plot figure b
     with Dataset(data_ict2, 'r') as ic_2:
@@ -194,26 +198,26 @@ def main():
 
     # iiee = IIEE(sic0, sic2, lsmask, threshold = 1)
 
-    ax[1].pcolormesh(lon, lat, sic2, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
-    ax[1].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
-    ax[1].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=3, color='black', rasterized = True)
+    ax['b'].pcolormesh(lon, lat, sic2, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
+    ax['b'].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
+    ax['b'].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=3, color='black', rasterized = True)
 
-    # ax[1].pcolormesh(lon, lat, np.ma.masked_less(iiee[0],1),alpha=0.7, transform=data_proj, cmap = 'summer', zorder=3, rasterized = True)
-    # ax[1].pcolormesh(lon, lat, np.ma.masked_less(iiee[1], 1),alpha=0.7, transform=data_proj, zorder=4, cmap='winter', rasterized = True)
+    # ax['b'].pcolormesh(lon, lat, np.ma.masked_less(iiee[0],1),alpha=0.7, transform=data_proj, cmap = 'summer', zorder=3, rasterized = True)
+    # ax['b'].pcolormesh(lon, lat, np.ma.masked_less(iiee[1], 1),alpha=0.7, transform=data_proj, zorder=4, cmap='winter', rasterized = True)
 
-    ax[1].set_xlim(x0,x1)
-    ax[1].set_ylim(y0,y1)
+    ax['b'].set_xlim(x0,x1)
+    ax['b'].set_ylim(y0,y1)
 
-    ax[1].set_title(f"Sea ice chart {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}")
+    ax['b'].set_title(f"Sea ice chart {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}")
     
     fig.canvas.draw()
-    ax[1].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
-    ax[1].xaxis.set_major_formatter(LONGITUDE_FORMATTER)
-    ax[1].yaxis.set_major_formatter(LATITUDE_FORMATTER)
-    LambertLabels.lambert_xticks(ax[1], xticks)
-    LambertLabels.lambert_yticks(ax[1], yticks)
+    ax['b'].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
+    ax['b'].xaxis.set_major_formatter(LONGITUDE_FORMATTER)
+    ax['b'].yaxis.set_major_formatter(LATITUDE_FORMATTER)
+    LambertLabels.lambert_xticks(ax['b'], xticks)
+    LambertLabels.lambert_yticks(ax['b'], yticks)
 
-    ax[1].set_frame_on(False)
+    ax['b'].set_frame_on(False)
 
     # divider1 = make_axes_locatable(ax[1])
     # cax1 = divider1.append_axes("bottom", size="3%", pad=.05)
@@ -244,30 +248,30 @@ def main():
 
 
 
-    ax[2].pcolormesh(lon, lat, sicml, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
-    ax[2].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
+    ax['c'].pcolormesh(lon, lat, sicml, transform=data_proj, norm = ice_norm, cmap = ice_cmap, zorder=1, rasterized = True)
+    ax['c'].pcolormesh(lon, lat, np.ma.masked_less(lsmask, 1), transform=data_proj, zorder=2, cmap=land_cmap, rasterized = True)
 
-    ax[2].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=4, color='black', rasterized = True)
-    ax[2].scatter(lon[::], lat[::], 0.05*ice_edge2[::], transform=data_proj, zorder=3, color='dodgerblue', rasterized=True)
+    ax['c'].scatter(lon, lat, 0.05*ice_edge0, transform=data_proj, zorder=4, color='black', rasterized = True)
+    ax['c'].scatter(lon[::], lat[::], 0.05*ice_edge2[::], transform=data_proj, zorder=3, color='dodgerblue', rasterized=True)
 
-    # ax[2].pcolormesh(lon, lat, np.ma.masked_less(iiee[0],1),alpha=0.7, transform=data_proj, cmap = 'summer', zorder=3, rasterized = True)
-    # ax[2].pcolormesh(lon, lat, np.ma.masked_less(iiee[1], 1),alpha=0.7, transform=data_proj, zorder=4, cmap='winter', rasterized = True)
+    # ax['c'].pcolormesh(lon, lat, np.ma.masked_less(iiee[0],1),alpha=0.7, transform=data_proj, cmap = 'summer', zorder=3, rasterized = True)
+    # ax['c'].pcolormesh(lon, lat, np.ma.masked_less(iiee[1], 1),alpha=0.7, transform=data_proj, zorder=4, cmap='winter', rasterized = True)
 
-    ax[2].set_xlim(x0,x1)
-    ax[2].set_ylim(y0,y1)
+    ax['c'].set_xlim(x0,x1)
+    ax['c'].set_ylim(y0,y1)
 
-    ax[2].set_title(f"Deep learning {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}, initialized {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}")
+    ax['c'].set_title(f"Deep learning {vdate.strftime('%d')}th {vdate.strftime('%B')} {vdate.strftime('%Y')}, initialized {bdate.strftime('%d')}rd {bdate.strftime('%B')} {bdate.strftime('%Y')}")
     
     fig.canvas.draw()
-    ax[2].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
-    ax[2].xaxis.set_major_formatter(LONGITUDE_FORMATTER)
-    ax[2].yaxis.set_major_formatter(LATITUDE_FORMATTER)
-    LambertLabels.lambert_xticks(ax[2], xticks)
-    LambertLabels.lambert_yticks(ax[2], yticks)
+    ax['c'].gridlines(xlocs = xticks, ylocs = yticks, color = 'dimgrey')
+    ax['c'].xaxis.set_major_formatter(LONGITUDE_FORMATTER)
+    ax['c'].yaxis.set_major_formatter(LATITUDE_FORMATTER)
+    LambertLabels.lambert_xticks(ax['c'], xticks)
+    LambertLabels.lambert_yticks(ax['c'], yticks)
 
-    ax[2].set_frame_on(False)
+    ax['c'].set_frame_on(False)
 
-    # divider2 = make_axes_locatable(ax[2])
+    # divider2 = make_axes_locatable(ax['c'])
     # cax2 = divider2.append_axes("bottom", size="3%", pad=.05)
     # cax2.axis('off')
 
@@ -281,9 +285,9 @@ def main():
     mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)
         # mapper.set_array([-1, 8])
 
-    ax[1].grid(False)
+    ax['c'].grid(False)
     cbar = fig.colorbar(mapper,
-                        ax = ax[1],
+                        ax = ax['c'],
                         spacing = 'uniform',
                         orientation = 'horizontal',
                         pad = .0,
@@ -301,15 +305,15 @@ def main():
     
         
     trans = mtransforms.ScaledTranslation(-20/72, 7/72, fig.dpi_scale_trans)    
-    for i,j in zip(range(3), ['a', 'b', 'c']):
+    for i in ['a', 'b', 'c']:
         ax[i].set_anchor('N')
-        ax[i].text(0.0, 1.0, f"{j})", transform = ax[i].transAxes + trans, va='bottom')
+        ax[i].text(-0.06, .88, f"({i})", transform = ax[i].transAxes + trans, va='bottom')
 
     # cbar.ax.tick_params(labelsize = 16)
 
     # plt.tight_layout()
     print('saving fig')
-    fig.savefig(f"{path_figure}new_predictions.png")
+    fig.savefig(f"{path_figure}new_predictions.pdf", dpi = 300)
 
     exit()
     with h5py.File(f'{path}{month}/PreparedSample_v{vdate.strftime("%Y%m%d")}_b{bdate.strftime("%Y%m%d")}.hdf5', 'r') as arome:
@@ -420,7 +424,7 @@ def main():
     cbar2.outline.set_edgecolor('black')
     cbar2.dividers.set_edgecolor('black')
 
-    fig.savefig(f'{path_figure}iiee.png')
+    fig.savefig(f'{path_figure}iiee.png', dpi = 300)
 
 if __name__ == "__main__":
     main()

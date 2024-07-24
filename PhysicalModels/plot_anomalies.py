@@ -22,7 +22,7 @@ from shapely.errors import ShapelyDeprecationWarning
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
 from netCDF4 import Dataset
 from tqdm import tqdm
-from computeMetrics import load_barents, load_ml, load_nextsim, load_osisaf, load_persistence
+from computeMetrics import load_barents, load_ml, load_nextsim, load_osisaf, load_persistence, load_freedrift
 
 
 from datetime import datetime, timedelta
@@ -34,7 +34,7 @@ def main():
     # sns.despine()
 
     sns.set_theme('talk')
-    sns.set(font_scale = 2)
+    # sns.set(font_scale = 2)
     lead_time = sys.argv[1]
     grid = 'nextsim'
     weights = sys.argv[2]
@@ -42,6 +42,7 @@ def main():
     # Define paths
     csv_PATH_NEXTSIM = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/nextsim.csv"
     csv_PATH_OSISAF = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/osisaf.csv"
+    csv_PATH_FREEDRIFT = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/freedrift.csv"
     csv_PATH_ML = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/{weights}.csv"
     csv_PATH_BARENTS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/barents.csv"
     csv_PATH_PERSISTENCE = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/lead_time_{lead_time}/persistence.csv"
@@ -104,6 +105,7 @@ def main():
     nextsim_anom = []
     barents_anom = []
     pers_anom = []
+    freedrift_anom = []
     dates_datetime = []
 
     barents_test = []
@@ -121,6 +123,7 @@ def main():
         sic_nextsim, _, _ = load_nextsim(date_bulletin_physical, int(lead_time), grid, PATH_TARGETS, None)
         sic_barents, _, _ = load_barents(date_bulletin_physical, int(lead_time), grid, PATH_TARGETS, None)
         sic_pers, _, _ = load_persistence(date_bulletin, int(lead_time), grid, PATH_TARGETS, None)
+        sic_freedrift, _, _ = load_freedrift(date_bulletin, int(lead_time), grid, PATH_TARGETS, None)
 
         # sic_barents = np.where(lsmask == 1, -10, sic_barents)
         sic_target = np.where(sic_ml == -1, -1, sic_target)
@@ -130,6 +133,7 @@ def main():
         nextsim_anom.append(sic_nextsim - sic_target)
         barents_anom.append(sic_barents - sic_target)
         pers_anom.append(sic_pers - sic_target)
+        freedrift_anom.append(sic_freedrift - sic_target)
 
         barents_test.append(sic_barents)
 
@@ -141,6 +145,7 @@ def main():
     nextsim_anom = np.array(nextsim_anom) 
     barents_anom = np.array(barents_anom) 
     pers_anom = np.array(pers_anom)
+    freedrift_anom = np.array(freedrift_anom)
 
     dates_datetime = np.array(dates_datetime)
     
@@ -153,9 +158,9 @@ def main():
     SON = np.where(np.logical_or(np.logical_or(dates_datetime == np.datetime64('2022-09'), dates_datetime == np.datetime64('2022-10')), dates_datetime == np.datetime64('2022-11')))
 
     seasons = [DJF, MAM, JJA, SON]
-    products = [nextsim_anom, pers_anom, ml_anom, osi_anom, barents_anom]
+    products = [nextsim_anom, pers_anom, freedrift_anom, ml_anom, osi_anom, barents_anom]
     
-    fig, ax = plt.subplots(nrows = 5, ncols = 4, figsize = (15, 15), subplot_kw = {'projection' : map_proj})
+    fig, ax = plt.subplots(nrows = 6, ncols = 4, figsize = (15, 15), subplot_kw = {'projection' : map_proj})
 
     normalize = colors.Normalize(vmin = -6, vmax = 6)
 
@@ -214,7 +219,7 @@ def main():
     fig.suptitle('Seasonal distribution of spatial biases')
 
 
-    fig.savefig(f"{PATH_FIGURES}anomalies.pdf", dpi=300)
+    fig.savefig(f"{PATH_FIGURES}anomalies.png", dpi=300)
 
 
 if __name__ == "__main__":

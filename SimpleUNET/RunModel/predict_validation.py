@@ -14,6 +14,17 @@ from unet import create_UNET, create_MultiOutputUNET
 from dataset import HDF5Generator, MultiOutputHDF5Generator
 from datetime import datetime, timedelta
 from helper_functions import read_config_from_csv
+from netCDF4 import Dataset
+
+def updated_numpy_where_wrapper(arr):
+    sea_ice_changes = np.where(np.diff(arr))[0]
+    changes = len(sea_ice_changes)
+
+    sea_ice_class = sea_ice_changes[0] + 1 if changes != 0 else np.sum(arr)
+    changes -= 1 if changes != 0 else 0
+
+    return sea_ice_class, changes
+
 
 def numpy_where_wrapper(arr):
     """Computes the index where the cumulative distribution changes
@@ -35,29 +46,37 @@ def numpy_where_wrapper(arr):
 
     return sea_ice_class, changes
 
-def predict_validation_single(validation_generator, model, PATH_OUTPUTS, weights):
-    samples = len(validation_generator)
+def predict_validation_single(test_generator, model, PATH_OUTPUTS, weights, lead_time):
+    samples = len(test_generator)
 
     for i in range(samples):
         print(f"Sample {i} of {samples}", end="\r")
-        X, y = validation_generator[i]
+        X, y = test_generator[i]
         y_pred = np.argmax(model.predict(X), axis=-1)
         
-        yyyymmdd = validation_generator.get_dates(i)[0][-13:-5]
-        yyyymmdd = datetime.strptime(yyyymmdd, '%Y%m%d')
-        yyyymmdd = (yyyymmdd + timedelta(days = 2)).strftime('%Y%m%d')
+        yyyymmdd = test_generator.get_dates(i)[0][-13:-5]
+        yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
+        yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
+
+        x_vals, y_vals = test_generator.get_xy(i)
 
         hdf_path = f"{PATH_OUTPUTS}Data/{weights}/{yyyymmdd[:4]}/{yyyymmdd[4:6]}/"
         if not os.path.exists(hdf_path):
             os.makedirs(hdf_path)
 
-        output_file = h5py.File(f"{hdf_path}SIC_SimpleUNET_two_day_forecast_{yyyymmdd}T15Z.hdf5", "w-")
+        with h5py.File(f"{hdf_path}SIC_UNET_v{yyyymmdd_valid}_b{yyyymmdd}T15Z.hdf5", "w") as output_file:
+            output_file['xc'] = x_vals
+            output_file['yc'] = y_vals
+            output_file["y"] = y
+            output_file["y_pred"] = y_pred
+            output_file["date"] = yyyymmdd
 
-        output_file["y"] = y
-        output_file["y_pred"] = y_pred
-        output_file["date"] = yyyymmdd
+        with Dataset(f"{hdf_path}SIC_UNET_v{yyyymmdd_valid}_b{yyyymmdd}T15Z.nc", "w") as output_file:
+            output_file.createDimension('y', len(y_vals))
+            output_file.createDimension('x', len(x_vals))
 
-        output_file.close()
+            of_sic = output_file.createVariable('y_pred', 'd', ('y', 'x'))
+            of_sic[:] = y_pred
 
 def predict_test_multi(test_generator, model, PATH_OUTPUTS, weights, lead_time):
     samples = len(test_generator)
@@ -76,7 +95,7 @@ def predict_test_multi(test_generator, model, PATH_OUTPUTS, weights, lead_time):
         # out = tf.math.reduce_sum(tf.round(tf.nn.sigmoid(y_pred[0])), -1)
         out = tf.round(tf.nn.sigmoid(y_pred[0]))
 
-        concentration_and_changes = np.apply_along_axis(numpy_where_wrapper, -1, out)
+        concentration_and_changes = np.apply_along_axis(updated_numpy_where_wrapper, -1, out)
 
         out = concentration_and_changes[...,0]
         local_changes = concentration_and_changes[...,1]
@@ -93,6 +112,13 @@ def predict_test_multi(test_generator, model, PATH_OUTPUTS, weights, lead_time):
             output_file["y"] = y
             output_file["y_pred"] = np.expand_dims(out, 0)
             output_file["date"] = yyyymmdd
+
+        with Dataset(f"{hdf_path}SIC_UNET_v{yyyymmdd_valid}_b{yyyymmdd}T15Z.nc", "w") as output_file:
+            output_file.createDimension('y', len(y_vals))
+            output_file.createDimension('x', len(x_vals))
+
+            of_sic = output_file.createVariable('y_pred', 'd', ('y', 'x'))
+            of_sic[:] = np.expand_dims(out, 0)
 
         total_changes += np.sum(local_changes)
 
@@ -123,8 +149,16 @@ def main():
     elif config['reduced_classes']:
         PATH_DATA = f"/mnt/PrepareDataset/Data/reduced_classes/lead_time_{config['lead_time']}/"
 
+
+    elif config['appended']:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/appended/lead_time_{config['lead_time']}/"
+
+    elif config['amsr2_input']:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/amsr2_input/lead_time_{config['lead_time']}/"
+
     else:
         PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/"
+
 
     # gpu = tf.config.list_physical_devices('GPU')[0]
     # tf.config.experimental.set_memory_growth(gpu, True)
@@ -137,6 +171,7 @@ def main():
         batch_size=BATCH_SIZE,
         fields=config['fields'],
         num_target_classes=config['num_outputs'],
+        # num_target_classes=7,
         lower_boundary=config['lower_boundary'],
         rightmost_boundary=config['rightmost_boundary'],
         normalization_file=f"{PATH_DATA}{config['test_normalization']}.csv",
@@ -156,6 +191,7 @@ def main():
 
     load_status = model.load_weights(f"{PATH_OUTPUTS}models/{weights}").expect_partial()
 
+    # predict_validation_single(test_generator, model, PATH_OUTPUTS, weights, config['lead_time'])
     predict_test_multi(test_generator, model, PATH_OUTPUTS, weights, config['lead_time'])
 
 

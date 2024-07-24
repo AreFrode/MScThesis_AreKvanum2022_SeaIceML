@@ -6,8 +6,8 @@
 #$ -t 1-3
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/Forecasts/logs
 
-module use /modules/MET/centos7/GeneralModules
+source /modules/rhel8/conda/install/etc/profile.d/conda.sh
 
-module load Python-devel/3.8.7
+conda activate development-11-2023
 
 python3 /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/Forecasts/computeMetricsPersistance.py $SGE_TASK_ID

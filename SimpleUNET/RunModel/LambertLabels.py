@@ -53,7 +53,8 @@ def lambert_yticks(ax, ticks, labelsize = 16):
 
 def _lambert_ticks(ax, ticks, tick_location, line_constructor, tick_extractor):
     """Get the tick locations and labels for an axis of a Lambert Conformal projection."""
-    outline_patch = sgeom.LineString(ax.outline_patch.get_path().vertices.tolist())
+    # outline_patch = sgeom.LineString(ax.outline_patch.get_path().vertices.tolist())
+    outline_patch = sgeom.LineString(ax.spines['geo'].get_path().vertices.tolist())
     axis = find_side(outline_patch, tick_location)
     n_steps = 30
     extent = ax.get_extent(ccrs.PlateCarree())
@@ -63,7 +64,9 @@ def _lambert_ticks(ax, ticks, tick_location, line_constructor, tick_extractor):
         proj_xyz = ax.projection.transform_points(ccrs.Geodetic(), xy[:, 0], xy[:, 1])
         xyt = proj_xyz[..., :2]
         ls = sgeom.LineString(xyt.tolist())
-        locs = axis.intersection(ls)
+        with np.errstate(invalid="ignore"):
+            locs = axis.intersection(ls)
+            
         if not locs:
             tick = [None]
         else:

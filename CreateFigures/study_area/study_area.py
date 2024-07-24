@@ -113,7 +113,7 @@ def main():
 
     ice_levels = np.linspace(0, 7, 8, dtype = 'int')
     ice_norm = colors.BoundaryNorm(ice_levels, ice_cmap.N)
-    ice_ticks = ['ice free', '<10', '10–30', '40–60', '70–80', '90–100', 'fast ice']
+    ice_ticks = ['ice-free\nopen water', '<10', '10–39', '40–69', '70–89', '90–100', 'fast ice']
 
     mapper = mpl.cm.ScalarMappable(cmap = ice_cmap, norm = ice_norm)
     # mapper.set_array([-1, 8])

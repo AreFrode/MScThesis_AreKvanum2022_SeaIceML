@@ -109,7 +109,7 @@ def main():
 
         for i in range(len(lead_times) - 1):
             for j in range(n_members):
-                barents_sic = np.mean(barents_sic_padded[lead_times[i]:lead_times[i+1], j, ...], axis=0)
+                barents_sic = np.mean(barents_sic_padded[lead_times[i]:lead_times[i+1] - 12, j, ...], axis=0)
                 interp_list.append(barents_sic)
 
         interp_array = np.array(interp_list)

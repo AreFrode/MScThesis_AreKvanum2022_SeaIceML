@@ -1,6 +1,6 @@
 # Script to regrid AA onto 1km grid
 # Author: Are Frode Kvanum
-# Date: 02.01.2023
+# Date: 29.04.2024
 
 import sys
 sys.path.append('/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid')
@@ -78,29 +78,22 @@ def main():
         yyyymmdd = f"{year_task}{month_task}{dd:02d}"
         print(yyyymmdd)
 
-        path_day = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T18Z.nc")
+        # path_day = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_full_2_5km_{yyyymmdd}T18Z.nc")
         path_day_det = glob.glob(f"{path_data_task}{dd:02d}/arome_arctic_det_2_5km_{yyyymmdd}T18Z.nc")
         path_day_extracted = glob.glob(f"{path_data_task}{dd:02}/arome_arctic_extracted_2_5km_{yyyymmdd}T18Z.nc")
         path_day_sfx = glob.glob(f"{path_data_task}{dd:02}/arome_arctic_sfx_2_5km_{yyyymmdd}T18Z.nc")
 
         try:
-            dataset = path_day[0]
+            dataset = path_day_extracted[0]
 
-            
         except IndexError:
+
             try:
-                print(f"{path_data_task}{dd:02}/arome_arctic_extracted_2_5km_{yyyymmdd}T18.nc")
-                print(path_day_extracted)
-                dataset = path_day_extracted[0]
-
-            except IndexError:
-
-                try:
-                    dataset = path_day_det[0]
-                    ice_flag = True
+                dataset = path_day_det[0]
+                ice_flag = True
             
-                except IndexError:
-                    continue
+            except IndexError:
+                continue
 
         try:
             if not ice_flag:
@@ -171,11 +164,12 @@ def main():
 
         sic_target = regrid_cat[-1]
 
+        # Edit 29.04.2024 AVOID rotating winds, AA documentation incorrect
         # ROTATION assuming u: zonal, v: meridional
-        for i in range(3):
-            xwind_rotated, ywind_rotated = rotate(uwind_regrid[i].flatten(), vwind_regrid[i].flatten(), lat_target.flatten(), lon_target.flatten(), 'proj+=longlat', proj4_arome)
-            xwind_target[i] = xwind_rotated.reshape(*xwind_target[i].shape)
-            ywind_target[i] = ywind_rotated.reshape(*ywind_target[i].shape)
+        # for i in range(3):
+            # xwind_rotated, ywind_rotated = rotate(uwind_regrid[i].flatten(), vwind_regrid[i].flatten(), lat_target.flatten(), lon_target.flatten(), 'proj+=longlat', proj4_arome)
+            # xwind_target[i] = xwind_rotated.reshape(*xwind_target[i].shape)
+            # ywind_target[i] = ywind_rotated.reshape(*ywind_target[i].shape)
 
 
         ################################################
@@ -235,8 +229,8 @@ def main():
             lonc[:] = lon_target
             lsmask_out[:] = lsmask_target
             t2m_out[:] = t2m_target
-            xwind_out[:] = xwind_target
-            ywind_out[:] = ywind_target
+            xwind_out[:] = uwind_regrid
+            ywind_out[:] = vwind_regrid
             sic_out[:] = sic_target
 
             ##

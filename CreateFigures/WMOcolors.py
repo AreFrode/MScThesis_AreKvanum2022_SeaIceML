@@ -26,3 +26,11 @@ class cm:
         cmap[0, :-1] = np.array([196., 196., 196.])/255.
 
         return mcolors.ListedColormap(cmap)
+
+    def cartopy_land():
+        cmap = np.zeros((2,4))
+        cmap[:, -1] = 1.
+
+        cmap[0, :-1] = np.array([0.9375, 0.9375, 0.859375])
+
+        return mcolors.ListedColormap(cmap)

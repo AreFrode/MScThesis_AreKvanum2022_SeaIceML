@@ -17,8 +17,8 @@ from loadClimatologicalIceEdge import load_climatological_ice_edge
 def main():
     lead_time = sys.argv[1]
 
-    concentration = '15%'
-    climatological_ice_edge = load_climatological_ice_edge(2022, concentration, int(lead_time))
+    concentration = '10-40%'
+    climatological_ice_edge = load_climatological_ice_edge(2022, concentration, int(lead_time), 'nextsim')
 
     PATH_PERSISTENCE = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{lead_time}/"
     PATH_OUTPUTS = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/ForecastValidation/lead_time_{lead_time}/"

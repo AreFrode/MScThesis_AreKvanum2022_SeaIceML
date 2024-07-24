@@ -32,14 +32,14 @@ def main():
 
     # THIS SHOULD BE WHERE I NEED TO EDIT FOR EXPERIMENTS
     config = {
-        'lead_time': 2,
+        'lead_time': int(sys.argv[1]),
         'BATCH_SIZE': 4,
         # 'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 'xwind', 'ywind'],
         # 'fields': ['sic', 'osisaf_trend_7/sic_trend', 'lsmask', 'xwind', 'ywind'],
         # 'fields': ['sic', 'osisaf_trend_7/sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
-        'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 'xwind', 'ywind'],
+        'fields': ['sic', 'osisaf_trend_5/sic_trend', 'lsmask', 't2m', 'xwind', 'ywind'],
         'train_augment': False,
-        'train_normalization': 'normalization_constants_train_start_2019',
+        'train_normalization': 'normalization_constants_train',
         'train_shuffle': True,
         'val_augment': False,
         'val_normalization': 'normalization_constants_validation',
@@ -50,7 +50,7 @@ def main():
         'learning_rate': 0.001,
         'epochs': 25,
         'pooling_factor': 4,
-        'num_outputs': 7,
+        'num_outputs': 6,
         'channels': [64, 128, 256],
         'height': 1792,
         'width': 1792,
@@ -67,6 +67,8 @@ def main():
         'lr_decay_staircase': True,
         'open_ocean_mask': False,
         'reduced_classes': False,
+        'appended': False,
+        'amsr2_input': True,
         'train_start': 2019,
         'train_end': 2020,
         'validation': 2021
@@ -80,6 +82,12 @@ def main():
 
     elif config['reduced_classes']:
         PATH_DATA = f"/mnt/PrepareDataset/Data/reduced_classes/lead_time_{config['lead_time']}/"
+
+    elif config['appended']:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/appended/lead_time_{config['lead_time']}/"
+
+    elif config['amsr2_input']:
+        PATH_DATA = f"/mnt/PrepareDataset/Data/amsr2_input/lead_time_{config['lead_time']}/"
 
     else:
          PATH_DATA = f"/mnt/PrepareDataset/Data/lead_time_{config['lead_time']}/"
@@ -112,6 +120,7 @@ def main():
         batch_size=config['BATCH_SIZE'], 
         fields=config['fields'],
         num_target_classes=config['num_outputs'],
+        # num_target_classes=7,
         lower_boundary=config['lower_boundary'], 
         rightmost_boundary=config['rightmost_boundary'],
         normalization_file=f"{PATH_DATA}{config['train_normalization']}.csv",
@@ -124,6 +133,7 @@ def main():
         batch_size=config['BATCH_SIZE'], 
         fields=config['fields'],
         num_target_classes=config['num_outputs'],
+        # num_target_classes=7,
         lower_boundary=config['lower_boundary'], 
         rightmost_boundary=config['rightmost_boundary'],
         normalization_file=f"{PATH_DATA}{config['val_normalization']}.csv",

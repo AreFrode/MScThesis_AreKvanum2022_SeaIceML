@@ -99,16 +99,19 @@ class HDF5Generator(keras.utils.Sequence):
 
         for idx, sample in enumerate(samples):
             with h5py.File(sample, 'r') as hf:
-                X[idx, ..., 0] = hf[f"sic"][:]
-                X[idx, ..., 1] = hf[f"sst"][:]
-                X[idx, ..., 2] = hf[f"lsmask"][:]
+                for i, field in enumerate(self.fields):
+                    X[idx, ..., i] = (hf[f"{field}"][:] - self.mins[field]) / (self.maxs[field] - self.mins[field])
+
+                # X[idx, ..., 0] = hf[f"sic"][:]
+                # X[idx, ..., 1] = hf[f"sst"][:]
+                # X[idx, ..., 2] = hf[f"lsmask"][:]
                 
-                X[idx, ..., 3]   = hf[f"ts0"][f"t2m"][:]
-                X[idx, ..., 4]   = hf[f"ts1"][f"t2m"][:]
-                X[idx, ..., 5]   = hf[f"ts0"][f"xwind"][:]
-                X[idx, ..., 6]   = hf[f"ts1"][f"xwind"][:]
-                X[idx, ..., 7]   = hf[f"ts0"][f"ywind"][:]
-                X[idx, ..., 8]   = hf[f"ts1"][f"ywind"][:]
+                # X[idx, ..., 3]   = hf[f"ts0"][f"t2m"][:]
+                # X[idx, ..., 4]   = hf[f"ts1"][f"t2m"][:]
+                # X[idx, ..., 5]   = hf[f"ts0"][f"xwind"][:]
+                # X[idx, ..., 6]   = hf[f"ts1"][f"xwind"][:]
+                # X[idx, ..., 7]   = hf[f"ts0"][f"ywind"][:]
+                # X[idx, ..., 8]   = hf[f"ts1"][f"ywind"][:]
 
                 y[idx] = keras.utils.to_categorical(hf[f"{self.target}"][:], num_classes = self.num_target_classes)
 
@@ -163,7 +166,8 @@ class MultiOutputHDF5Generator(HDF5Generator):
 
                 # compute binary concentration contours
                 for k in range(self.num_target_classes):
-                    y[idx, ..., k] = np.where(onehot >= k, 1, 0)
+                    # Edit to skip ice free open water contour
+                    y[idx, ..., k] = np.where(onehot >= k+1, 1, 0)
 
         return X[:, self.lower_boundary:, :self.rightmost_boundary, :], [y[:, self.lower_boundary:, :self.rightmost_boundary, k] for k in range(self.num_target_classes)]
 

@@ -74,8 +74,13 @@ def get_target_domain(common_grid, current_proj, product):
 
 
     # Define projection transformer
-    
-    crs_CURRENT = CRS.from_proj4(current_proj)
+
+    try: 
+        crs_CURRENT = CRS.from_proj4(current_proj)
+
+    except TypeError:
+        crs_CURRENT = CRS.from_epsg(current_proj)
+
     transform_function = Transformer.from_crs(crs_CURRENT, crs_TARGET, always_xy = True)
 
     # Define target grid

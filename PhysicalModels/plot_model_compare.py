@@ -227,12 +227,19 @@ def main():
     sns.move_legend(axs['d'], "upper left", bbox_to_anchor = (1,1))
     axs['d'].legend_.set_title('Forecast product')
 
-    axs['a'].set_ylim(top = 181)
-    axs['b'].set_ylim(top = 145)
-    axs['c'].set_ylim(top = 153)
-    axs['d'].set_ylim(top = 270)
-    axs['f'].set_ylim(bottom = -1, top = 30)
+    # clim limits
+    # axs['a'].set_ylim(top = 181)
+    # axs['b'].set_ylim(top = 145)
+    # axs['c'].set_ylim(top = 153)
+    # axs['d'].set_ylim(top = 270)
+    # axs['f'].set_ylim(bottom = -1, top = 30)
 
+    # icechart limits
+    # axs['a'].set_ylim(top = 60)
+    # axs['b'].set_ylim(top = 30)
+    # axs['c'].set_ylim(top = 42)
+    # axs['d'].set_ylim(top = 100)
+    # axs['f'].set_ylim(bottom = -1, top = 9)
 
 
     fig.supylabel('Ice edge displacement error [km] (Normalized IIEE)', ha='left')

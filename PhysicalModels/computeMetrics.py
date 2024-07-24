@@ -86,24 +86,24 @@ def load_nextsim(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
 
     return nextsim_sic, target_sic, yyyymmdd_ml
 
-def load_osisaf(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
+def load_amsr2_trend(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
     # Use weights parameter to get osisaf trend
-    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/osisaf/"
+    PATH_FORECAST = f"//lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/amsr2-trend/"
 
     yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
     yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
 
-    osisaf_path = glob.glob(f"{PATH_FORECAST}{yyyymmdd[:4]}/{yyyymmdd[4:6]}/osisaf_mean_b{yyyymmdd}.nc")[0]
+    amsr2_trend_path = glob.glob(f"{PATH_FORECAST}{yyyymmdd[:4]}/{yyyymmdd[4:6]}/amsr2_trend_b{yyyymmdd}.nc")[0]
 
     target_path = glob.glob(f"{PATH_TARGET}{yyyymmdd_valid[:4]}/{yyyymmdd_valid[4:6]}/target_v{yyyymmdd_valid}.nc")[0]
 
-    with Dataset(osisaf_path, 'r') as nc:
-        osisaf_sic = nc.variables['sic'][weights, lead_time - 1, :,:]
+    with Dataset(amsr2_trend_path, 'r') as nc:
+        amsr2_trend_sic = nc.variables['sic'][lead_time - 1, :,:]
 
     with Dataset(target_path, 'r') as nc:
         target_sic = nc.variables['sic'][:,:]
 
-    return osisaf_sic, target_sic, yyyymmdd
+    return amsr2_trend_sic, target_sic, yyyymmdd
 
 def load_persistence(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
     PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/persistence/"
@@ -123,6 +123,60 @@ def load_persistence(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
 
     return persistence_sic, target_sic, yyyymmdd
 
+def load_persistence_amsr2(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
+    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/amsr2/"
+
+    yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
+    yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
+
+    amsr2_persistence_path = glob.glob(f"{PATH_FORECAST}{yyyymmdd[:4]}/{yyyymmdd[4:6]}/target_v{yyyymmdd}.nc")[0]
+
+    target_path = glob.glob(f"{PATH_TARGET}{yyyymmdd_valid[:4]}/{yyyymmdd_valid[4:6]}/target_v{yyyymmdd_valid}.nc")[0]
+
+    with Dataset(amsr2_persistence_path, 'r') as nc:
+        amsr2_persistence_sic = nc.variables['sic'][:,:]
+
+    with Dataset(target_path, 'r') as nc:
+        target_sic = nc.variables['sic'][:,:]
+
+    return amsr2_persistence_sic, target_sic, yyyymmdd
+
+def load_osisaf(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
+    # Use weights parameter to get osisaf trend
+    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/osisaf/"
+
+    yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
+    yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
+
+    osisaf_path = glob.glob(f"{PATH_FORECAST}{yyyymmdd[:4]}/{yyyymmdd[4:6]}/osisaf_mean_b{yyyymmdd}.nc")[0]
+
+    target_path = glob.glob(f"{PATH_TARGET}{yyyymmdd_valid[:4]}/{yyyymmdd_valid[4:6]}/target_v{yyyymmdd_valid}.nc")[0]
+
+    with Dataset(osisaf_path, 'r') as nc:
+        osisaf_sic = nc.variables['sic'][weights, lead_time - 1, :,:]
+
+    with Dataset(target_path, 'r') as nc:
+        target_sic = nc.variables['sic'][:,:]
+
+    return osisaf_sic, target_sic, yyyymmdd
+
+def load_freedrift(yyyymmdd, lead_time, grid, PATH_TARGET, weights = None):
+    PATH_FORECAST = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/{grid}_grid/freedrift/"
+
+    yyyymmdd_datetime = datetime.strptime(yyyymmdd, '%Y%m%d')
+    yyyymmdd_valid = (yyyymmdd_datetime + timedelta(days = lead_time)).strftime('%Y%m%d')
+
+    freedrift_path = glob.glob(f"{PATH_FORECAST}{yyyymmdd[:4]}/{yyyymmdd[4:6]}/freedrift_b{yyyymmdd}.nc")[0]
+
+    target_path = glob.glob(f"{PATH_TARGET}{yyyymmdd_valid[:4]}/{yyyymmdd_valid[4:6]}/target_v{yyyymmdd_valid}.nc")[0]
+
+    with Dataset(freedrift_path, 'r') as nc:
+        freedrift_sic = nc.variables['sic'][lead_time - 1, :, :]
+
+    with Dataset(target_path, 'r') as nc:
+        target_sic = nc.variables['sic'][:,:]
+
+    return freedrift_sic, target_sic, yyyymmdd
 
 def main():
     product = sys.argv[1]
@@ -175,6 +229,18 @@ def main():
 
     elif product == 'persistence':
         load_func = load_persistence
+    
+    elif product == 'amsr2_persistence':
+        load_func = load_persistence_amsr2
+
+    elif product == 'amsr2_trend':
+        load_func = load_amsr2_trend
+
+    elif product == 'freedrift':
+        load_func = load_freedrift
+
+    # elif product == 'ice_chart':
+        # load_func = load_ice_charts
 
     else:
         print("No valid product supplied")
@@ -205,8 +271,11 @@ def main():
         months.append(month)
         days.append(monthrange(int(year), (month))[1])
 
-    conc = '15%'
-    climatological_ice_edge = load_climatological_ice_edge(2022, conc, lead_time)
+    # Updated for compatibility wiht IceChartLength
+    conc = '10-40%'
+    # conc = '15%'
+    climatological_ice_edge = load_climatological_ice_edge(2022, conc, lead_time, product = grid)
+    # climatological_ice_edge = load_climatological_ice_edge(2022, conc, lead_time)
  
     for i, month in enumerate(months):
         for dd in range(1, days[i] + 1):
@@ -218,8 +287,9 @@ def main():
 
             try:
                 sic_forecast, sic_target, yyyymmdd_ml = load_func(yyyymmdd, lead_time, grid, PATH_TARGET, weights)
+                climatological_ice_edge[conc].loc[yyyymmdd_ml]
 
-            except IndexError:
+            except (IndexError, KeyError):
                 continue
 
             # sic_target = remove_open_water_and_fast_ice(sic_target)

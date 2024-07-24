@@ -2,7 +2,7 @@
 #$ -q gpu-r8.q
 #$ -l h=gpu-05.ppi.met.no
 #$ -l h_rt=24:00:00
-#$ -l h_rss=16G
+#$ -l h_rss=16G,mem_free=16G,h_data=16G
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/logs/qsub_model_run_logs
 
 #Old centos7 definitions
@@ -15,7 +15,7 @@
 
 #New Singularity definitions running on rhel8
 
-COMMAND='python -u /mnt/SimpleUNET/RunModel/run_model.py'
+COMMAND='python -u /mnt/SimpleUNET/RunModel/run_model.py 1'
 
 module use /modules/MET/rhel8/user-modules
 

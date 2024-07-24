@@ -34,7 +34,12 @@ def main():
     # setup data-paths
     path_arome = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/AROME_ARCTIC_regrid/Data/"
     path_icechart = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/"
+    path_icechart_target = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/RawIceChart_dataset/Data/"
     path_osisaf = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/OSI_SAF_regrid/Data/"
+
+    file_key1 = 'ICECHART_1kmAromeGrid'
+    file_key2 = 'T1500Z'
+    sic_key = 'sic'
 
     # Define lead time in days (1 - 3) and osisaf trend
     lead_times = [1, 2, 3]
@@ -50,12 +55,19 @@ def main():
     elif mode == 'reduced_classes':
         path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/reduced_classes/lead_time_{i}/" for i in lead_times]
 
+    elif mode == 'amsr2_input':
+        path_icechart = "/lustre/storeB/project/metkl/DigitalSeaIce/are-phd/CouplingProject/Dataset/amsr2/1km/"
+        file_key1 = 'RegridAMSR2'
+        file_key2 = ''
+        sic_key = 'amsr2'
+        path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/amsr2_input/lead_time_{i}/" for i in lead_times]
+
     # NN land mask path
     else:
         path_outputs = [f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PrepareDataset/Data/lead_time_{i}/" for i in lead_times]
 
     paths = []
-    for year in range(2016, 2023):
+    for year in range(2019, 2023):
         for month in range(1, 13):
             p = f"{path_arome}{year}/{month:02d}/"
             paths.append(p)
@@ -83,9 +95,11 @@ def main():
 
     baltic_mask = np.zeros_like(lsmask)
     mask = np.zeros_like(lsmask)
-    baltic_mask[:1200, 1500:] = 1   # Mask out baltic sea, return only water after interp
+    baltic_mask[:1300, 1000:] = 1   # Mask out baltic sea, return only water after interp
     
     mask = np.where(~np.logical_or((lsmask == 1), (baltic_mask == 1)))
+    if mode == 'amsr2_input':
+        mask = np.where(~(baltic_mask == 1))
     mask_T = np.transpose(mask)
 
     for dd in range(1, nb_days_task + 1):
@@ -99,8 +113,9 @@ def main():
             # Assert that arome forecast exist for current day
             # Assert that predictor icechart exist for current day
             # Assert that target icechart exist two timesteps forward in time
-            arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}T18Z.nc")[0]
-            icechart_path = glob.glob(f"{path_icechart}{year_task}/{month_task}/ICECHART_1kmAromeGrid_{yyyymmdd}T1500Z.nc")[0]
+            icechart_key = glob.glob(f"{path_icechart_target}{year_task}/{month_task}/ICECHART_1kmAromeGrid_{yyyymmdd}T1500Z.nc")[0]
+            arome_path = glob.glob(f"{path_data_task}AROME_1kmgrid_{yyyymmdd}*.nc")[0]
+            icechart_path = glob.glob(f"{path_icechart}{year_task}/{month_task}/{file_key1}_{yyyymmdd}{file_key2}.nc")[0]
             osisaf_path = glob.glob(f"{path_osisaf}{yyyymmdd_osi[:4]}/{yyyymmdd_osi[4:6]}/OSISAF_trend_1kmgrid_{yyyymmdd_osi}.nc")[0]
 
 
@@ -109,7 +124,7 @@ def main():
         
         # Open IceChart
         with Dataset(icechart_path, 'r') as nc_ic:
-            sic = nc_ic.variables['sic'][:,:-1]
+            sic = nc_ic.variables[sic_key][:,:-1]
             lat = nc_ic.variables['lat'][:,:-1]
             lon = nc_ic.variables['lon'][:,:-1]
             x = nc_ic.variables['x'][:-1]
@@ -135,7 +150,7 @@ def main():
 
         for i in range(len(lead_times)):
             try:
-                target_icechart_path = glob.glob(f"{path_icechart}{yyyymmdd_targets[i][:4]}/{yyyymmdd_targets[i][4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_targets[i]}T1500Z.nc")[0]
+                target_icechart_path = glob.glob(f"{path_icechart_target}{yyyymmdd_targets[i][:4]}/{yyyymmdd_targets[i][4:6]}/ICECHART_1kmAromeGrid_{yyyymmdd_targets[i]}T1500Z.nc")[0]
 
             except IndexError:
                 continue
@@ -164,7 +179,10 @@ def main():
                 xwind = nc_a.variables['xwind'][lead_times[i] - 1,:,:-1]
                 ywind = nc_a.variables['ywind'][lead_times[i] - 1,:,:-1]
 
-            output_sic = onehot_encode_sic(sic)
+            output_sic = sic
+            if not mode == 'amsr2_input':
+                output_sic = onehot_encode_sic(sic)
+
             output_sic_target = onehot_encode_sic(sic_target)
 
             # remove class 1 and 6
@@ -189,7 +207,6 @@ def main():
 
                 for i, trend in enumerate(osisaf_trends):
                     outfile[f'osisaf_trend_{trend}/sic_trend'] = conc_trend[i]
-
 
 if __name__ == "__main__":
     main()

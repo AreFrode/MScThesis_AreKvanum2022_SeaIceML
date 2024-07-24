@@ -131,7 +131,7 @@ def main():
     grid = ['nextsim']
     grid = [ele for ele in grid for _ in range(3)]
 
-    weights = ['weights_08031256', 'weights_21021550', 'weights_09031047']
+    weights = ['weights_12051126', 'weights_21021550', 'weights_09031047']
     # models = ['']
 
     # Define paths
@@ -173,7 +173,7 @@ def main():
     categories = ['Open water', 'Very open drift ice', 'Open drift ice', 'Close drift ice', 'Very close drift ice', 'Fast ice']
     contours = ['10–30%', '40–60%', '70–80%', '90–100%']
 
-    figsize = (24,20)
+    figsize = (29,25)
 
     fig = plt.figure(figsize = figsize, constrained_layout = True)
     subfigs = fig.subfigures(nrows = 5)
@@ -229,8 +229,9 @@ def main():
     axs1["a1"].set_title(r'1 day lead time')
     axs1["b1"].set_title(r'2 day lead time')
     axs1["c1"].set_title(r'3 day lead time')
-
-    axs4['a4'].legend(loc = 'outside lower left')
+    
+    
+    axs4['c4'].legend(loc = 'lower left', bbox_to_anchor = (1, 1))
 
 
     # fig.subplots_adjust(right = 0.8)

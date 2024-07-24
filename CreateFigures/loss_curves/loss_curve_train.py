@@ -23,7 +23,7 @@ def running_min(df):
 
 # PATH_FILE2 = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_15022058.log"
 
-PATH_FILE = "/home/arefk/Documents/Lustre/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_09021654.log"
+PATH_FILE = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/histories/weights_21021550.log"
 
 file = pd.read_table(PATH_FILE, sep = ',', index_col=0)
 
@@ -40,6 +40,7 @@ file['val_loss'].plot(ax = ax, label='Validation loss', zorder = 3)
 ax.plot(file_mins, label="Current minimum Validation loss", zorder = 2)
 ax.set_title('Model train/val loss')
 ax.set_ylabel('Loss')
+ax.set_xlabel('Epoch')
 
 ax.legend()
 
@@ -47,4 +48,4 @@ print(lr_changes[10:].sum())
 
 # plt.show()
 # plt.savefig('loss_big_data_t2m.png')
-plt.savefig('/home/arefk/uio/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/loss_curves/loss_gs_middle_left.png')
+plt.savefig('/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/CreateFigures/loss_curves/loss_21021550.pdf', dpi = 300)

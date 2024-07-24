@@ -23,4 +23,4 @@ ax.set_title('U-Net Grid Search')
 ax.set_xlabel('U-Net depth [# Channels]')
 ax.set_ylabel('Learning rate')
 
-plt.savefig('grid_search.png')
+plt.savefig('grid_search.pdf', dpi = 300)

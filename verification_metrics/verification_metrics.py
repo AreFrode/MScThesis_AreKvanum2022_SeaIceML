@@ -4,7 +4,9 @@ import h5py
 
 import numpy as np
 
-def find_ice_edge(sic, mask, threshold: int = 2):
+from tqdm import tqdm
+
+def find_ice_edge(sic, mask, threshold: int = 2, verbose = False):
     """Creates an Ice-Edge mask containing spatially aware ice-edge pixels,
         code inspired by derivations performed in [Melsom, 2019]
 
@@ -27,7 +29,7 @@ def find_ice_edge(sic, mask, threshold: int = 2):
     # cbar = plt.pcolormesh(sic_padded == 7)
     # plt.colorbar(cbar)
     # plt.savefig('ice_edge.png')
-    for i in range(1, H-1):
+    for i in tqdm(range(1, H-1), disable = not verbose):
         for j in range(1, W-1):
             current = sic_padded[i,j]
             if current == 7:

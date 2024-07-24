@@ -68,7 +68,7 @@ def main():
 
     # Create figure classes
 
-    figname = f"{PATH_FIGURES}model_intercomparisson_amsr2.pdf"
+    figname = f"{PATH_FIGURES}model_intercomparisson_amsr2_{weights}.pdf"
 
     # Define list where forecasts are appended
     fetched_forecasts = [] 
@@ -146,10 +146,10 @@ def main():
     sns.move_legend(axs['d'], "upper left", bbox_to_anchor = (1,1))
     axs['d'].legend_.set_title('Forecast product')
 
-    axs['a'].set_ylim(top = 181)
-    axs['b'].set_ylim(top = 145)
-    axs['c'].set_ylim(top = 153)
-    axs['d'].set_ylim(top = 270)
+    # axs['a'].set_ylim(top = 181)
+    # axs['b'].set_ylim(top = 145)
+    # axs['c'].set_ylim(top = 153)
+    # axs['d'].set_ylim(top = 270)
     # axs['f'].set_ylim(bottom = -1, top = 30)
 
 

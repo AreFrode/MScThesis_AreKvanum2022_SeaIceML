@@ -1,8 +1,7 @@
 #$ -S /bin/bash
-#$ -l h_rt=10:00:00
+#$ -l h_rt=71:00:00
 #$ -q research-r8.q
-#$ -l h_rss=20G
-#$ -l mem_free=20G
+#$ -l h_rss=20G,mem_free=20G,h_data=20G
 #$ -t 1-10
 #$ -wd /lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/logs/predictions
 
@@ -14,7 +13,8 @@
 
 #New Singularity definitions on rhel8
 
-weights="weights_21021550"
+# weights="weights_08031256"
+weights="weights_09031047"
 
 module use /modules/MET/rhel8/user-modules/
 

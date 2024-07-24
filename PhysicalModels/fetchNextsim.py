@@ -66,7 +66,7 @@ def main():
         with Dataset(nextsim_path, 'r') as nc:
             nextsim_x = nc.variables['x'][:]
             nextsim_y = nc.variables['y'][:]
-            nextsim_sic = nc.variables['siconc'][:]
+            nextsim_sic = nc.variables['siconc'][:12]
             fill_value = nc.variables['siconc']._FillValue
 
         xxc, yyc = np.meshgrid(nextsim_x, nextsim_y)
@@ -90,7 +90,7 @@ def main():
                 continue
 
             with Dataset(nextsim_path, 'r') as nc:
-                nextsim_sic_current = nc.variables['siconc'][:]
+                nextsim_sic_current = nc.variables['siconc'][:12]
             
             lead_time_list.append(np.mean(np.ma.filled(nextsim_sic_current, fill_value), axis = 0))
 

@@ -9,7 +9,7 @@ from calendar import monthrange
 from netCDF4 import Dataset
 from pyproj import CRS, Transformer
 from datetime import datetime, timedelta
-from common_functions import onehot_encode_sic, find_nearest, get_ml_domain_borders
+from common_functions import onehot_encode_sic, find_nearest, get_ml_domain_borders, get_target_domain
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
     path_output = f"/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/PhysicalModels/Data/nextsim/"
 
     # This will be used to define the xy-boundary
-    path_ml = "/lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/TwoDayForecast/outputs/Data/weights_05011118/2022/01/"
+    path_ml = "//lustre/storeB/users/arefk/MScThesis_AreKvanum2022_SeaIceML/SimpleUNET/RunModel/outputs/Data/weights_21021550/2022/01/"
 
     # Define projection transformer
     proj4_nextsim = "+proj=stere +lat_0=90 +lat_ts=90 +lon_0=-45 +x_0=0 +y_0=0 +R=6378273 +ellps=sphere +units=m +no_defs"
@@ -74,7 +74,7 @@ def main():
             nextsim_y = nc.variables['y'][:]
             nextsim_lat = nc.variables['latitude'][:]         
             nextsim_lon = nc.variables['longitude'][:]
-            nextsim_sic = nc.variables['siconc'][:]
+            nextsim_sic = nc.variables['siconc'][:12]
             fill_value = nc.variables['siconc']._FillValue
 
         # The boundaries are defined as inclusive:exclusive
@@ -102,7 +102,7 @@ def main():
                 continue
 
             with Dataset(nextsim_path, 'r') as nc:
-                nextsim_sic_current = nc.variables['siconc'][:, lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary]
+                nextsim_sic_current = nc.variables['siconc'][:12, lower_boundary:upper_boundary, leftmost_boundary:rightmost_boundary]
             
             lead_time_list.append(np.mean(np.ma.filled(nextsim_sic_current, fill_value), axis = 0))
 
