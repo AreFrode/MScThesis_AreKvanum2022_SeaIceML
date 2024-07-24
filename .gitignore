@@ -658,3 +658,5 @@ thesis/previous_writing/old.tex
 thesis/model_development/figures/pipeline.log
 CreateFigures/forecast_time_series/Forecast_time_series.pdf
 ForecastValidation/*/*/*/*.csv
+PrepareDataset/*/*/*/*.csv
+*.npy
